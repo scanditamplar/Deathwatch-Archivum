@@ -303,7 +303,7 @@ export const ARMOR_ABILITIES: { [key: string]: ArmorAbility } = {
   },
   "Giant Among Men": {
     name: "Giant Among Men",
-    description: "Hulking size. +1 Agility Bonus to Base Movement. Enemy gets no attack bonus. -10 to Concealment and Silent Move."
+    description: "A Space Marine in power armour is Hulking. This increases his Base Movement by 1; however, the grace afforded by his Black Carapace negates the modifier enemies would otherwise have to attack him. He still suffers the usual penalties to Concealment and Silent Move for being heavily armoured."
   },
   "Poor Manual Dexterity": {
     name: "Poor Manual Dexterity",
@@ -428,97 +428,108 @@ export interface ArmorPattern {
   strengthBonus?: number;
   autoSensesBonus?: number;
   manualDexterityPenalty?: number;
+  imageUrl?: string;
 }
 
 export const ARMOR_PATTERNS: { [key: string]: ArmorPattern } = {
   "MK I Thunder": {
     name: "MK I Thunder",
     head: 6, torso: 8, rightArm: 6, leftArm: 6, rightLeg: 4, leftLeg: 4,
-    abilities: ["Enhanced Strength (+15)", "Vox Link", "Magnetized Boot Soles", "Nutrient Recycling", "Noisier", "Poor Manual Dexterity (-15)"],
+    abilities: ["Giant Among Men", "Enhanced Strength (+15)", "Vox Link", "Magnetized Boot Soles", "Nutrient Recycling", "Noisier", "Poor Manual Dexterity (-15)"],
     historySlots: 1,
     strengthBonus: 15,
-    manualDexterityPenalty: -15
+    manualDexterityPenalty: -15,
+    imageUrl: "https://i.ibb.co/hxgHyNqL/MKI.png"
   },
   "MK II Crusade": {
     name: "MK II Crusade",
     head: 7, torso: 9, rightArm: 7, leftArm: 7, rightLeg: 7, leftLeg: 7,
-    abilities: ["Enhanced Strength (+25)", "Auto-Senses (+5)", "Bio-monitor and Injectors", "Recoil Suppression", "Osmotic Gill Life Sustainer", "Vox Link", "Nutrient Recycling", "Magnetized Boot Soles", "Not built for stealth", "Legacy of the Great Crusade (+10)", "Poor Manual Dexterity (-20)"],
+    abilities: ["Giant Among Men", "Auto-Senses (+5)", "Bio-monitor and Injectors", "Recoil Suppression", "Osmotic Gill Life Sustainer", "Vox Link", "Nutrient Recycling", "Magnetized Boot Soles", "Not built for stealth", "Legacy of the Great Crusade (+10)", "Poor Manual Dexterity (-20)"],
     historySlots: 1,
     strengthBonus: 25,
     autoSensesBonus: 5,
-    manualDexterityPenalty: -20
+    manualDexterityPenalty: -20,
+    imageUrl: "https://i.ibb.co/DPq41rP2/MK-II.png"
   },
   "MK III Iron": {
     name: "MK III Iron",
     head: 9, torso: 10, rightArm: 9, leftArm: 9, rightLeg: 9, leftLeg: 9,
-    abilities: ["Enhanced Strength (+25)", "Auto-Senses (+5)", "Bio-monitor and Injectors", "Recoil Suppression", "Osmotic Gill Life Sustainer", "Vox Link", "Nutrient Recycling", "Magnetized Boot Soles", "Clanks and grinds", "Armored for assault", "Legacy of the Great Crusade (+5)", "Poor Manual Dexterity (-20)"],
+    abilities: ["Giant Among Men", "Auto-Senses (+5)", "Bio-monitor and Injectors", "Recoil Suppression", "Osmotic Gill Life Sustainer", "Vox Link", "Nutrient Recycling", "Magnetized Boot Soles", "Clanks and grinds", "Armored for assault", "Legacy of the Great Crusade (+5)", "Poor Manual Dexterity (-20)"],
     historySlots: 1,
     strengthBonus: 25,
     autoSensesBonus: 5,
-    manualDexterityPenalty: -20
+    manualDexterityPenalty: -20,
+    imageUrl: "https://i.ibb.co/0j5pWZgF/MK-III.png"
   },
   "MK IV Maximus": {
     name: "MK IV Maximus",
     head: 7, torso: 9, rightArm: 7, leftArm: 7, rightLeg: 7, leftLeg: 7,
-    abilities: ["Enhanced Strength", "Auto-Senses", "Bio-monitor and Injectors", "Recoil Suppression", "Osmotic Gill Life Sustainer", "Vox Link", "Nutrient Recycling", "Magnetized Boot Soles", "Echoes of brotherhood", "Poor Manual Dexterity"],
+    abilities: ["Giant Among Men", "Enhanced Strength", "Auto-Senses", "Bio-monitor and Injectors", "Recoil Suppression", "Osmotic Gill Life Sustainer", "Vox Link", "Nutrient Recycling", "Magnetized Boot Soles", "Echoes of brotherhood", "Poor Manual Dexterity"],
     historySlots: 3,
     strengthBonus: 20,
     autoSensesBonus: 10,
-    manualDexterityPenalty: -10
+    manualDexterityPenalty: -10,
+    imageUrl: "https://i.ibb.co/mj4zRQ8/MK-IV.png"
   },
   "MK V Heresy": {
     name: "MK V Heresy",
     head: 8, torso: 9, rightArm: 8, leftArm: 8, rightLeg: 8, leftLeg: 8,
-    abilities: ["Enhanced Strength", "Auto-Senses (+5)", "Bio-monitor and Injectors", "Recoil Suppression", "Osmotic Gill Life Sustainer", "Vox Link", "Nutrient Recycling", "Magnetized Boot Soles", "Marked from the heresy", "Poor Manual Dexterity"],
+    abilities: ["Giant Among Men", "Enhanced Strength", "Auto-Senses (+5)", "Bio-monitor and Injectors", "Recoil Suppression", "Osmotic Gill Life Sustainer", "Vox Link", "Nutrient Recycling", "Magnetized Boot Soles", "Marked from the heresy", "Poor Manual Dexterity"],
     historySlots: 2,
     strengthBonus: 20,
     autoSensesBonus: 5,
-    manualDexterityPenalty: -10
+    manualDexterityPenalty: -10,
+    imageUrl: "https://i.ibb.co/ZpQtMM9N/MK-V.png"
   },
   "MK VI Corvus": {
     name: "MK VI Corvus",
     head: 8, torso: 9, rightArm: 8, leftArm: 8, rightLeg: 8, leftLeg: 8,
-    abilities: ["Enhanced Strength", "Auto-Senses (+15)", "Bio-monitor and Injectors", "Recoil Suppression", "Osmotic Gill Life Sustainer", "Vox Link", "Nutrient Recycling", "Magnetized Boot Soles", "Lightest variant", "Poor Manual Dexterity"],
+    abilities: ["Giant Among Men", "Enhanced Strength", "Auto-Senses (+15)", "Bio-monitor and Injectors", "Recoil Suppression", "Osmotic Gill Life Sustainer", "Vox Link", "Nutrient Recycling", "Magnetized Boot Soles", "Lightest variant", "Poor Manual Dexterity"],
     historySlots: 2,
     strengthBonus: 20,
     autoSensesBonus: 15,
-    manualDexterityPenalty: -10
+    manualDexterityPenalty: -10,
+    imageUrl: "https://i.ibb.co/YFGPZN0y/MK-VI.png"
   },
   "MK VII Aquilla": {
     name: "MK VII Aquilla",
     head: 8, torso: 10, rightArm: 8, leftArm: 8, rightLeg: 8, leftLeg: 8,
-    abilities: ["Enhanced Strength", "Auto-Senses", "Bio-monitor and Injectors", "Recoil Suppression", "Osmotic Gill Life Sustainer", "Vox Link", "Nutrient Recycling", "Magnetized Boot Soles", "Poor Manual Dexterity"],
+    abilities: ["Giant Among Men", "Enhanced Strength", "Auto-Senses", "Bio-monitor and Injectors", "Recoil Suppression", "Osmotic Gill Life Sustainer", "Vox Link", "Nutrient Recycling", "Magnetized Boot Soles", "Poor Manual Dexterity"],
     historySlots: 1,
     strengthBonus: 20,
     autoSensesBonus: 10,
-    manualDexterityPenalty: -10
+    manualDexterityPenalty: -10,
+    imageUrl: "https://i.ibb.co/gZqNJXL2/MK-VII.png"
   },
   "MK VIII Errant": {
     name: "MK VIII Errant",
     head: 8, torso: 11, rightArm: 8, leftArm: 8, rightLeg: 8, leftLeg: 8,
-    abilities: ["Enhanced Strength", "Auto-Senses", "Bio-monitor and Injectors", "Recoil Suppression", "Osmotic Gill Life Sustainer", "Vox Link", "Nutrient Recycling", "Magnetized Boot Soles", "High collar", "Mark of command", "Poor Manual Dexterity"],
+    abilities: ["Giant Among Men", "Enhanced Strength", "Auto-Senses", "Bio-monitor and Injectors", "Recoil Suppression", "Osmotic Gill Life Sustainer", "Vox Link", "Nutrient Recycling", "Magnetized Boot Soles", "High collar", "Mark of command", "Poor Manual Dexterity"],
     historySlots: 1,
     strengthBonus: 20,
     autoSensesBonus: 10,
-    manualDexterityPenalty: -10
+    manualDexterityPenalty: -10,
+    imageUrl: "https://i.ibb.co/Y73xXJCD/MK-VIII.png"
   },
   "Terminator": {
     name: "Terminator",
     head: 14, torso: 14, rightArm: 14, leftArm: 14, rightLeg: 14, leftLeg: 14,
-    abilities: ["Enhanced Strength (+30)", "Auto-Senses", "Bio-monitor and Injectors", "Recoil Suppression", "Osmotic Gill Life Sustainer", "Vox Link", "Nutrient Recycling", "Magnetized Boot Soles", "Terminator Actuators", "Terminator Squad Link", "Sensorium", "Poor Manual Dexterity", "Slow and steady"],
+    abilities: ["Giant Among Men", "Enhanced Strength (+30)", "Auto-Senses", "Bio-monitor and Injectors", "Recoil Suppression", "Osmotic Gill Life Sustainer", "Vox Link", "Nutrient Recycling", "Magnetized Boot Soles", "Terminator Actuators", "Terminator Squad Link", "Sensorium", "Poor Manual Dexterity", "Slow and steady"],
     historySlots: 2,
     strengthBonus: 30,
     autoSensesBonus: 10,
-    manualDexterityPenalty: -10
+    manualDexterityPenalty: -10,
+    imageUrl: "https://i.ibb.co/V8NY8YC/Terminator.png"
   },
   "Artificer": {
     name: "Artificer",
     head: 12, torso: 12, rightArm: 12, leftArm: 12, rightLeg: 12, leftLeg: 12,
-    abilities: ["Enhanced Strength", "Auto-Senses", "Bio-monitor and Injectors", "Recoil Suppression", "Osmotic Gill Life Sustainer", "Vox Link", "Nutrient Recycling", "Magnetized Boot Soles", "Poor Manual Dexterity"],
+    abilities: ["Giant Among Men", "Enhanced Strength", "Auto-Senses", "Bio-monitor and Injectors", "Recoil Suppression", "Osmotic Gill Life Sustainer", "Vox Link", "Nutrient Recycling", "Magnetized Boot Soles", "Poor Manual Dexterity"],
     historySlots: 2,
     strengthBonus: 20,
     autoSensesBonus: 10,
-    manualDexterityPenalty: -10
+    manualDexterityPenalty: -10,
+    imageUrl: "https://i.ibb.co/Z6k49QdF/Artificer.png"
   },
   "Scout": {
     name: "Scout",
@@ -527,7 +538,8 @@ export const ARMOR_PATTERNS: { [key: string]: ArmorPattern } = {
     historySlots: 1,
     strengthBonus: 0,
     autoSensesBonus: 0,
-    manualDexterityPenalty: 0
+    manualDexterityPenalty: 0,
+    imageUrl: "https://i.ibb.co/yc17K2dT/Scout.png"
   }
 };
 
@@ -603,6 +615,277 @@ export const BATTLE_TRAUMAS: BattleTrauma[] = [
     name: "Endless Redemption",
     summary: "Driven to complete all mission objectives regardless of personal cost or danger.",
     description: "Some Battle-Brothers feel the weight of the Imperium on their shoulders and consider themselves solely responsible for the preservation and protection of the Emperor’s domain. This is where the lines of duty and fanaticism can become blurred, and the reality of battle becomes mired in the individual’s personal zeal. This is known as the endless redemption, a sin of duty carried by the Battle-Brother that can never be repaid regardless of the amount of glory or blood laid at its feet. The Battle-Brother is driven by duty and must not fail at all costs. When undertaking a Mission, he must attempt to complete all Objectives regardless of cost and danger. In extreme circumstances the GM may allow the character a Challenging (+0) Willpower Test to resist this duty and retreat if attempting an Objective would mean almost certain death."
+  }
+];
+
+export const SPECIAL_WARGEAR = [
+  { 
+    name: "Auspex", 
+    summary: "+20 Awareness Tests. Tech-Use Test to detect invisible gases, bio-signs, or radiation (50m range).",
+    description: "These devices are used to detect energy emissions, motion, and biological life signs. A character using an auspex gains a +20 bonus to Awareness Tests and may make a Tech-Use Test to spot things not normally detectable to human senses alone, such as invisible gases, nearby bio-signs, or ambient radiation. The standard range for an auspex is 50m, though walls more than 50cm thick and certain shielding materials can block the scanner." 
+  },
+  { 
+    name: "Back banner", 
+    summary: "Leader restores 1 bonus Cohesion point when spending a Fate Point for Cohesion.",
+    description: "Back banners fly on ornate poles wrought with the Deathwatch symbol and icons of Imperial faith, mounted on a backpack power unit or rising from between the shoulder blades. These elaborate banners often tower as tall again as the Battle-Brother’s height itself, heralding the valour of the Emperor’s avenging angels to brother and foe alike. When the Kill-team’s leader spends a Fate Point to restore a point of Cohesion, he restores one bonus point of lost Cohesion if he is wearing a back banner." 
+  },
+  { 
+    name: "Camo-cloak", 
+    summary: "+20 Concealment Tests. When stationary, wearer counts as one range bracket farther away.",
+    description: "A sharpshooter wearing a camo-cloak gains a +20 bonus to all Concealment Tests. When stationary, the wearer counts as being one range bracket farther away when targeted by ranged weapons." 
+  },
+  { 
+    name: "Cartograph", 
+    summary: "+10 Navigation (Surface) Tests. Tracks coordinates, provides bearing to locations, and stores maps.",
+    description: "This specialised data-slate accepts geographical and navigational information on a planet, either from existing data-banks or gathered by a ship’s Augur Arrays in orbit. Its geo-locator tracks the user’s planetary coordinates, enabling it to provide distance and bearing to any known location. This provides a +10 to all Navigation (Surface) Tests. It is also capable of storing detailed maps and schematics, which can be useful for objective approach planning. Many cartographs are also equipped with a small holo-projector that displays three-dimensional maps of its contents." 
+  },
+  { 
+    name: "Charm", 
+    summary: "Keepsake or holy relic. (Player: add details below).",
+    description: "A charm is a keepsake, holy relic, or good luck token that is intended to draw the benevolent eye of the Emperor, a Primarch, or other patron to the bearer. They take myriad forms including such things as fragments of blessed bolter casings, water from holy seas, and pelts of sacred animals." 
+  },
+  { 
+    name: "Chrono", 
+    summary: "Dependable timepiece.",
+    description: "Chronos are timepieces, which are dependable and simple to use. General models are usually hand-held or worn on the wrist, while Space Marines typically rely on the ones built into their armour." 
+  },
+  { 
+    name: "Deadlock (Toxin)", 
+    summary: "Difficult (-10) T Test or suffer 1d10 Str Damage. Paralysis at 0 Str.",
+    description: "This paralytic chemical causes the target’s muscles to seize, immobilising him for easy elimination or capture without rendering him unconscious. This toxin is most commonly found in the form of needler rounds. If the victim fails a Difficult (–10) Toughness Test, he suffers 1d10 temporary Strength Damage, plus a further 1d10 per degree of Failure. If he reaches “0” Strength, he is completely paralysed and unable to act. This paralysis and Strength Damage wears off in 2d5 minutes, minus the victim’s Toughness Bonus (minimum 1 minute).",
+    quantity: { current: 1, max: 10 }
+  },
+  { 
+    name: "De-tox", 
+    summary: "Negates effects of gases/toxins. Immune for 1d10 Rounds.",
+    description: "A more powerful form of the anti-toxins found in Astartes power armour, this drug can negate the effects of most dangerous gases and toxins if administered quickly enough. A dose of de-tox immediately ends the ongoing effects, both positive and negative, of any drugs, toxins, or gases affecting the character (unless the effect states that de-tox is not effective against them) and renders him immune for another 1d10 Rounds. Given that natural Space Marine resilience protects him against many of the common chemicals that pose a threat to other beings, de-tox is manually administered to avoid unintended interruption of injector system effects.",
+    quantity: { current: 1, max: 10 }
+  },
+  { 
+    name: "Delay Agent (Toxin)", 
+    summary: "Causes drugs/toxins to take effect 1d5 hours later.",
+    description: "Not a toxin in and of itself, a delay agent encapsulates the molecules of drugs and poisons with a slowly decaying non-reactive microshell that allows the payload to take effect substantially after delivery. Any drug or toxin may be cut with a delay agent, causing it to take effect 1d5 hours after it is administered.",
+    quantity: { current: 1, max: 10 }
+  },
+  { 
+    name: "Dilation field", 
+    summary: "Grants Unnatural Agility/Speed. 1d10 Rounds use. -10 WS/BS on activation/deactivation turns.",
+    description: "A dilation field grants the owner the Unnatural Agility and Unnatural Speed Traits. Activating the field is a Ready Action with all effects (including any change to the character’s place in the Initiative Order) beginning at the start of the next Round. Dilation fields consume huge amounts of power, and once activated remain on for only 1d10 Rounds before requiring 1 hour to recharge. Furthermore, the character is at –10 WS and BS on the first Turn the field goes into effect, and the first Turn after the field’s effects end, as he adjusts his timing. The interactions between dilation fields and force fields can have disastrous consequences, and only one type of field should be activated at a time on a character." 
+  },
+  { 
+    name: "Grapnel", 
+    summary: "Fires 100m wire. Manual/powered winch. Weapon: 1d10+2 R, Pen 2.",
+    description: "Sometimes used by Space Marine Scout Squads in the field, a grapnel fires a hooked or magnetic grapnel from a bolt pistol, connected to the launcher with a thin but strong 100m wire. Once the grapnel attaches to the desired rock outcropping, gargoyle edifice or other anchor, the user can manually climb the line or activate a powered winch. In a pinch, a grapnel can also be used as a crude—and messy—projectile weapon, doing 1d10+2 R Damage with a Penetration of 2." 
+  },
+  { 
+    name: "Genophage (Toxin)", 
+    summary: "Custom made. Hard (-20) T Test or take 1d10+5 impact damage per round.",
+    description: "Lethally effective, every dose of genophage is tailored to attack the weaknesses in the molecular structure of a particular individual. As such, it may never be simply Requisitioned, and must always be custom made. Victims of genophage stand little chance of resisting the quick-acting enzymes that immediately shut down circulatory and respiratory functions. Genophage is so deadly that it only needs to make contact with its intended target to be effective. If used in weapon form, this means the attack must deal at least 1 point of Damage after AP, but does not need to overcome TB. If contact is made, the target must pass a Hard (–20) Toughness Test. Failure indicates he takes 1d10+5 impact Damage with no reduction for armour or Toughness. This continues every Round until the victim either passes the Test or dies. If genophage is used upon a creature other than the individual it was made for, it simply has the standard Toxic effect.",
+    quantity: { current: 1, max: 5 }
+  },
+  { 
+    name: "Harness", 
+    summary: "+30 Climb Tests. Prevents falling on failure.",
+    description: "Offering more safety than a grapnel but less noise and bulk than a jump pack, this Battle-Brother-sized harness can be used to aid in safely descending from terrain or buildings. The simple harness fits over a character’s power amour. A hook-shaped magnetic clip can then be anchored to a wide variety of surfaces as the coiled safety line slowly unspools. The Battle-Brother gains a +30 bonus to Climb Tests, and will not fall if he fails." 
+  },
+  { 
+    name: "Injector", 
+    summary: "Full Action to administer 1 dose of drug/toxin. Melee rules for unwilling targets.",
+    description: "Injectors carried by the Adeptus Astartes are usually hyposprays that require helmets to be removed so that skin contact can be made. An injector can hold a single dose of any drug (or toxin), which a character may administer as a Full Action. An injector may be used on an unwilling target through standard melee combat rules as though it were a weapon, but the injector itself deals no Damage and cannot penetrate armour.",
+    quantity: { current: 1, max: 10 }
+  },
+  { 
+    name: "Jump Pack", 
+    summary: "Allows safe falls, short jumps (double Base Movement), or maximal thrust (Flyer 12 for 1 min).",
+    description: "A Jump Pack requires the Pilot (Personal) skill to operate effectively. An Astartes Jump Pack allows for a safe, guided fall from any height, and any number of short jumps. Such jumps allow the Battle-Brother to double his Base Movement and travel in any direction without regard for obstacles. For all other purposes, he counts as having taken the appropriate Movement action. He must land by the end of his Turn. Alternatively, the pack can use maximal thrust to duplicate the Flyer (12) trait for up to a minute before the turbines require a minute to cool." 
+  },
+  { 
+    name: "Magboots", 
+    summary: "Adhere to metallic surfaces. Halves Agility Bonus (recalculate Movement) when active.",
+    description: "Astartes power armour can be upgraded to contain strong electromagnets built into the boot soles, allowing the wearer to adhere to metallic surfaces such as exterior hull plating. These magnets may be activated or de-activated at the beginning of the wearer’s Turn. Magboots reduce Agility Bonus (recalculate Movement accordingly) by half when used, but otherwise allow normal movement in low- or zero- gravity areas provided there is a suitable surface to walk upon. Standalone versions of Magboots can be found outside the Adeptus Astartes." 
+  },
+  { 
+    name: "Magnoculars", 
+    summary: "Powerful vision aids. Advanced models give range, heat detection, and pict-captures.",
+    description: "These are powerful vision aids that magnify distant objects. More advanced, high-quality magnoculars can also give range read-outs, detect heat sources, calculate target location positioning, and take pict-captures of a view for later analysis." 
+  },
+  { 
+    name: "Multikey", 
+    summary: "+30 to Security Tests when opening locks.",
+    description: "As it can open most standard Imperial locks, a multikey is reason for suspicion in the hands of a common citizen. For organisations like the Deathwatch they are indispensable, as it is considerably faster and quieter to infiltrate the enemy’s fortifications than to blast through them. A character with a multikey gains a +30 bonus to any Security Test when trying to open locks." 
+  },
+  { 
+    name: "Narthecium", 
+    summary: "+20 Medicae Tests on Astartes. Raises Lightly Damaged threshold to 3x TB. Doubles healing.",
+    description: "A narthecium grants a +20 Bonus to Medicae Tests made on a Space Marine patient. It also raises the Threshold at which the patient is considered Lightly Damaged to 3 times his Toughness Bonus, and doubles the amount of damage healed by first aid. A narthecium also holds ten doses of any one drug. The drug must be acquired separately." 
+  },
+  { 
+    name: "Pain Suppressant", 
+    summary: "Ignore Critical Effects for 1d10 Rounds.",
+    description: "The same chemical is found in most Astartes power armour injectors and allows a character to ignore Critical Effects for 1d10 Rounds. Additional doses are often carried in nartheciums, and may also be used in the Sacraments of Renewal to refill power armour injectors with a Routine (+10) Tech-Use Test.",
+    quantity: { current: 1, max: 10 }
+  },
+  { 
+    name: "Psychic Hood", 
+    summary: "Reaction to nullify psychic techniques within WP range. +5 Focus Power Tests.",
+    description: "A character equipped with a psychic hood may spend his Reaction to attempt to nullify a psychic technique being used by another psyker within a number of metres equal to the character’s Willpower. This attempt should be declared before the enemy psyker makes his Focus Power roll. The psychic hood’s wearer first makes a Focus Power (Willpower) Test. Every degree of success imposes a –10 penalty on the enemy’s Focus Power Test. Alternatively, the wearer may attempt to nullify the effects of a Psychic Technique on himself only, regardless of Range. To do this, the character takes a Focus Power (Willpower) Test. If he succeeds, he is unaffected by the Psychic Technique, but any other targets or areas are affected normally. A nullification Test may trigger psychic phenomena based on Psychic Strength as normal. Additionally, the psychic hood grants the wearer a +5 bonus to all Focus Power Tests, including nullification attempts." 
+  },
+  { 
+    name: "Reductor", 
+    summary: "Progenoid removal 1 Round/gland. Melee weapon: 1d10+2 R, Pen 10 (no SB).",
+    description: "A reductor reduces the time to remove the Progenoid glands to 1 Round per gland (2 for a full recovery). Although generally regarded as disrespectful to the machine’s sombre purpose, it can also be used as a melee weapon that does 1d10+2 R with a Penetration of 10. If used as a weapon, a reductor does not add the Battle-Brother’s SB to Damage; its design emphasises control and precision, but does not provide adequate leverage to take advantage of the wielder’s strength." 
+  },
+  { 
+    name: "Repair Cement", 
+    summary: "Seals power armour breaches instantly. Takes one Round, no Test required.",
+    description: "Repair Cement is a spray-gel composed of dual tubes of polyplas allomers that bond instantly with each other to seal power armour damage. It is typically used for quick field repair of breaches until the armour can be attended properly by a follower of the Omnissiah. A Space Marine learns how to use repair cement as soon as he is issued power armour; its application takes one Round but requires no Test.",
+    quantity: { current: 1, max: 10 }
+  },
+  { 
+    name: "ResusCitex", 
+    summary: "Revives unconscious characters. Reverts Fatigue to TB if in excess.",
+    description: "This stimm is intended to revive an unconscious comrade. It immediately wakes an unconscious character. If the character has taken Fatigue levels in excess of his Toughness Bonus, it reverts the level of Fatigue to a number equal to his TB. It has no effect on conscious characters suffering Fatigue levels equal to or less than their TB.",
+    quantity: { current: 1, max: 10 }
+  },
+  { 
+    name: "Sacred Unguents", 
+    summary: "Immune to Jamming for one clip size or unjams weapon.",
+    description: "Sacred unguents blessed by the Omnissiah are much sought after for their mystical properties when applied to machines. If applied to a weapon (a Full Action) it becomes immune to Jamming for a number of shots equal to its clip size. If the weapon is Jammed and the unguent is then applied, it immediately unjams, but there is no further effect.",
+    quantity: { current: 1, max: 10 }
+  },
+  { 
+    name: "Stummer", 
+    summary: "+30 Silent Move Tests. Countermeasure against surveillance. 20 mins power.",
+    description: "The reverse of a screamer, stummers generate sound waves to cancel out ambient sounds and noises made by moving personnel in a small area. A character carrying an active stummer gains a +30 to Silent Move Tests. The device may also be used as a countermeasure against vox-bugs and other surveillance attempts. A stummer typically has enough power for 20 minutes of continuous use before needing to be recharged, a process that takes about 1 hour." 
+  },
+  { 
+    name: "Teleport Homer", 
+    summary: "Signal transmitter for teleportation targeting or retrieval.",
+    description: "These powerful signal transmitters allow ships equipped with a Teleportarium or similar technology to zero in on a person, object, or area. Teleport homers may be used to target points for squad deployment or to locate a moving individual who needs to be retrieved." 
+  },
+  { 
+    name: "AUTO-SENSE GOGGLES", 
+    summary: "Vision enhancements (photo-visor, preysense +20). Laser range finder grants +20 to allied artillery/aerospace BS.",
+    description: "These bulky goggles (most often worn by Space Marine Scout snipers) provide the wearer with a number of vision enhancements. There are many models and variants of these goggles. Many of them combine the effects of photo-visors (no penalties due to darkness) and preysense (+20 to vision based Perception Tests at night or in the dark) sights, can detect and see a broad range of radioactivity frequencies, can record pict-captures, have a 5x optical enhancement, 5x micromagnification, and a number of coloured filters that can be flipped in and out of the view ports. These goggles also have an integral laser range finder that allows the wearer to act as a forward observer or fire controller for artillery and aerospace units by pinpointing targets, calculating firing solutions, and broadcasting the data to waiting units. When using the laser range finder to guide artillery or aerospace fire, the forward observer grants +20 to the allied unit’s Ballistic Skill Test." 
+  },
+  { 
+    name: "CAMELEOLINE TARPAULIN", 
+    summary: "+30 to all Concealment Tests for vehicles and emplacements.",
+    description: "These thin, resilient tarpaulins are made of sheets of photosensitive, colour-shifting fabric that can take on the appearance of their surroundings. Issued in five metre by five metre sheets, cameleoline tarps can be hooked together to hide anything from a land speeder to a rhino to an entire encampment. Use of cameleoline tarps to hide vehicles and emplacements grants the user a +30 to all Concealment Tests." 
+  },
+  { 
+    name: "CLAVIS", 
+    summary: "Bypasses Imperial locks/defences. +30 Security Test. +10 Medicae on wearer.",
+    description: "A clavis is a special silvered vambrace, a piece of armour granted to Space Marines upon becoming a Deathwatch Keeper. Created during the Dark Age of Technology, the workings of the clavis are not fully understood by the Adeptus Mechanicus, but it is known that it interfaces with the Space Marine’s nervous system and monitors his vital signs. The clavis acts as a unique and complex key that contains a myriad of Inquisitional override codes and other, more arcane systems that allow it to bypass nearly any technological seal. The clavis communicates with light, vibration, and other, less-known means to unseal magnetic locks and shield barriers at the Keeper’s command. Servitors and other autodefences register the Keeper as a friend and stand down in his presence. The clavis is what allows a Keeper to walk his vigil undisturbed and reach nearly any secure zone. Effect: The clavis bypasses nearly any Imperial lock, seal, or automated defence system. If a roll is required, the clavis allows its wearer full use of the Security Skill even if he does not possess it, and in addition adds a +30 bonus to any Security Test. In addition, Medicae Tests used on the wearer of a clavis gain a +10 bonus due to the device’s ability to monitor its wearer’s vital information." 
+  },
+  { 
+    name: "Codex Astartes", 
+    summary: "Sacred text of Roboute Guilliman. Guiding doctrine for most Chapters.",
+    description: "The entirety of the Codex Astartes fills immense librariums, but many Space Marines carry the heart of this sacred text into battle. Of course, interpretations of what passages form the core of the codex vary even more than the forms it has been transcribed into over the millennia since the Second Founding. From hand-copied tomes bound in etched leather to crystal-circuited datacrypts, the collected wisdom of Roboute Guilliman, the Primarch of the Ultramarines—and arguably the most celebrated war tactician the Imperium has ever seen—endures in forms uncounted. It is also the guiding doctrine for how most Chapters operate today. Many Battle-Brothers, particularly the descendants of Guilliman, never pass a day without studying from this text." 
+  },
+  { 
+    name: "COMBAT WEBBING", 
+    summary: "Belt and suspenders with various pouches (Clip, Medicae, Vox, Grenade, etc.).",
+    description: "Astartes combat webbing consists of a sturdy web belt and detachable load-bearing suspenders. The belt and load-bearing suspenders are five centimetres wide and adjustable to fit nearly every body size, as well as over standard Astartes Scout armour. The webbing is designed to carry hard and soft-sided pouches for equipment and ammunition that a scout needs readily at hand. These pouches come in a variety of sizes, and range in use from magazine pouches to medikits to holsters and drop pouches. The pouches connect to the belt and suspenders with a series of semi-permanent clips that can be undone with any flat-bladed tool. Common pouches include: Clip Pouch, Medicae Pouch (+20 Medicae), Vox Pouch, Grenade Pouch, Knife Sheath, Shotgun Pouch, Sidearm Holster, Drop Pouch." 
+  },
+  { 
+    name: "Combi tool", 
+    summary: "+10 bonus to Tech-Use Tests.",
+    description: "Commonly found in the hands of Techmarines, combi-tools are versatile, if somewhat bizarre, mechanical devices. They are spindled with small implements that interface, cut, solder, and anoint, granting a +10 bonus to Tech-Use Tests." 
+  },
+  { 
+    name: "data-slate", 
+    summary: "Stores and reads text, schematics, video, and audio.",
+    description: "Data-slates are commonplace in the Imperium—the primary means of storing and reading printed text, schematics, and other media such as video (pict) or audio (vox) recordings. Models range from cheap, single purpose devices built to play only a certain recording, to sophisticated models that can rerecord new information and transmit and receive data from other devices." 
+  },
+  { 
+    name: "DIAGNOSTICATOR", 
+    summary: "+20 bonus to Tech-use Tests when diagnosing or repairing equipment.",
+    description: "This small, hand-held device contains a number of technological diagnostic tools and a small cogitator array that allows a Deathwatch Techmarine to diagnose what ails a machine’s spirit. It has a number of common plugs and adaptors that allow it to be plugged into nearly every machine of human manufacture, as well as sensors and scanners that can see through hulls and casings, detect microscopic cracks and material fatigue, and generally help the Techmarine in his daily obligations to the Omnissiah. A Techmarine using a machine-spirit Diagnostor gains a +20 bonus to all Tech-use Tests when diagnosing or repairing malfunctioning equipment." 
+  },
+  { 
+    name: "Elucidator", 
+    summary: "Analyzes and translates speech/text. Logic Test (-20) for alien languages.",
+    description: "The Jericho Reach is rife with planets out of contact with the Imperium for thousands of years, pockets of humanity lost during the Age of Shadow or even before. During that time, their language may have diverged radically from Low Gothic. An elucidator is a hand-held device that can analyse speech or text, and translate it into a standard language and dialect (and vice versa). It is most useful in dealing with cultures whose languages have a basis in Low Gothic, requiring no Test to perform this function. However, a character with the Logic Skill may make a Difficult (–20) Test to use an elucidator to decipher basic meanings from truly alien languages. An elucidator’s output can display on its screen, project from its vox, or transmit through a vox channel." 
+  },
+  { 
+    name: "GRAV CHUTE", 
+    summary: "Safe fall from any height using suspensor fields.",
+    description: "On occasion, Space Marine Scout Squads must deploy stealthily, unable to utilise more common methods like teleportation or drop pods. Under those unusual circumstances, the Scouts utilise an Astartes grav chute. Grav chutes rely on suspensor fields to counter gravity and slow descent. Unlike a jump pack, which allows the user to leap into the air, a grav chute’s lower power output only allows for a safe, guided fall such as a combat drop from a transport. It allows for a safe fall from any height." 
+  },
+  { 
+    name: "GRAV-FLARES", 
+    summary: "Illuminates 10km area for 2d10 minutes.",
+    description: "Fired from integral tube launchers, Grav-flares are used to light large swaths of terrain. With a small rocket motor to get it to altitude and a low-power grav-system similar to a grav plate to keep it there, these extremely high-intensity chemical flares can illuminate an area roughly ten kilometres across and lasts for 2d10 minutes. They come in red, white, green, gold, and blue.",
+    quantity: { current: 1, max: 5 }
+  },
+  { 
+    name: "INFILTRIOL ENAMEL", 
+    summary: "Masks bio-signature from Hive Fleet Dagon Tyranids. Lasts 1d10+10 hours.",
+    description: "Treats power armour to mask bio-signature from Hive Fleet Dagon. Tyranid organisms do not recognise wearer as an enemy unless they approach closer than 2 x Perception Bonus meters. Discovering or attacking reveals the character. Lasts 1d10+10 hours. Psy-active Tyranids gain +20 to Awareness Tests to see through it.",
+    quantity: { current: 1, max: 5 }
+  },
+  { 
+    name: "lamp/ glow-globe", 
+    summary: "Illuminates area a dozen metres in diameter. Lasts 1d5 hours.",
+    description: "These common devices can illuminate an area a dozen or more metres in diameter. A typical lamp lasts 1d5 hours before it needs to be recharged." 
+  },
+  { 
+    name: "Locus Seeker", 
+    summary: "Pair of devices (caller/seeker) for tracking over sectors. Navigation Test to plot course.",
+    description: "A locus seeker is actually a pair of devices. The smaller component, the locus caller, is a dull metal sphere only millimetres in diameter. The larger component is a small, translucent globe with a needle of identical metal suspended mysteriously inside. The needle, called the locus seeker, is usually carved in the shape of a grasping talon and reaches unerringly towards the caller, with no observed limits on its distance. Plotting a course towards the caller using the globe requires the appropriate Navigation Test with a Difficulty based on how much distance lies between the two." 
+  },
+  { 
+    name: "LUMINATOR SIGNAL FLARE CAPSULES", 
+    summary: "Steady (5m light, 1d10h) or Stroboscopic (distress, 1d5h) modes. One-use.",
+    description: "Roughly half the size of a standard bolt round, these high intensity beacons have two operating modes, steady and stroboscopic. In steady mode they are used for marking and illuminating, and can light an area five metres in diameter. In stroboscopic mode the Luminator Flare flashes on and off hundreds of times per minute and is typically used as a distress beacon. Unlike lamp packs or glow globes, Luminator Flares are one-use only—simply discarded when they run out of power. Luminators last 1d10 hours in steady mode, and 1d5 hours in stroboscopic mode.",
+    quantity: { current: 1, max: 10 }
+  },
+  { 
+    name: "pict recorder", 
+    summary: "Records and plays back live media. Some have holographic capabilities.",
+    description: "Pict recorders (or simply picters) are relatively simple live-media recording devices, and some have holographic capabilities. Most also allow for playback as well as recording, and some are even built into dedicated pict-servitors so they can capture important battles, weapon tests, alien interrogations, and other dangerous events." 
+  },
+  { 
+    name: "psy-focus", 
+    summary: "+10 bonus to Invocation Skill Tests.",
+    description: "Psykers and Librarians often use these items to help them focus their powers. A psy-focus could be a book of meditations, a blessed icon, or a carved witch stave from the Battle-Brother’s homeworld. When a psyker with a Psy-focus makes an Invocation Skill Test he gains a +10 bonus." 
+  },
+  { 
+    name: "Restraints", 
+    summary: "Strong enough to hold an Ork. Sized for human-shaped bodies.",
+    description: "Despite their designation, Kill-teams’ Mission objectives are far more varied than simple target elimination. Live capture may be the means to an end or the goal itself. Simple but effective, Deathwatch restraints size to most roughly human-shaped bodies and are strong enough to hold even a thrashing Ork." 
+  },
+  { 
+    name: "SIEGE AUSPEX", 
+    summary: "Powerful scanner (20m range) to find stress fractures and hidden passages.",
+    description: "The siege auspex is a powerful scanner that can see through the densest materials to find their weak points. These items are used for finding stress fractures, reinforced or up-armoured areas, hidden passages, power conduits, and the numerous other items of interest to a siege engineer. The machine-spirits of a siege auspex, while canny, can only see so far through solid objects and have a fixed range of about 20 metres." 
+  },
+  { 
+    name: "signum", 
+    summary: "+5 Ballistic Skill to Squad Mode members. Full Action + Tech-Use for +10 until end of next Round.",
+    description: "A signum is a sensorium and transmitter array that can be mounted on a Battle-Brother’s armour. It broadcasts enhanced tactical readings to all members of a Squad, allowing them to benefit from the targeting data. While a character equipped with a signum is in Squad Mode, all characters in Squad Mode receive a +5 bonus to Ballistic Skill Tests. If the equipped character spends a Full Action and succeeds on a Tech-Use Test, this bonus increases to +10 until the end of the next Round. The effects of multiple signums are not cumulative." 
+  },
+  { 
+    name: "signum link", 
+    summary: "Web of interconnected autosenses. Benefit from ganging up rules for melee/ranged attacks in Squad Mode.",
+    description: "A signum is a useful tool alone, but by equipping the targeting systems of one or more squad members with a signum link, they can make optimal use of the signum’s readings to achieve unparalleled acts of teamwork by forming a web of their interconnected autosenses. This allows all participating members to make a concerted attack on the same foe, striking with a coordinated precision that makes their assault all but inescapable. To form a signum web, at least one member of a Squad must be equipped with a signum. One or more other characters in the squad then equip their armour with signum links. All characters in Squad Mode on the web (via the signum or a link) may benefit from the rules for ganging up on an opponent, regardless of whether they are engaged in melee or using ranged attacks." 
+  },
+  { 
+    name: "STALKER FLARES", 
+    summary: "Invisible chemical markers detectable only through photo/preysense sights.",
+    description: "Invisible to the naked eye, these small chemical markers can only be detected through photo or preysense sights or by those using auto-sense goggles. They allow Space Marines to mark trails and landing zones in ways difficult or impossible to detect by enemy forces.",
+    quantity: { current: 1, max: 10 }
+  },
+  { 
+    name: "targeter", 
+    summary: "Combines Red-Dot and Telescopic sights. Dodge ranged attacks from user suffer -10 penalty.",
+    description: "The Space Marine version of a Targeter encompasses several sights connected to a guidance cogitator array that improves overall accuracy. Rather than being hard-wired to a specific weapon, the array fixes at the shoulder or backpack unit and links into the power armour’s general targeting systems, providing its benefits to all ranged weapons the user wields regardless of their Class. A Targeter combines the effects of a Red-Dot Laser Sight and Telescopic Sight. In addition, its sophisticated target-lock system makes evading a shot from a weapon guided by it extremely difficult. Attempts to Dodge ranged attacks from a character equipped with a Targeter suffer a –10 penalty." 
+  },
+  { 
+    name: "VIVISECTION GAGE", 
+    summary: "+10 Medicae (research) or +10 Interrogation/Intimidation. Weapon: 1d5+5 R, Tearing, Toxic.",
+    description: "Primarily a tool used by Deathwatch Techmarines and Apothecaries, especially those affiliated with the Magos Biologis, this wicked looking device is used mainly to maintain the ranks of Deathwatch servitors. The hand itself contains augmentation similar to that of a cybernetic hand, and the fingers contain a number of laser cutters, bio-solvents, auto-injectors, shears and flensing instruments. When used by a Techmarine or Apothecary for the purposes of research or maintaining servitors, the vivsection gage grants the user a +10 bonus to all Medicae Tests. When pressed into service as an interrogation device, it grants the wearer +10 to Interrogation and Intimidation Tests, deals 1d5+5 R damage, and possesses the Tearing and Toxic Qualities." 
   }
 ];
 

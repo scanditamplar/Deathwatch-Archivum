@@ -65,6 +65,15 @@ export interface Armor {
   abilities: string[]; // Names of abilities
 }
 
+export interface WargearItem {
+  id: string;
+  name: string;
+  description: string;
+  summary?: string;
+  notes?: string;
+  quantity?: { current: number; max: number };
+}
+
 export interface BattleTrauma {
   name: string;
   summary: string;
@@ -88,6 +97,7 @@ export interface CharacterData {
   insanity: number;
   corruption: number;
   battleTraumas: string[]; // List of names
+  additionalWargear: WargearItem[];
   characteristics: Characteristics;
   skills: Skill[];
   talents: string[];
@@ -121,16 +131,17 @@ export const INITIAL_CHARACTER: CharacterData = {
   insanity: 0,
   corruption: 0,
   battleTraumas: [],
+  additionalWargear: [],
   characteristics: {
-    WS: { base: 40, bonus: 0, adv: 0 },
-    BS: { base: 45, bonus: 0, adv: 5 },
-    S: { base: 40, bonus: 0, adv: 0 },
-    T: { base: 40, bonus: 0, adv: 5 },
-    Ag: { base: 35, bonus: 0, adv: 0 },
-    Int: { base: 35, bonus: 0, adv: 0 },
-    Per: { base: 40, bonus: 0, adv: 0 },
-    WP: { base: 45, bonus: 0, adv: 0 },
-    Fel: { base: 35, bonus: 5, adv: 0 },
+    WS: { base: 30, bonus: 0, adv: 0 },
+    BS: { base: 30, bonus: 0, adv: 0 },
+    S: { base: 30, bonus: 0, adv: 0 },
+    T: { base: 30, bonus: 0, adv: 0 },
+    Ag: { base: 30, bonus: 0, adv: 0 },
+    Int: { base: 30, bonus: 0, adv: 0 },
+    Per: { base: 30, bonus: 0, adv: 0 },
+    WP: { base: 30, bonus: 0, adv: 0 },
+    Fel: { base: 30, bonus: 0, adv: 0 },
   },
   skills: [
     { name: "Awareness", characteristic: "Per", mastery: 1 },
@@ -163,7 +174,7 @@ export const INITIAL_CHARACTER: CharacterData = {
     leftArm: 8,
     rightLeg: 8,
     leftLeg: 8,
-    abilities: ["Enhanced Strength", "Auto-Senses", "Bio-monitor and Injectors", "Recoil Suppression", "Osmotic Gill Life Sustainer", "Vox Link", "Nutrient Recycling", "Magnetized Boot Soles", "Poor Manual Dexterity"],
+    abilities: ["Giant Among Men", "Enhanced Strength", "Auto-Senses", "Bio-monitor and Injectors", "Recoil Suppression", "Osmotic Gill Life Sustainer", "Vox Link", "Nutrient Recycling", "Magnetized Boot Soles", "Poor Manual Dexterity"],
   },
   history: "Hails from the world of Macragge. Served with distinction in the Tyrannic Wars.",
   personalDemeanor: "Stoic",

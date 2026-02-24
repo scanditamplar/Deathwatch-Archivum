@@ -1,18 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { CharacterData, INITIAL_CHARACTER, Characteristic, Characteristics, MeleeWeapon, RangedWeapon, Explosive, Armor, BattleTrauma as BattleTraumaType } from './types';
-import { Icons, CHAPTERS, SPECIALIZATIONS, CHAPTER_DATA, PERSONAL_DEMEANORS, ADVANCED_SPECIALITY_RULES, BATTLE_TRAUMAS, ARMOR_PATTERNS, ARMOR_ABILITIES, ARMOR_HISTORIES } from './constants';
+import { CharacterData, INITIAL_CHARACTER, Characteristic, Characteristics, MeleeWeapon, RangedWeapon, Explosive, Armor, WargearItem, BattleTrauma as BattleTraumaType } from './types';
+import { Icons, CHAPTERS, SPECIALIZATIONS, CHAPTER_DATA, PERSONAL_DEMEANORS, ADVANCED_SPECIALITY_RULES, BATTLE_TRAUMAS, ARMOR_PATTERNS, ARMOR_ABILITIES, ARMOR_HISTORIES, SPECIAL_WARGEAR } from './constants';
 import ServoSkullChat from './components/ServoSkullChat';
 
 // --- Helper for Characteristic Logic ---
 
-const getCharScore = (stat: Characteristic): number => {
-  return stat.base + stat.bonus + stat.adv;
+const getCharScore = (stat: Characteristic, armorBonus: number = 0): number => {
+  return stat.base + stat.bonus + stat.adv + armorBonus;
 };
 
-const getCharBonus = (stat: Characteristic, key: string): number => {
-  const score = getCharScore(stat);
-  const baseBonus = Math.floor(score / 10);
-  return (key === 'S' || key === 'T') ? baseBonus * 2 : baseBonus;
+const getCharBonus = (stat: Characteristic, key: string, armorBonus: number = 0): number => {
+  if (key === 'S' || key === 'T') {
+    const baseScore = stat.base + stat.adv;
+    const baseBonus = Math.floor(baseScore / 10);
+    
+    const additionalScore = stat.bonus + armorBonus;
+    const additionalBonus = Math.floor(additionalScore / 10);
+    
+    return (baseBonus * 2) + additionalBonus;
+  }
+  
+  const score = getCharScore(stat, armorBonus);
+  return Math.floor(score / 10);
 };
 
 const getRenownTitle = (value: number): string => {
@@ -35,14 +44,14 @@ const getCurseInfo = (insanity: number) => {
 
 // --- Sub-components ---
 
-const StatBlock: React.FC<{ label: string; stat: Characteristic; onChange: (val: number) => void }> = ({ label, stat, onChange }) => {
-  const score = getCharScore(stat);
-  const bonus = getCharBonus(stat, label);
+const StatBlock: React.FC<{ label: string; stat: Characteristic; onChange: (val: number) => void; armorBonus?: number }> = ({ label, stat, onChange, armorBonus = 0 }) => {
+  const score = getCharScore(stat, armorBonus);
+  const bonus = getCharBonus(stat, label, armorBonus);
   const isUnnatural = label === 'S' || label === 'T';
   const showBadge = !(label === 'WS' || label === 'BS');
 
   return (
-    <div className={`relative bg-[#1a1a1a] border ${stat.bonus > 0 ? 'border-green-900/50 shadow-[0_0_5px_rgba(34,197,94,0.2)]' : 'border-[#333]'} p-2 pt-3 rounded text-center transition-all group`}>
+    <div className={`relative bg-[#1a1a1a] border ${stat.bonus > 0 || armorBonus > 0 ? 'border-green-900/50 shadow-[0_0_5px_rgba(34,197,94,0.2)]' : 'border-[#333]'} p-2 pt-3 rounded text-center transition-all group`}>
       {showBadge && (
         <div className={`absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold border shadow-lg transition-transform group-hover:scale-110 
           ${isUnnatural ? 'bg-[#8b0000] border-[#ffd700] text-[#ffd700]' : 'bg-[#222] border-[#444] text-gray-400'}`}
@@ -51,7 +60,7 @@ const StatBlock: React.FC<{ label: string; stat: Characteristic; onChange: (val:
         </div>
       )}
       <div className="text-[9px] text-gray-500 font-bold uppercase tracking-tighter mb-1">{label}</div>
-      <div className={`text-2xl font-bold ${stat.bonus > 0 ? 'text-green-500' : 'text-white'} gothic-font leading-none mb-2`}>
+      <div className={`text-2xl font-bold ${stat.bonus > 0 || (label === 'S' && armorBonus > 0) ? 'text-green-500' : 'text-white'} gothic-font leading-none mb-2`}>
         {score}
       </div>
       <div className="flex flex-col gap-0.5 border-t border-[#222] pt-1.5">
@@ -115,6 +124,67 @@ const TraumaItem: React.FC<{ trauma: BattleTraumaType, onRemove: () => void }> =
   );
 };
 
+const WargearCard: React.FC<{ 
+  item: WargearItem; 
+  onRemove: () => void;
+  onUpdate?: (updates: Partial<WargearItem>) => void;
+}> = ({ item, onRemove, onUpdate }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  return (
+    <div 
+      className="bg-[#111] border border-[#333] p-4 rounded relative group hover:border-[#8b0000] transition-all cursor-pointer"
+      onMouseEnter={() => setIsExpanded(true)}
+      onMouseLeave={() => setIsExpanded(false)}
+      onClick={() => setIsExpanded(!isExpanded)}
+    >
+      <button 
+        onClick={(e) => { e.stopPropagation(); onRemove(); }}
+        className="absolute top-2 right-2 text-[7px] text-red-800 hover:text-red-500 font-bold uppercase tracking-tighter z-10"
+      >
+        Purge
+      </button>
+      <div className="flex justify-between items-start mb-1">
+        <div className="text-xs font-bold text-white uppercase tracking-widest">{item.name}</div>
+        {item.quantity && (
+          <div className="flex items-center gap-1 bg-black/40 px-1.5 py-0.5 rounded border border-[#333]" onClick={(e) => e.stopPropagation()}>
+            <button 
+              onClick={() => onUpdate?.({ quantity: { ...item.quantity!, current: Math.max(0, item.quantity!.current - 1) } })}
+              className="text-[10px] text-gray-500 hover:text-white transition-colors px-1"
+            >-</button>
+            <span className="text-[10px] font-mono text-red-500 min-w-[12px] text-center">{item.quantity.current}</span>
+            <button 
+              onClick={() => onUpdate?.({ quantity: { ...item.quantity!, current: Math.min(item.quantity!.max, item.quantity!.current + 1) } })}
+              className="text-[10px] text-gray-500 hover:text-white transition-colors px-1"
+            >+</button>
+          </div>
+        )}
+      </div>
+      <div className="relative">
+        {item.summary && (
+          <div className={`transition-all duration-300 ${isExpanded ? 'opacity-0 h-0 overflow-hidden' : 'opacity-100'}`}>
+            <div className="text-[10px] text-gray-400 leading-tight italic">{item.summary}</div>
+          </div>
+        )}
+        <div className={`transition-all duration-300 ${isExpanded || !item.summary ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
+          <div className="text-[10px] text-gray-300 leading-tight">{item.description}</div>
+        </div>
+      </div>
+      {item.name === "Charm" && (
+        <div className="mt-2 pt-2 border-t border-[#222]">
+          <input 
+            type="text"
+            value={item.notes || ''}
+            onChange={(e) => onUpdate?.({ notes: e.target.value })}
+            onClick={(e) => e.stopPropagation()}
+            placeholder="Describe your charm..."
+            className="w-full bg-black/30 border border-[#222] text-[9px] text-gray-400 p-1 rounded focus:outline-none focus:border-[#8b0000] transition-colors"
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+
 // --- Main App ---
 
 export default function App() {
@@ -126,9 +196,13 @@ export default function App() {
   // Modals state
   const [showHonorsModal, setShowHonorsModal] = useState(false);
   const [showWeaponModal, setShowWeaponModal] = useState(false);
+  const [showWargearModal, setShowWargearModal] = useState(false);
   const [isCloseHovered, setIsCloseHovered] = useState(false);
   const [isWeaponCloseHovered, setIsWeaponCloseHovered] = useState(false);
   const [isWeaponSubmitting, setIsWeaponSubmitting] = useState(false);
+  const [isWargearAccessGranted, setIsWargearAccessGranted] = useState(false);
+  const [showCustomWargearView, setShowCustomWargearView] = useState(false);
+  const [customWargear, setCustomWargear] = useState({ name: '', description: '' });
 
   // Trauma confirmation state
   const [confirmStep, setConfirmStep] = useState<'none' | 'authorizing' | 'confirmed'>('none');
@@ -335,6 +409,37 @@ export default function App() {
     }));
   };
 
+  const addWargear = (item: { name: string, description: string, summary?: string, quantity?: { current: number, max: number } }) => {
+    const newItem: WargearItem = {
+      id: Math.random().toString(36).substr(2, 9),
+      name: item.name,
+      description: item.description,
+      summary: item.summary,
+      quantity: item.quantity ? { ...item.quantity } : undefined
+    };
+    setCharacter(prev => ({
+      ...prev,
+      additionalWargear: [...(prev.additionalWargear || []), newItem]
+    }));
+    setShowWargearModal(false);
+  };
+
+  const removeWargear = (id: string) => {
+    setCharacter(prev => ({
+      ...prev,
+      additionalWargear: prev.additionalWargear.filter(item => item.id !== id)
+    }));
+  };
+
+  const updateWargear = (id: string, updates: Partial<WargearItem>) => {
+    setCharacter(prev => ({
+      ...prev,
+      additionalWargear: prev.additionalWargear.map(item => 
+        item.id === id ? { ...item, ...updates } : item
+      )
+    }));
+  };
+
   const removeRangedWeapon = (id: string) => {
     setCharacter(prev => ({
       ...prev,
@@ -489,7 +594,10 @@ export default function App() {
     }, 1000);
   };
 
-  const getCharScoreWrapper = (key: keyof Characteristics) => getCharScore(character.characteristics[key]);
+  const getCharScoreWrapper = (key: keyof Characteristics) => {
+    const armorBonus = key === 'S' ? (ARMOR_PATTERNS[character.armor.pattern]?.strengthBonus || 0) : 0;
+    return getCharScore(character.characteristics[key], armorBonus);
+  };
   const currentChapterData = CHAPTER_DATA[character.chapter];
   const isSpecializationRestricted = currentChapterData?.restrictions.includes(character.specialization);
   const toughnessBonus = getCharBonus(character.characteristics.T, 'T');
@@ -634,9 +742,10 @@ export default function App() {
               <div className="space-y-8 animate-fadeIn">
                 <SectionHeader title="Characteristics" icon={<Icons.Info />} />
                 <div className="grid grid-cols-3 md:grid-cols-9 gap-2">
-                  {(Object.keys(character.characteristics) as Array<keyof Characteristics>).map(key => (
-                    <StatBlock key={key} label={key} stat={character.characteristics[key]} onChange={(v) => updateStatBase(key, v)} />
-                  ))}
+                  {(Object.keys(character.characteristics) as Array<keyof Characteristics>).map(key => {
+                    const armorBonus = key === 'S' ? (ARMOR_PATTERNS[character.armor.pattern]?.strengthBonus || 0) : 0;
+                    return <StatBlock key={key} label={key} stat={character.characteristics[key]} onChange={(v) => updateStatBase(key, v)} armorBonus={armorBonus} />;
+                  })}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -804,8 +913,16 @@ export default function App() {
                   <div className="bg-[#1a1a1a] border border-[#333] p-4 rounded space-y-4">
                     <h4 className="text-xs font-bold text-gray-600 uppercase tracking-widest border-b border-[#333] pb-1">Movement</h4>
                     <div className="grid grid-cols-2 text-[10px] gap-2">
-                      <div>Half: {Math.floor(getCharScoreWrapper('Ag') / 10)}m</div><div>Full: {Math.floor(getCharScoreWrapper('Ag') / 10) * 2}m</div>
-                      <div>Charge: {Math.floor(getCharScoreWrapper('Ag') / 10) * 3}m</div><div>Run: {Math.floor(getCharScoreWrapper('Ag') / 10) * 6}m</div>
+                      {(() => {
+                        const hasJumpPack = character.additionalWargear?.some(item => item.name === "Jump Pack");
+                        const baseMove = (Math.floor(getCharScoreWrapper('Ag') / 10) + (character.armor.abilities.includes("Giant Among Men") ? 1 : 0)) * (hasJumpPack ? 2 : 1);
+                        return (
+                          <>
+                            <div>Half: {baseMove}m</div><div>Full: {baseMove * 2}m</div>
+                            <div>Charge: {baseMove * 3}m</div><div>Run: {baseMove * 6}m</div>
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -977,11 +1094,11 @@ export default function App() {
                   </button>
                 </div>
 
-                <SectionHeader title="Protection" icon={<Icons.Shield />} />
+                <SectionHeader title="Armour" icon={<Icons.Shield />} />
                 <div className="space-y-6">
                   <div className="bg-[#1a1a1a] p-4 rounded border border-[#333] flex flex-col md:flex-row gap-4 items-center justify-between">
                     <div className="flex-1 space-y-1">
-                      <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Armor Pattern</label>
+                      <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Armour Pattern</label>
                       <select 
                         value={character.armor.pattern} 
                         onChange={e => handleArmorPatternChange(e.target.value)} 
@@ -993,7 +1110,7 @@ export default function App() {
                     <div className="flex-1 grid grid-cols-1 gap-4">
                       {Array.from({ length: ARMOR_PATTERNS[character.armor.pattern]?.historySlots || 1 }).map((_, idx) => (
                         <div key={idx} className="space-y-1">
-                          <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Armor History Slot {idx + 1}</label>
+                          <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Armour History Slot {idx + 1}</label>
                           <select 
                             value={character.armor.histories[idx] || "None"} 
                             onChange={e => handleArmorHistoryChange(e.target.value, idx)} 
@@ -1015,51 +1132,47 @@ export default function App() {
                   </div>
 
                   <div className="bg-[#1a1a1a] p-6 rounded border border-[#333] flex flex-col md:flex-row gap-8 items-start">
-                    <div className="relative w-56 h-72 border border-[#444] rounded flex flex-col items-center justify-center p-4 bg-black/40">
-                      <div className="text-[8px] absolute top-2 left-2 text-red-800 font-bold uppercase">Armor Profile</div>
-                      <div className="text-[10px] text-center text-gray-400 font-bold uppercase mb-4 px-2">{character.armor.name}</div>
+                    <div className="relative w-56 h-72 border border-[#444] rounded overflow-hidden bg-black flex flex-col items-center">
+                      <img 
+                        src={ARMOR_PATTERNS[character.armor.pattern]?.imageUrl || portrait} 
+                        alt="Armour Profile" 
+                        className="absolute inset-0 w-full h-full object-cover opacity-60 grayscale brightness-125 contrast-110" 
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/60"></div>
                       
-                      {/* Visual Diagram */}
-                      <div className="relative w-32 h-48 opacity-40">
-                          <Icons.Skull />
-                          {/* Simple body outline representation */}
-                          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-8 h-12 border border-gray-700 rounded-lg"></div> {/* Torso */}
-                          <div className="absolute top-1/4 left-[15%] w-4 h-14 border border-gray-700 rounded-full"></div> {/* L Arm */}
-                          <div className="absolute top-1/4 right-[15%] w-4 h-14 border border-gray-700 rounded-full"></div> {/* R Arm */}
-                          <div className="absolute bottom-4 left-[25%] w-5 h-16 border border-gray-700 rounded-full"></div> {/* L Leg */}
-                          <div className="absolute bottom-4 right-[25%] w-5 h-16 border border-gray-700 rounded-full"></div> {/* R Leg */}
-                      </div>
-
+                      <div className="text-[8px] absolute top-2 left-2 text-red-800 font-bold uppercase z-10">Armour Profile</div>
+                      <div className="text-[10px] absolute top-2 right-2 text-gray-400 font-bold uppercase z-10">{character.armor.pattern}</div>
+                      
                       {/* Head */}
-                      <div className="absolute top-12 left-1/2 -translate-x-1/2 flex flex-col items-center">
-                          <span className="text-[7px] text-gray-600 uppercase font-bold">Head</span>
-                          <span className="text-lg font-bold text-white leading-none">{character.armor.head}</span>
+                      <div className="absolute top-4 left-1/2 -translate-x-1/2 flex flex-col items-center z-10">
+                          <span className="text-[7px] text-gray-400 uppercase font-bold tracking-widest bg-black/60 px-1 rounded">Head</span>
+                          <span className="text-2xl font-bold text-white leading-none drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] gothic-font">{character.armor.head}</span>
                       </div>
 
                       {/* Torso */}
-                      <div className="absolute top-[45%] left-1/2 -translate-x-1/2 flex flex-col items-center">
-                          <span className="text-[7px] text-gray-600 uppercase font-bold">Torso</span>
-                          <span className="text-lg font-bold text-white leading-none">{character.armor.torso}</span>
+                      <div className="absolute top-[26%] left-1/2 -translate-x-1/2 flex flex-col items-center z-10">
+                          <span className="text-[7px] text-gray-400 uppercase font-bold tracking-widest bg-black/60 px-1 rounded">Torso</span>
+                          <span className="text-2xl font-bold text-white leading-none drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] gothic-font">{character.armor.torso}</span>
                       </div>
 
                       {/* Arms */}
-                      <div className="absolute top-[35%] left-4 flex flex-col items-center">
-                          <span className="text-[7px] text-gray-600 uppercase font-bold">L.Arm</span>
-                          <span className="text-lg font-bold text-[#8b0000] leading-none">{character.armor.leftArm}</span>
+                      <div className="absolute top-[35%] left-4 flex flex-col items-center z-10">
+                          <span className="text-[7px] text-gray-400 uppercase font-bold tracking-widest bg-black/60 px-1 rounded">L.Arm</span>
+                          <span className="text-2xl font-bold text-red-600 leading-none drop-shadow-[0_0_8px_rgba(220,38,38,0.5)] gothic-font">{character.armor.leftArm}</span>
                       </div>
-                      <div className="absolute top-[35%] right-4 flex flex-col items-center">
-                          <span className="text-[7px] text-gray-600 uppercase font-bold">R.Arm</span>
-                          <span className="text-lg font-bold text-[#8b0000] leading-none">{character.armor.rightArm}</span>
+                      <div className="absolute top-[35%] right-4 flex flex-col items-center z-10">
+                          <span className="text-[7px] text-gray-400 uppercase font-bold tracking-widest bg-black/60 px-1 rounded">R.Arm</span>
+                          <span className="text-2xl font-bold text-red-600 leading-none drop-shadow-[0_0_8px_rgba(220,38,38,0.5)] gothic-font">{character.armor.rightArm}</span>
                       </div>
 
                       {/* Legs */}
-                      <div className="absolute bottom-8 left-6 flex flex-col items-center">
-                          <span className="text-[7px] text-gray-600 uppercase font-bold">L.Leg</span>
-                          <span className="text-lg font-bold text-[#8b0000] leading-none">{character.armor.leftLeg}</span>
+                      <div className="absolute bottom-12 left-6 flex flex-col items-center z-10">
+                          <span className="text-[7px] text-gray-400 uppercase font-bold tracking-widest bg-black/60 px-1 rounded">L.Leg</span>
+                          <span className="text-2xl font-bold text-red-600 leading-none drop-shadow-[0_0_8px_rgba(220,38,38,0.5)] gothic-font">{character.armor.leftLeg}</span>
                       </div>
-                      <div className="absolute bottom-8 right-6 flex flex-col items-center">
-                          <span className="text-[7px] text-gray-600 uppercase font-bold">R.Leg</span>
-                          <span className="text-lg font-bold text-[#8b0000] leading-none">{character.armor.rightLeg}</span>
+                      <div className="absolute bottom-12 right-6 flex flex-col items-center z-10">
+                          <span className="text-[7px] text-gray-400 uppercase font-bold tracking-widest bg-black/60 px-1 rounded">R.Leg</span>
+                          <span className="text-2xl font-bold text-red-600 leading-none drop-shadow-[0_0_8px_rgba(220,38,38,0.5)] gothic-font">{character.armor.rightLeg}</span>
                       </div>
                     </div>
 
@@ -1083,7 +1196,7 @@ export default function App() {
                   </div>
 
                   <div className="space-y-4">
-                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-[#333] pb-1">Armor Systems (Nodes)</h4>
+                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-[#333] pb-1">Power Armour Sub Routines</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {character.armor.abilities.map(abilityName => {
                         if (abilityName === "None") return null;
@@ -1140,6 +1253,26 @@ export default function App() {
                       </div>
                     </div>
                   </div>
+                </div>
+
+                <SectionHeader title="Additional Wargear" icon={<Icons.Wargear />} />
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {character.additionalWargear?.map(item => (
+                      <WargearCard 
+                        key={item.id} 
+                        item={item} 
+                        onRemove={() => removeWargear(item.id)} 
+                        onUpdate={(updates) => updateWargear(item.id, updates)}
+                      />
+                    ))}
+                  </div>
+                  <button 
+                    onClick={() => setShowWargearModal(true)}
+                    className="w-full border-2 border-dashed border-[#333] p-4 text-xs hover:border-[#8b0000] hover:text-white transition-colors rounded uppercase tracking-widest font-bold"
+                  >
+                    + REQUEST ADDITIONAL WARGEAR
+                  </button>
                 </div>
               </div>
             )}
@@ -1442,6 +1575,110 @@ export default function App() {
               >
                 {isWeaponSubmitting ? "+++ request approved +++" : "Submit request of holy weaponry to The master of the Forge"}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showWargearModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fadeIn">
+          <div className="bg-[#0a0a0a] border border-[#333] w-full max-w-2xl rounded-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="bg-[#1a1a1a] p-4 border-b border-[#333] flex justify-between items-center">
+              <h3 className="text-lg gothic-font text-red-600 uppercase tracking-widest">
+                {showCustomWargearView ? "Sanctioned Wargear Customization" : "Wargear Requisition"}
+              </h3>
+              <button 
+                onClick={() => {
+                  setShowWargearModal(false);
+                  setShowCustomWargearView(false);
+                  setIsWargearAccessGranted(false);
+                }}
+                className="text-gray-500 hover:text-white transition-colors"
+              >
+                <Icons.Skull />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto space-y-6">
+              {showCustomWargearView ? (
+                <div className="space-y-4 animate-fadeIn">
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Wargear Designation</label>
+                    <input 
+                      value={customWargear.name}
+                      onChange={e => setCustomWargear({...customWargear, name: e.target.value})}
+                      placeholder="e.g. Master-Crafted Auspex"
+                      className="w-full bg-[#1a1a1a] border border-[#333] p-3 rounded text-sm text-white focus:border-[#8b0000] outline-none transition-colors"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Functional Description</label>
+                    <textarea 
+                      value={customWargear.description}
+                      onChange={e => setCustomWargear({...customWargear, description: e.target.value})}
+                      placeholder="Describe the wargear's capabilities..."
+                      className="w-full bg-[#1a1a1a] border border-[#333] p-3 rounded text-sm text-white focus:border-[#8b0000] outline-none h-32 transition-colors"
+                    />
+                  </div>
+                  <button 
+                    onClick={() => {
+                      if (customWargear.name && customWargear.description) {
+                        addWargear(customWargear);
+                        setCustomWargear({ name: '', description: '' });
+                        setShowCustomWargearView(false);
+                        setIsWargearAccessGranted(false);
+                      }
+                    }}
+                    disabled={!customWargear.name || !customWargear.description}
+                    className="w-full bg-[#8b0000] text-white p-3 rounded gothic-font uppercase tracking-widest text-xs hover:bg-[#a00000] transition-colors disabled:opacity-50"
+                  >
+                    Authorize and Add to Manifest
+                  </button>
+                  <button 
+                    onClick={() => setShowCustomWargearView(false)}
+                    className="w-full text-[10px] text-gray-500 uppercase font-bold tracking-widest hover:text-gray-300 transition-colors"
+                  >
+                    Return to Standard Requisition
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {SPECIAL_WARGEAR.map(item => (
+                    <button
+                      key={item.name}
+                      onClick={() => addWargear(item)}
+                      className="bg-[#111] border border-[#222] p-4 rounded text-left hover:border-[#8b0000] hover:bg-[#1a1a1a] transition-all group"
+                    >
+                      <div className="text-xs font-bold text-white uppercase tracking-widest mb-1 group-hover:text-red-500">{item.name}</div>
+                      <div className="text-[10px] text-gray-400 leading-tight">
+                        {item.summary || item.description}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="p-4 bg-[#1a1a1a] border-t border-[#222] flex flex-col gap-3">
+              {!showCustomWargearView && (
+                <button 
+                  onClick={() => {
+                    setIsWargearAccessGranted(true);
+                    setTimeout(() => {
+                      setIsWargearAccessGranted(false);
+                      setShowCustomWargearView(true);
+                    }, 1000);
+                  }}
+                  className={`w-full py-2 rounded gothic-font uppercase tracking-widest text-[10px] transition-all border border-transparent flex items-center justify-center ${
+                    isWargearAccessGranted 
+                      ? 'bg-green-800 text-white' 
+                      : 'bg-[#1a1a1a] text-gray-500 hover:text-white hover:border-[#8b0000]'
+                  }`}
+                >
+                  {isWargearAccessGranted ? "Access granted" : "access additional sanctioned wargear"}
+                </button>
+              )}
+              <div className="text-[10px] text-gray-600 uppercase font-bold tracking-widest text-center">
+                {showCustomWargearView ? "Define custom wargear parameters for the Ordo Xenos archives" : "Select wargear to add to the character's manifest"}
+              </div>
             </div>
           </div>
         </div>

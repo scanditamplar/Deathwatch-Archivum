@@ -50,6 +50,12 @@ const ServoSkullChat: React.FC<ServoSkullChatProps> = ({ character }) => {
 
   const triggerUpload = () => fileInputRef.current?.click();
 
+  const clearChat = () => {
+    setMessages([
+      { role: 'ai', text: `Archival memory purged. How may I assist your service to the Golden Throne, Brother ${character.name}?` }
+    ]);
+  };
+
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
     
@@ -109,6 +115,16 @@ const ServoSkullChat: React.FC<ServoSkullChatProps> = ({ character }) => {
         </div>
         
         <div className="absolute inset-0 flex flex-col items-center justify-end p-4 pb-8">
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              clearChat();
+            }}
+            className="absolute top-4 right-4 p-2 bg-black/40 hover:bg-red-900/60 border border-red-900/30 rounded-full transition-all group/clear z-30"
+            title="Purge Archival Memory"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-600 group-hover/clear:text-white transition-colors"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+          </button>
           <div className="bg-black/60 backdrop-blur-md border border-[#8b0000]/40 px-4 py-1.5 rounded-sm mb-2 transition-all group-hover:border-[#ffd700]/60 shadow-lg">
             <h2 className="text-[11px] font-bold gothic-font uppercase tracking-[0.4em] text-white drop-shadow-[0_2px_10px_rgba(0,0,0,1)]">
               Arch-Logis 7-Theta
