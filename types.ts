@@ -35,6 +35,7 @@ export interface BaseWeapon {
 export interface MeleeWeapon extends BaseWeapon {}
 
 export interface RangedWeapon extends BaseWeapon {
+  class?: 'Pistol' | 'Basic' | 'Heavy' | 'Mounted';
   range: string;
   rof: string;
   clip: { current: number; max: number };
@@ -72,6 +73,12 @@ export interface WargearItem {
   summary?: string;
   notes?: string;
   quantity?: { current: number; max: number };
+  modifiers?: {
+    traits?: string[];
+    talents?: string[];
+    skills?: Skill[]; // Or partial skill updates
+    characteristics?: Partial<Characteristics>;
+  };
 }
 
 export interface BattleTrauma {
@@ -157,7 +164,7 @@ export const INITIAL_CHARACTER: CharacterData = {
       { id: 'm1', name: "Astartes Combat Knife", damage: "1d10+2 R", pen: 2, special: "-" }
     ],
     ranged: [
-      { id: 'r1', name: "Astartes Bolter", range: "100m", rof: "S/2/4", damage: "1d10+9 X", pen: 4, special: "Tearing", clip: { current: 28, max: 28 }, reload: "Full", ammoType: "Standard Bolt Rounds" }
+      { id: 'r1', name: "Astartes Bolter", class: "Basic", range: "100m", rof: "S/2/4", damage: "1d10+9 X", pen: 4, special: "Tearing", clip: { current: 28, max: 28 }, reload: "Full", ammoType: "Standard Bolt Rounds" }
     ],
     explosives: [
       { id: 'e1', name: "Frag Grenade", range: "SBx3m", damage: "2d10 X", pen: 0, special: "Blast (5)", quantity: { current: 3, max: 3 } },

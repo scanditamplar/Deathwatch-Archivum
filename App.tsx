@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CharacterData, INITIAL_CHARACTER, Characteristic, Characteristics, MeleeWeapon, RangedWeapon, Explosive, Armor, WargearItem, BattleTrauma as BattleTraumaType } from './types';
-import { Icons, CHAPTERS, SPECIALIZATIONS, CHAPTER_DATA, PERSONAL_DEMEANORS, ADVANCED_SPECIALITY_RULES, BATTLE_TRAUMAS, ARMOR_PATTERNS, ARMOR_ABILITIES, ARMOR_HISTORIES, SPECIAL_WARGEAR } from './constants';
+import { Icons, CHAPTERS, SPECIALIZATIONS, CHAPTER_DATA, PERSONAL_DEMEANORS, ADVANCED_SPECIALITY_RULES, BATTLE_TRAUMAS, ARMOR_PATTERNS, ARMOR_ABILITIES, ARMOR_HISTORIES, SPECIAL_WARGEAR, RELIC_WARGEAR } from './constants';
 import ServoSkullChat from './components/ServoSkullChat';
+import RelicCard from './components/RelicCard';
 
 // --- Helper for Characteristic Logic ---
 
@@ -201,6 +202,10 @@ export default function App() {
   const [isWeaponCloseHovered, setIsWeaponCloseHovered] = useState(false);
   const [isWeaponSubmitting, setIsWeaponSubmitting] = useState(false);
   const [isWargearAccessGranted, setIsWargearAccessGranted] = useState(false);
+  const [isReclusiamAccessGranted, setIsReclusiamAccessGranted] = useState(false);
+  const [showReclusiamView, setShowReclusiamView] = useState(false);
+  const [selectedRelics, setSelectedRelics] = useState<Set<number>>(new Set());
+  const [isRelicRequisitionApproved, setIsRelicRequisitionApproved] = useState(false);
   const [showCustomWargearView, setShowCustomWargearView] = useState(false);
   const [customWargear, setCustomWargear] = useState({ name: '', description: '' });
 
@@ -558,6 +563,7 @@ export default function App() {
         const weapon: RangedWeapon = {
           id,
           name: newWeapon.name || 'Unidentified Firearm',
+          class: newWeapon.class,
           damage: damageStr,
           pen: newWeapon.pen || 0,
           special: newWeapon.special || '-',
@@ -576,6 +582,7 @@ export default function App() {
       // Reset and close
       setNewWeapon({
         name: '',
+        class: undefined,
         damage: '',
         pen: 0,
         special: '',
@@ -965,7 +972,14 @@ export default function App() {
                         <div className="grid grid-cols-2 md:grid-cols-6 gap-4 items-start pr-8">
                           <div className="md:col-span-2">
                             <div className="text-[10px] font-bold uppercase text-gray-500 mb-1">Pattern Designation</div>
-                            <div className="text-sm text-white font-bold">{weapon.name}</div>
+                            <div className="flex items-center gap-2">
+                              <div className="text-sm text-white font-bold">{weapon.name}</div>
+                              {weapon.class && (
+                                <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#333] text-gray-300 uppercase font-bold tracking-wider border border-[#444]">
+                                  {weapon.class}
+                                </span>
+                              )}
+                            </div>
                             <div className="text-[9px] text-[#8b0000] mt-1 uppercase font-mono">Special: {weapon.special}</div>
                           </div>
                           <div>
@@ -1417,6 +1431,24 @@ export default function App() {
                     className="w-full bg-[#1a1a1a] border border-[#333] p-2 rounded text-xs text-white focus:border-[#8b0000] outline-none disabled:opacity-50"
                   />
                 </div>
+
+                {weaponType === 'ranged' && (
+                  <div className="col-span-2 space-y-1">
+                    <label className="text-[9px] uppercase font-bold text-gray-500">Weapon Class</label>
+                    <div className="flex gap-2">
+                      {['Pistol', 'Basic', 'Heavy', 'Mounted'].map((cls) => (
+                        <button
+                          key={cls}
+                          disabled={isWeaponSubmitting}
+                          onClick={() => setNewWeapon({...newWeapon, class: cls as any})}
+                          className={`flex-1 py-1 px-2 text-[9px] font-bold uppercase tracking-widest rounded transition-all border ${newWeapon.class === cls ? 'bg-[#333] text-white border-white' : 'bg-[#1a1a1a] text-gray-500 border-[#333] hover:border-gray-500'}`}
+                        >
+                          {cls}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 
                 <div className="col-span-2 grid grid-cols-3 gap-3 pt-2">
                   <div className="space-y-1">
@@ -1585,13 +1617,15 @@ export default function App() {
           <div className="bg-[#0a0a0a] border border-[#333] w-full max-w-2xl rounded-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div className="bg-[#1a1a1a] p-4 border-b border-[#333] flex justify-between items-center">
               <h3 className="text-lg gothic-font text-red-600 uppercase tracking-widest">
-                {showCustomWargearView ? "Sanctioned Wargear Customization" : "Wargear Requisition"}
+                {showCustomWargearView ? "Sanctioned Wargear Customization" : showReclusiamView ? "Reclusiam Reliquary" : "Wargear Requisition"}
               </h3>
               <button 
                 onClick={() => {
                   setShowWargearModal(false);
                   setShowCustomWargearView(false);
                   setIsWargearAccessGranted(false);
+                  setShowReclusiamView(false);
+                  setIsReclusiamAccessGranted(false);
                 }}
                 className="text-gray-500 hover:text-white transition-colors"
               >
@@ -1599,7 +1633,147 @@ export default function App() {
               </button>
             </div>
             <div className="p-6 overflow-y-auto space-y-6">
-              {showCustomWargearView ? (
+              {showReclusiamView ? (
+                <div className="space-y-4 animate-fadeIn">
+                  <div className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-4 border-b border-[#333] pb-2">
+                    +++ Authorized Access: Chapter Relics & Archeotech +++
+                  </div>
+                  <div className="grid grid-cols-1 gap-4">
+                    {RELIC_WARGEAR.map((relic, idx) => (
+                      <RelicCard 
+                        key={idx} 
+                        relic={relic} 
+                        character={character}
+                        selectionMode={true}
+                        isSelected={selectedRelics.has(idx)}
+                        onToggle={() => {
+                          const newSelected = new Set(selectedRelics);
+                          if (newSelected.has(idx)) {
+                            newSelected.delete(idx);
+                          } else {
+                            newSelected.add(idx);
+                          }
+                          setSelectedRelics(newSelected);
+                        }}
+                        onRequisition={() => {}} // Disabled in selection mode
+                      />
+                    ))}
+                  </div>
+                  <button 
+                    onClick={() => {
+                      if (selectedRelics.size === 0) return;
+                      
+                      setIsRelicRequisitionApproved(true);
+                      
+                      setCharacter(prev => {
+                        let newCharacter = { ...prev };
+                        
+                        // Process all selected relics
+                        selectedRelics.forEach(idx => {
+                          const relic = RELIC_WARGEAR[idx];
+
+                          // Apply modifiers
+                          if (relic.modifiers) {
+                            if (relic.modifiers.traits) {
+                              newCharacter.traits = [...new Set([...newCharacter.traits, ...relic.modifiers.traits])];
+                            }
+                            // Add other modifiers logic here if needed
+                          }
+
+                          if (relic.type === 'armor' && relic.stats?.armor) {
+                            newCharacter.armor = {
+                              ...newCharacter.armor,
+                              ...relic.stats!.armor!,
+                              histories: [...newCharacter.armor.histories], 
+                              abilities: [...relic.stats!.armor!.abilities]
+                            };
+                            newCharacter.additionalWargear = [...newCharacter.additionalWargear, {
+                              id: Math.random().toString(36).substr(2, 9),
+                              name: relic.name,
+                              description: relic.description,
+                              summary: relic.summary || "Relic of the Chapter",
+                              modifiers: relic.modifiers
+                            }];
+                          } else if (relic.type === 'wargear') {
+                            newCharacter.additionalWargear = [...newCharacter.additionalWargear, {
+                              id: Math.random().toString(36).substr(2, 9),
+                              name: relic.name,
+                              description: relic.description,
+                              summary: relic.summary || "Relic of the Chapter",
+                              modifiers: relic.modifiers
+                            }];
+                          }
+                          
+                          // Handle single weapon or multiple weapons
+                          const weaponsToAdd = [];
+                          if (relic.stats?.weapon) weaponsToAdd.push(relic.stats.weapon);
+                          if (relic.stats?.weapons) weaponsToAdd.push(...relic.stats.weapons);
+                          
+                          weaponsToAdd.forEach((weaponStats, wIdx) => {
+                            const weaponId = `relic-${Date.now()}-${idx}-${wIdx}`;
+                            const isMelee = weaponStats.damage.includes("R") || weaponStats.damage.includes("E") || weaponStats.damage.includes("I"); 
+                            
+                            // Check if it's explicitly ranged by looking for range/rof properties
+                            const isRanged = weaponStats.range && weaponStats.rof;
+
+                            if (isRanged) {
+                              newCharacter.weapons = {
+                                ...newCharacter.weapons,
+                                ranged: [...newCharacter.weapons.ranged, {
+                                  id: weaponId,
+                                  name: weaponStats.name,
+                                  class: weaponStats.class,
+                                  range: weaponStats.range,
+                                  rof: weaponStats.rof,
+                                  damage: weaponStats.damage,
+                                  pen: weaponStats.pen,
+                                  clip: weaponStats.clip,
+                                  reload: weaponStats.reload,
+                                  special: weaponStats.special,
+                                  ammoType: weaponStats.ammoType
+                                }]
+                              };
+                            } else if (isMelee) {
+                              newCharacter.weapons = {
+                                ...newCharacter.weapons,
+                                melee: [...newCharacter.weapons.melee, {
+                                  id: weaponId,
+                                  name: weaponStats.name,
+                                  damage: weaponStats.damage,
+                                  pen: weaponStats.pen,
+                                  special: weaponStats.special
+                                }]
+                              };
+                            }
+                          });
+                        });
+                        
+                        return newCharacter;
+                      });
+
+                      setTimeout(() => {
+                        setShowWargearModal(false);
+                        setShowReclusiamView(false);
+                        setIsReclusiamAccessGranted(false);
+                        setIsRelicRequisitionApproved(false);
+                        setSelectedRelics(new Set());
+                      }, 2000);
+                    }}
+                    disabled={selectedRelics.size === 0 || isRelicRequisitionApproved}
+                    className={`w-full py-3 mt-6 rounded gothic-font uppercase tracking-widest text-xs transition-all border border-transparent flex items-center justify-center shadow-lg ${
+                      isRelicRequisitionApproved
+                        ? 'bg-green-800 text-white hover:bg-green-700'
+                        : selectedRelics.size > 0 
+                          ? 'bg-[#8b0000] text-white hover:bg-[#a00000] hover:border-[#ffd700]' 
+                          : 'bg-[#1a1a1a] text-gray-600 cursor-not-allowed border-[#333]'
+                    }`}
+                  >
+                    {isRelicRequisitionApproved 
+                      ? "+++ Requisition approved, carry it with honor brother +++" 
+                      : "Interface to request holy relics from the Deathwatch Reclusiarch"}
+                  </button>
+                </div>
+              ) : showCustomWargearView ? (
                 <div className="space-y-4 animate-fadeIn">
                   <div className="space-y-2">
                     <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Wargear Designation</label>
@@ -1658,7 +1832,8 @@ export default function App() {
               )}
             </div>
             <div className="p-4 bg-[#1a1a1a] border-t border-[#222] flex flex-col gap-3">
-              {!showCustomWargearView && (
+              {!showCustomWargearView && !showReclusiamView && (
+                <>
                 <button 
                   onClick={() => {
                     setIsWargearAccessGranted(true);
@@ -1675,9 +1850,26 @@ export default function App() {
                 >
                   {isWargearAccessGranted ? "Access granted" : "access additional sanctioned wargear"}
                 </button>
+                <button 
+                  onClick={() => {
+                    setIsReclusiamAccessGranted(true);
+                    setTimeout(() => {
+                      setIsReclusiamAccessGranted(false);
+                      setShowReclusiamView(true);
+                    }, 1000);
+                  }}
+                  className={`w-full py-2 mt-2 rounded gothic-font uppercase tracking-widest text-[10px] transition-all border border-transparent flex items-center justify-center ${
+                    isReclusiamAccessGranted 
+                      ? 'bg-green-800 text-white' 
+                      : 'bg-[#1a1a1a] text-gray-500 hover:text-white hover:border-[#8b0000]'
+                  }`}
+                >
+                  {isReclusiamAccessGranted ? "+++ Access to reclusiam approved +++" : "+++ Request access to reclusiam +++"}
+                </button>
+                </>
               )}
               <div className="text-[10px] text-gray-600 uppercase font-bold tracking-widest text-center">
-                {showCustomWargearView ? "Define custom wargear parameters for the Ordo Xenos archives" : "Select wargear to add to the character's manifest"}
+                {showCustomWargearView ? "Define custom wargear parameters for the Ordo Xenos archives" : showReclusiamView ? "Reclusiam Reliquary Access Terminal" : "Select wargear to add to the character's manifest"}
               </div>
             </div>
           </div>
