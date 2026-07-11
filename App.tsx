@@ -1,19 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { db } from './firebase';
 import { SpecialRulesList, SPECIAL_RULES } from './components/SpecialRules';
 import { CharacterData, INITIAL_CHARACTER, Characteristic, Characteristics, MeleeWeapon, RangedWeapon, Explosive, Armor, WargearItem, BattleTrauma as BattleTraumaType, STANDARD_WARGEAR, SPECIALIZATION_GEAR, WEAPON_ATTACHMENTS, AMMO_DATABASE, Cybernetic, ALL_SKILLS, ALL_TALENTS, Skill } from './types';
-import { Icons, CHAPTERS, SPECIALIZATIONS, LIBRARIAN_PSYCHIC_POWERS, TACTICAL_MARINE_ABILITIES, APOTHECARY_ABILITIES, ASSAULT_MARINE_ABILITIES, DEVASTATOR_MARINE_ABILITIES, TECHMARINE_ABILITIES, GENERAL_SOLO_MODE_ABILITIES, CHAPTER_SOLO_MODE_ABILITIES, CODEX_ATTACK_PATTERNS, CHAPTER_ATTACK_PATTERNS, CODEX_DEFENSIVE_STANCES, CHAPTER_DEFENSIVE_STANCES, CHAPTER_DATA, PERSONAL_DEMEANORS, ADVANCED_SPECIALITY_RULES, BATTLE_TRAUMAS, ARMOR_PATTERNS, ARMOR_ABILITIES, ARMOR_HISTORIES, SPECIAL_WARGEAR, RELIC_WARGEAR, CHAPTER_TRAPPINGS, PROTECTIVE_WARGEAR, FORCE_WEAPON_RULE, CYBERNETICS, TALENT_DESCRIPTIONS, TRAIT_DESCRIPTIONS, DEATHWATCH_CHAMPION_ABILITIES, DEATHWATCH_CHAPLAIN_ABILITIES, DEATHWATCH_EPISTOLARY_ABILITIES, DEATHWATCH_EPISTOLARY_PSYCHIC_POWERS, DEATHWATCH_FORGE_MASTER_ABILITIES, DEATHWATCH_KEEPER_ABILITIES, DEATHWATCH_KILL_MARINE_ABILITIES, DEATHWATCH_CAPTAIN_ABILITIES, FIRST_COMPANY_VETERAN_ABILITIES, SANGUINARY_PRIEST_ABILITIES, RAVENWING_VETERAN_ABILITIES, DEATHWING_TERMINATOR_ABILITIES, WOLF_SCOUT_ABILITIES, WOLF_PRIEST_ABILITIES, TYRANNIC_WAR_VETERAN_ABILITIES, ULTRAMARINES_HONOUR_GUARD_ABILITIES, SWORD_BROTHER_ABILITIES, WOLF_GUARD_ABILITIES } from './constants';
+import { Icons, CHAPTERS, CUSTOM_CHAPTER_DEMEANORS, GENE_SEED_PURITIES, GENE_SEED_DEFICIENCIES, CUSTOM_CHAPTER_MODIFIERS, CUSTOM_CHAPTER_SOLO_MODES, CUSTOM_CHAPTER_ATTACK_PATTERNS, CUSTOM_CHAPTER_DEFENSIVE_STANCES, SPECIALIZATIONS, LIBRARIAN_PSYCHIC_POWERS, TACTICAL_MARINE_ABILITIES, APOTHECARY_ABILITIES, ASSAULT_MARINE_ABILITIES, DEVASTATOR_MARINE_ABILITIES, TECHMARINE_ABILITIES, GENERAL_SOLO_MODE_ABILITIES, CHAPTER_SOLO_MODE_ABILITIES, CODEX_ATTACK_PATTERNS, CHAPTER_ATTACK_PATTERNS, CODEX_DEFENSIVE_STANCES, CHAPTER_DEFENSIVE_STANCES, CHAPTER_DATA, PERSONAL_DEMEANORS, ADVANCED_SPECIALITY_RULES, BATTLE_TRAUMAS, ARMOR_PATTERNS, ARMOR_ABILITIES, ARMOR_HISTORIES, SPECIAL_WARGEAR, RELIC_WARGEAR, CHAPTER_TRAPPINGS, PROTECTIVE_WARGEAR, FORCE_WEAPON_RULE, CYBERNETICS, TALENT_DESCRIPTIONS, TRAIT_DESCRIPTIONS, DEATHWATCH_CHAMPION_ABILITIES, DEATHWATCH_CHAPLAIN_ABILITIES, DEATHWATCH_EPISTOLARY_ABILITIES, DEATHWATCH_EPISTOLARY_PSYCHIC_POWERS, DEATHWATCH_FORGE_MASTER_ABILITIES, DEATHWATCH_KEEPER_ABILITIES, DEATHWATCH_KILL_MARINE_ABILITIES, DEATHWATCH_CAPTAIN_ABILITIES, FIRST_COMPANY_VETERAN_ABILITIES, SANGUINARY_PRIEST_ABILITIES, RAVENWING_VETERAN_ABILITIES, DEATHWING_TERMINATOR_ABILITIES, WOLF_SCOUT_ABILITIES, WOLF_PRIEST_ABILITIES, TYRANNIC_WAR_VETERAN_ABILITIES, ULTRAMARINES_HONOUR_GUARD_ABILITIES, SWORD_BROTHER_ABILITIES, WOLF_GUARD_ABILITIES, MISSION_OATHS, CHAPTER_NAMES, TEMPEST_BLADE_ABILITIES, EMPERORS_CHAMPION_ABILITIES, EMPERORS_CHAMPION_VOWS, CATEGORY_DESCRIPTIONS } from './constants';
 import ServoSkullChat from './components/ServoSkullChat';
 import RelicCard from './components/RelicCard';
+import MissionMode from './components/MissionMode';
 
 const SORTED_RELIC_WARGEAR = [...RELIC_WARGEAR].sort((a, b) => a.name.localeCompare(b.name));
 
 // --- Helper for Characteristic Logic ---
 
 const getCharScore = (stat: Characteristic, armorBonus: number = 0): number => {
+  if (!stat) return 0;
   return stat.base + stat.bonus + stat.adv + armorBonus;
 };
 
 const getCharBonus = (stat: Characteristic, key: string, armorBonus: number = 0): number => {
+  if (!stat) return 0;
   if (key === 'S' || key === 'T') {
     const baseScore = stat.base + stat.adv;
     const baseBonus = Math.floor(baseScore / 10);
@@ -55,7 +60,7 @@ const statMap: Record<string, keyof Characteristics> = {
 const checkRequirement = (char: CharacterData, req: string): boolean => {
   req = req.trim().toLowerCase();
   if (req === "—" || req === "-" || req === "") return true;
-  if (req === "adeptus astartes" || req === "member of the deathwatch") return true;
+  if (req === "adeptus astartes" || req === "member of the deathwatch" || req === "deathwatch") return true;
   if (req === "raven guard") return char.chapter === "Raven Guard";
   if (req === "salamanders") return char.chapter === "Salamanders";
   if (req === "white scars") return char.chapter === "White Scars";
@@ -68,17 +73,28 @@ const checkRequirement = (char: CharacterData, req: string): boolean => {
   if (charMatch) {
     const stat = statMap[charMatch[1]];
     const val = parseInt(charMatch[2]);
-    return getCharScore(char.characteristics[stat]) >= val;
+    let armorBonus = 0;
+    if (stat === 'S') armorBonus = ARMOR_PATTERNS[char.armor.pattern]?.strengthBonus || 0;
+    if (stat === 'Ag') armorBonus = ARMOR_PATTERNS[char.armor.pattern]?.agilityBonus || 0;
+    return getCharScore(char.characteristics[stat], armorBonus) >= val;
   }
 
-  if (req === "adeptus astartes" || req === "member of the deathwatch" || req === "—" || req === "-") return true;
+  if (req === "adeptus astartes" || req === "member of the deathwatch" || req === "deathwatch" || req === "—" || req === "-") return true;
 
   if (req === "techmarine") return char.specialization === "Techmarine";
   if (req === "librarian") return char.specialization === "Librarian";
   if (req === "apothecary") return char.specialization === "Apothecary";
   if (req === "assault marine") return char.specialization === "Assault Marine";
-  if (req === "devastator marine") return char.specialization === "Devastator Marine";
+  if (req === "devastator marine" || req === "devastator") return char.specialization === "Devastator Marine";
   if (req === "tactical marine") return char.specialization === "Tactical Marine";
+
+  if (CHAPTERS.map(c => c.toLowerCase()).includes(req) || req === "any battle-brother of the blood angels chapter" || req === "any battle-brother of the dark angels chapter." || req === "any battle-brother of the space wolves chapter." || req === "any battle-brother of the ultramarines chapter." || req === "any battle-brother of the black templars chapter." || req === "any battle-brother of the storm wardens chapter") {
+    const chap = CHAPTERS.find(c => c.toLowerCase() === req || req.includes(c.toLowerCase()));
+    if (chap) return char.chapter === chap;
+  }
+
+  if (req === "any wolf priest of the space wolves chapter.") return char.advancedSpeciality === "Wolf Priest";
+
   if (req === "deathwatch captain") return char.advancedSpeciality === "Deathwatch Captain";
   if (req === "deathwatch champion") return char.advancedSpeciality === "Deathwatch Champion";
   if (req === "deathwatch chaplain") return char.advancedSpeciality === "Deathwatch Chaplain";
@@ -149,6 +165,8 @@ const StatBlock: React.FC<{ label: string; stat: Characteristic; onChange: (val:
   const isUnnatural = label === 'S' || label === 'T';
   const showBadge = !(label === 'WS' || label === 'BS');
 
+  if (!stat) return null;
+
   return (
     <div className={`relative bg-[#1a1a1a] border ${stat.bonus > 0 || armorBonus > 0 ? 'border-green-900/50 shadow-[0_0_5px_rgba(34,197,94,0.2)]' : 'border-[#333]'} p-2 pt-3 rounded text-center transition-all group`}>
       {showBadge && (
@@ -159,7 +177,7 @@ const StatBlock: React.FC<{ label: string; stat: Characteristic; onChange: (val:
         </div>
       )}
       <div className="text-[9px] text-gray-500 font-bold uppercase tracking-tighter mb-1">{label}</div>
-      <div className={`text-2xl font-bold ${stat.bonus > 0 || (label === 'S' && armorBonus > 0) ? 'text-green-500' : 'text-white'} gothic-font leading-none mb-2`}>
+      <div className={`text-2xl font-bold ${stat.bonus > 0 || ((label === 'S' || label === 'Ag') && armorBonus > 0) ? 'text-green-500' : 'text-white'} gothic-font leading-none mb-2`}>
         {score}
       </div>
       <div className="flex flex-col gap-0.5 border-t border-[#222] pt-1.5">
@@ -186,10 +204,11 @@ const SectionHeader: React.FC<{ title: string; icon: React.ReactNode }> = ({ tit
   </div>
 );
 
-const ImplantCard: React.FC<{ name: string; effect: string }> = ({ name, effect }) => (
-  <div className="bg-[#111] border border-[#222] p-2 rounded group hover:border-[#8b0000] transition-colors h-full flex flex-col">
-    <div className="text-[9px] font-bold text-[#8b0000] uppercase tracking-tighter mb-1 group-hover:text-red-500 leading-none">{name}</div>
-    <div className="text-[10px] text-gray-400 leading-tight flex-1">{effect}</div>
+const ImplantCard: React.FC<{ name: string; effect: string; redacted?: boolean }> = ({ name, effect, redacted }) => (
+  <div className={`bg-[#111] border ${redacted ? 'border-red-900/50 bg-red-900/10' : 'border-[#222] hover:border-[#8b0000]'} p-2 rounded group transition-colors h-full flex flex-col relative overflow-hidden`}>
+    {redacted && <div className="absolute inset-x-0 top-1/2 h-[2px] bg-red-600/70 -translate-y-1/2 z-20 shadow-[0_0_8px_rgba(255,0,0,0.8)] -rotate-3"></div>}
+    <div className={`text-[9px] font-bold ${redacted ? 'text-red-500 line-through' : 'text-[#8b0000] group-hover:text-red-500'} uppercase tracking-tighter mb-1 leading-none relative z-10`}>{name} {redacted && '(REDACTED)'}</div>
+    <div className={`text-[10px] leading-tight flex-1 relative z-10 ${redacted ? 'text-red-900/70 line-through' : 'text-gray-400'}`}>{effect}</div>
   </div>
 );
 
@@ -375,16 +394,6 @@ const isAdvancedSkill = (name: string) => {
   return advancedPrefixes.some(prefix => name.startsWith(prefix));
 };
 
-const CATEGORY_DESCRIPTIONS: Record<string, string> = {
-  "Common Lore": "The Common Lore skill allows the character to recall general information, procedures, divisions, traditions, famed individuals, and superstitions of a particular world, group, organisation, or race. This skill differs from Scholastic Lore, which represents scholarly learning, and Forbidden Lore, which involves hidden or proscribed knowledge, in that it deals with basic information learned from prolonged exposure to a culture or area.\nSuccess in a Common Lore Test indicates the character recalls general information about the subject. The GM determines what extra information to provide for additional Degrees of Success.",
-  "Forbidden Lore": "Forbidden Lore skills represent knowledge usually hidden, veiled, or proscribed by an organisation or society. Mere possession of this knowledge may cause difficulties for those not associated with the group in question. Excessive knowledge of the hidden truths of the Traitor Legions, for example, can be decidedly bad for one’s health for those outside (or even inside) the Adeptus Astartes. A successful Forbidden Lore Test indicates the character recalls basic information about the subject. The GM reveals additional information as appropriate to the Degree of Success on the roll.",
-  "Scholastic Lore": "Scholastic Lore grants the character knowledge of a particularly complex or esoteric subject. A successful Skill Test allows the character to recall necessary information or research a particular subject if appropriate reference material is readily available. Scholastic Lore grants a depth of knowledge far beyond that of Common Lore, requiring both experience and study to obtain. Scholastic Lore Tests can identify things that fall within the character’s area of expertise, such as a person, book, starship, or machine spirit. Scholastic Lore can overlap with Common Lore and Forbidden Lore in some areas, but it represents more indepth—and academic—information. A character with Common Lore (Imperial Creed) might know conventional information about the Cult of the Emperor and its various organisations and their practices within the Imperium, but one with Scholastic Lore (Imperial Creed) would be able to name the various cults within a subsector and their varying levels of divergence from the Ministorum. Scholastic Lore Tests require no time, as the character either knows the fact or not. Researching, however, requires an Extended Test of a duration and difficulty appropriate to the task at hand.",
-  "Navigation": "The character uses the Navigation Skill to plot a course between two points. The course might be across a continent or across a star system. A successful Navigation Test also provides an estimated travel time based on geography, cosmography, prevailing conditions, weather, and solar winds. Surface navigation is used to navigate across a planet’s surface, using logi-compasses, map readouts, and geographical knowledge. Stellar navigation is used to navigate in space between planets, using star-charts, and carto-mantic rituals. A Navigation Test represents several hours of charting courses, consulting maps, and making necessary trajectory corrections. However, 1 minute is adequate for the purpose of finding the character’s current location.\nSkill Use: 1 minute for simple location; 1d5 hours for plotting courses or routes",
-  "Pilot": "Characters utilise the Pilot Skill to fly anything from personal jump packs, to small atmospheric craft such as landers or guncutters, to void-capable fighters, bombers, and capital vessels. Under normal conditions, piloting does not require a test, but unusual or difficult conditions such as storms, obstacles or dangerous manoeuvres do require a Skill Test. When chasing another vehicle or ship or contesting for position, the character makes an opposed Pilot Test against his opponent. The skill also allows the character to control land-based, hover, or skimmer-type vehicles. Vehicles include Cargo-8s, Rhinos, Land Speeders, Sentinels, and other ground-based transports. Normal driving does not require a test, but a test is required for hazardous conditions, excessive speed, or dangerous manoeuvres.\nSkill Use: Half Action",
-  "Speak Language": "The Speak Language Skill is used to communicate with others using the same language. The Imperium has nearly as many languages as it has star systems, but for all this variety, most can speak or understand a variation of Low Gothic. In most situations, Skill Tests are unnecessary so long as those involved all speak a common tongue. However, communication with those using obscure dialects or cryptic, complex concepts requires a test at an appropriate difficulty.",
-  "Trade": "Trade Skills allow the character to create things, from guns to starships. Characters with this Skill can earn money or reputation plying a trade. They can identify the works of particularly famous or infamous craftsmen, or recall information concerning items of their trade. Trade Tests can represent the work of an hour, week, or month depending on the complexity of the task at hand. However, tests that involve the examination of an item to recall information require a Full Action."
-};
-
 // --- Main App ---
 
 const getAbilityDescription = (name: string): string | undefined => {
@@ -410,6 +419,8 @@ const getAbilityDescription = (name: string): string | undefined => {
   if (chaplain) return chaplain.description;
   const epistolary = DEATHWATCH_EPISTOLARY_ABILITIES.find(a => a.name === name);
   if (epistolary) return epistolary.description;
+  const emperorsChampion = EMPERORS_CHAMPION_ABILITIES.find(a => a.name === name);
+  if (emperorsChampion) return emperorsChampion.description;
   const forgeMaster = DEATHWATCH_FORGE_MASTER_ABILITIES.find(a => a.name === name);
   if (forgeMaster) return forgeMaster.description;
   const keeper = DEATHWATCH_KEEPER_ABILITIES.find(a => a.name === name);
@@ -438,6 +449,8 @@ const getAbilityDescription = (name: string): string | undefined => {
   if (uhg) return uhg.description;
   const sb = SWORD_BROTHER_ABILITIES.find(a => a.name === name);
   if (sb) return sb.description;
+  const tempestBlade = TEMPEST_BLADE_ABILITIES.find(a => a.name === name);
+  if (tempestBlade) return tempestBlade.description;
   const armor = Object.values(ARMOR_ABILITIES).find(a => a.name === name);
   if (armor) return armor.description;
   return undefined;
@@ -711,7 +724,23 @@ const TalentTag: React.FC<{ talent: string }> = ({ talent }) => {
 };
 
 export default function App() {
-  const [character, setCharacter] = useState<CharacterData>(INITIAL_CHARACTER);
+  const [appMode, setAppMode] = useState<'creation' | 'mission'>('creation');
+  const [character, setCharacter] = useState<CharacterData>(() => {
+    const saved = localStorage.getItem('astartes_character');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Failed to parse saved character', e);
+      }
+    }
+    return INITIAL_CHARACTER;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('astartes_character', JSON.stringify(character));
+  }, [character]);
+
   const [activeTab, setActiveTab] = useState<'basics' | 'wargear' | 'psychic' | 'skills' | 'experience' | 'history'>('basics');
   const [showFullCurse, setShowFullCurse] = useState(false);
   const [showFullDemeanor, setShowFullDemeanor] = useState(false);
@@ -750,11 +779,18 @@ export default function App() {
   // Black Shield Modal State
   const [showBlackShieldModal, setShowBlackShieldModal] = useState(false);
 
+  // Blood Ravens Modal State
+  const [showBloodRavensModal, setShowBloodRavensModal] = useState(false);
+
+  // Novamarines Modal State
+  const [showNovamarinesModal, setShowNovamarinesModal] = useState(false);
+
   // Keeper Modal State
   const [showKeeperWeaponModal, setShowKeeperWeaponModal] = useState(false);
 
   // Oath Modal State
   const [showOathModal, setShowOathModal] = useState(false);
+  const [selectedOath, setSelectedOath] = useState<string>('');
 
   // Tactical Marine Ability Modal State
   const [showTacticalMarineAbilityModal, setShowTacticalMarineAbilityModal] = useState(false);
@@ -772,6 +808,7 @@ export default function App() {
   const [levelUpCost, setLevelUpCost] = useState(0);
 
   // Modals state
+  const [showChapterModal, setShowChapterModal] = useState(false);
   const [showCaptainAbilityModal, setShowCaptainAbilityModal] = useState(false);
   const [showFirstCompanyVeteranAbilityModal, setShowFirstCompanyVeteranAbilityModal] = useState(false);
   const [showDeathwingTerminatorAbilityModal, setShowDeathwingTerminatorAbilityModal] = useState(false);
@@ -786,8 +823,31 @@ export default function App() {
   const [isCloseHovered, setIsCloseHovered] = useState(false);
   const [isWeaponCloseHovered, setIsWeaponCloseHovered] = useState(false);
   const [isWeaponSubmitting, setIsWeaponSubmitting] = useState(false);
+  const [customChapterName, setCustomChapterName] = useState("");
+  const [customChapterDemeanorSelection, setCustomChapterDemeanorSelection] = useState("");
+  const [customChapterPuritySelection, setCustomChapterPuritySelection] = useState("Pure");
+  const [customChapterDeficiencySelection, setCustomChapterDeficiencySelection] = useState("");
+  const [customChapterAdditionalDeficiencies, setCustomChapterAdditionalDeficiencies] = useState<string[]>([]);
+  const [customLostZygoteSelections, setCustomLostZygoteSelections] = useState<string[]>([]);
+  const [customChapterModifierSelection, setCustomChapterModifierSelection] = useState("");
+  const [customChapterModifierChoices, setCustomChapterModifierChoices] = useState<string[]>([]);
+  const [customSoloModeSelection, setCustomSoloModeSelection] = useState("");
+  const [customSoloModeSkillChoices, setCustomSoloModeSkillChoices] = useState<string[]>([]);
+  const [customSoloModeCharacteristicChoice, setCustomSoloModeCharacteristicChoice] = useState("");
+  const [customSoloModeChosenAbility, setCustomSoloModeChosenAbility] = useState("");
+  const [customSquadModeAttackPattern, setCustomSquadModeAttackPattern] = useState("");
+  const [customSquadModeChosenAttackPattern, setCustomSquadModeChosenAttackPattern] = useState("");
+  const [customSquadModeDefensiveStance, setCustomSquadModeDefensiveStance] = useState("");
+  const [customSquadModeChosenDefensiveStance, setCustomSquadModeChosenDefensiveStance] = useState("");
+  const [customChapterPsychicPowers, setCustomChapterPsychicPowers] = useState("");
+  const [customChapterRestrictedSpecializations, setCustomChapterRestrictedSpecializations] = useState<string[]>([]);
+  const [customChapterCustomRestrictions, setCustomChapterCustomRestrictions] = useState("");
+  const [customChapterPrimogenitorSelection, setCustomChapterPrimogenitorSelection] = useState("");
+  const [customChapterUsePrimogenitorSelection, setCustomChapterUsePrimogenitorSelection] = useState(false);
+  const [isCreatingCustomChapter, setIsCreatingCustomChapter] = useState(false);
   const [isWargearAccessGranted, setIsWargearAccessGranted] = useState(false);
   const [isReclusiamAccessGranted, setIsReclusiamAccessGranted] = useState(false);
+  const [isRequisitioningDreadWargear, setIsRequisitioningDreadWargear] = useState(false);
   const [showReclusiamView, setShowReclusiamView] = useState(false);
   const [selectedRelics, setSelectedRelics] = useState<Set<number>>(new Set());
   const [isRelicRequisitionApproved, setIsRelicRequisitionApproved] = useState(false);
@@ -796,11 +856,129 @@ export default function App() {
   const [showProtectiveView, setShowProtectiveView] = useState(false);
   const [showAmmoView, setShowAmmoView] = useState(false);
   const [isAmmoAccessGranted, setIsAmmoAccessGranted] = useState(false);
-  const [customWargear, setCustomWargear] = useState({ name: '', description: '' });
+  const [customWargear, setCustomWargear] = useState({ name: '', description: '', isConsumable: false, maxQuantity: 1 });
+
+  // Toast State
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
 
   // Trauma confirmation state
   const [confirmStep, setConfirmStep] = useState<'none' | 'authorizing' | 'confirmed'>('none');
   const [pendingTrauma, setPendingTrauma] = useState<string | null>(null);
+
+  // Emperor's Champion Confirmation State
+  const [showEmperorsChampionConfirm, setShowEmperorsChampionConfirm] = useState(false);
+  const [showRelinquishConfirm, setShowRelinquishConfirm] = useState(false);
+
+  // Purge Character Confirmation State
+  const [showPurgeConfirm, setShowPurgeConfirm] = useState(false);
+
+  const [portrait, setPortrait] = useState<string>(() => {
+    const defaultImg = 'https://i.redd.it/7w14tvb9rahb1.jpg';
+    return localStorage.getItem('astartes_portrait') || defaultImg;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('astartes_portrait', portrait);
+  }, [portrait]);
+
+  // GM Connection State
+  const [showGMModal, setShowGMModal] = useState(false);
+  const [gmSessionId, setGmSessionId] = useState('');
+  const [gmConnectionStatus, setGmConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected');
+  const [characterId] = useState(() => {
+    const saved = localStorage.getItem('astartes_character_id');
+    if (saved) return saved;
+    const newId = crypto.randomUUID();
+    localStorage.setItem('astartes_character_id', newId);
+    return newId;
+  });
+  const firebaseUnsubscribeRef = useRef<(() => void) | null>(null);
+
+  const connectToGM = async () => {
+    if (!gmSessionId) return;
+    
+    let targetSessionId = gmSessionId;
+    try {
+      const u = new URL(gmSessionId);
+      const sessionParam = u.searchParams.get("session");
+      if (sessionParam) {
+        targetSessionId = sessionParam;
+      }
+    } catch (e) {
+      // Not a URL, use as is
+    }
+
+    setGmConnectionStatus('connecting');
+    
+    try {
+      const characterDocRef = doc(db, 'sessions', targetSessionId, 'characters', characterId);
+      
+      // Upload initial character data
+      await setDoc(characterDocRef, { type: 'CHARACTER_DATA', character: { ...character, portrait } }, { merge: true });
+      
+      const unsubscribe = onSnapshot(characterDocRef, (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.data();
+          if (data.type === 'UPDATE_CHARACTER' && data.character) {
+            setCharacter(data.character);
+            if (data.character.portrait) {
+              setPortrait(data.character.portrait);
+            }
+            setToastMessage("Character updated by GM.");
+          }
+        }
+      });
+      
+      firebaseUnsubscribeRef.current = unsubscribe;
+      setGmConnectionStatus('connected');
+      setShowGMModal(false);
+      setToastMessage("Connected to GM Session.");
+    } catch (err) {
+      console.error("Connection error:", err);
+      setGmConnectionStatus('disconnected');
+      setToastMessage("Error connecting to GM.");
+    }
+  };
+
+  const disconnectFromGM = () => {
+    if (firebaseUnsubscribeRef.current) {
+      firebaseUnsubscribeRef.current();
+      firebaseUnsubscribeRef.current = null;
+    }
+    setGmConnectionStatus('disconnected');
+    setToastMessage("Disconnected from GM.");
+  };
+
+  useEffect(() => {
+    if (gmConnectionStatus === 'connected' && gmSessionId) {
+      let targetSessionId = gmSessionId;
+      try {
+        const u = new URL(gmSessionId);
+        const sessionParam = u.searchParams.get("session");
+        if (sessionParam) targetSessionId = sessionParam;
+      } catch (e) {}
+
+      const characterDocRef = doc(db, 'sessions', targetSessionId, 'characters', characterId);
+      setDoc(characterDocRef, { type: 'CHARACTER_DATA', character: { ...character, portrait } }, { merge: true }).catch(err => {
+        console.error("Error updating character in Firebase:", err);
+      });
+    }
+  }, [character, portrait, gmConnectionStatus]);
+
+  useEffect(() => {
+    return () => {
+      if (firebaseUnsubscribeRef.current) {
+        firebaseUnsubscribeRef.current();
+      }
+    };
+  }, []);
 
   // New Weapon form state
   const [weaponType, setWeaponType] = useState<'melee' | 'ranged' | 'explosive'>('ranged');
@@ -819,17 +997,24 @@ export default function App() {
     clip: { current: 0, max: 0 },
     quantity: { current: 1, max: 1 }
   });
-  
-  const [portrait, setPortrait] = useState<string>(() => {
-    const defaultImg = 'https://i.redd.it/7w14tvb9rahb1.jpg';
-    return localStorage.getItem('astartes_portrait') || defaultImg;
+
+  const [isCombiWeapon, setIsCombiWeapon] = useState(false);
+  const [combiWeaponProfile, setCombiWeaponProfile] = useState<Partial<RangedWeapon>>({
+    class: 'Basic',
+    damage: '',
+    pen: 0,
+    special: '',
+    range: '',
+    rof: '',
+    reload: '',
+    clip: { current: 0, max: 0 },
+    ammoType: 'Standard Bolt Rounds',
   });
+  const [combiWeaponDamageDice, setCombiWeaponDamageDice] = useState(1);
+  const [combiWeaponDamageBonus, setCombiWeaponDamageBonus] = useState(0);
+  const [combiWeaponDamageType, setCombiWeaponDamageType] = useState('X');
   
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    localStorage.setItem('astartes_portrait', portrait);
-  }, [portrait]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -966,7 +1151,7 @@ export default function App() {
       // Special Ammo Reload
       const ammoIndex = prev.ammunition.findIndex(a => a.name === ammoType);
       if (ammoIndex === -1) {
-          alert(`No ${ammoType} found in inventory!`);
+          setToastMessage(`No ${ammoType} found in inventory!`);
           return prev;
       }
 
@@ -982,7 +1167,7 @@ export default function App() {
           ammoItem.remainingRounds -= toTake;
           newClipCurrent += toTake;
       } else {
-          alert(`No ${ammoType} remaining!`);
+          setToastMessage(`No ${ammoType} remaining!`);
           return prev; 
       }
 
@@ -1270,7 +1455,7 @@ export default function App() {
     }));
   };
 
-  const getGearForSpec = (spec: string) => {
+  const getGearForSpec = (spec: string, currentChapter?: string) => {
     const specGear = SPECIALIZATION_GEAR[spec];
     let newMelee: MeleeWeapon[] = [...STANDARD_WARGEAR.weapons.melee];
     const newRanged: RangedWeapon[] = [...STANDARD_WARGEAR.weapons.ranged];
@@ -1383,6 +1568,14 @@ export default function App() {
   };
 
   const handleSpecializationChange = (newSpecialization: string) => {
+    const currentChapterData = CHAPTER_DATA[character.chapter] || (character.usePrimogenitorRules && character.customChapterPrimogenitor ? CHAPTER_DATA[character.customChapterPrimogenitor] : undefined);
+    const isRestricted = currentChapterData?.restrictions?.includes(newSpecialization) || character.customChapterRestrictedSpecializations?.includes(newSpecialization);
+    
+    if (isRestricted) {
+      alert(`Validation Error: ${newSpecialization} is restricted by your chapter.`);
+      return;
+    }
+
     const gear = getGearForSpec(newSpecialization);
     setCharacter(prev => {
       // Remove any Apothecary abilities if we are switching away from Apothecary
@@ -1576,6 +1769,19 @@ export default function App() {
   };
 
   const handleAdvancedSpecialityChange = (val: string) => {
+                      const oldRule = ADVANCED_SPECIALITY_RULES.find(r => r.name === character.advancedSpeciality);
+                      const newRule = ADVANCED_SPECIALITY_RULES.find(r => r.name === val);
+                      
+                      const oldCost = oldRule?.xpCost || 0;
+                      const newCost = newRule?.xpCost || 0;
+
+                      if (val !== "None" && val !== character.advancedSpeciality && (character.xpTotal - character.xpSpent + oldCost) < newCost) {
+                        setToastMessage("Not enough XP to acquire " + val + ". Requires " + newCost + " XP.");
+                        return;
+                      }
+
+                      const costDiff = newCost - oldCost;
+
                       let newWeapons = character.weapons;
                       let newAdditionalWargear = character.additionalWargear;
 
@@ -1585,6 +1791,7 @@ export default function App() {
                       let newCohesion = { ...character.cohesion };
                       let newCybernetics = [...character.cybernetics];
                       let newRenown = character.renown;
+                      let newTempestBladeDreadnought = character.tempestBladeDreadnought;
 
                       if (val === "Deathwatch Champion") {
                         const champGear = SPECIALIZATION_GEAR["Deathwatch Champion"];
@@ -2078,6 +2285,53 @@ export default function App() {
                         }
                       } else if (character.advancedSpeciality === "Sword Brother") {
                         newAbilities = newAbilities.filter(a => !SWORD_BROTHER_ABILITIES.map(aa => aa.name).includes(a));
+                      } else if (character.advancedSpeciality === "Tempest Blade") {
+                        if (["Deathwatch Dreadnought", "Furioso Dreadnought", "Librarian Dreadnought", "Ironclad Dreadnought"].includes(val)) {
+                          // Retaining Tempest Blade logic when turning into Dreadnought
+                          newTempestBladeDreadnought = true;
+                        } else {
+                          const gear = SPECIALIZATION_GEAR["Tempest Blade"];
+                          if (gear && gear.weapons?.melee) {
+                            const gearIds = gear.weapons.melee.map(w => w.id);
+                            newWeapons = {
+                              ...newWeapons,
+                              melee: newWeapons.melee.filter(w => !gearIds.includes(w.id))
+                            };
+                          }
+                          newAbilities = newAbilities.filter(a => !TEMPEST_BLADE_ABILITIES.map(aa => aa.name).includes(a));
+                          newTalents = newTalents.filter(t => t !== "Two-Handed Weapon Expertise");
+                        }
+                      } else if (character.tempestBladeDreadnought && !["Deathwatch Dreadnought", "Furioso Dreadnought", "Librarian Dreadnought", "Ironclad Dreadnought"].includes(val)) {
+                         // Removed dreadnought, need to strip tempest blade too because it was retained
+                         newTempestBladeDreadnought = false;
+                         const gear = SPECIALIZATION_GEAR["Tempest Blade"];
+                         if (gear && gear.weapons?.melee) {
+                            const gearIds = gear.weapons.melee.map(w => w.id);
+                            newWeapons = {
+                              ...newWeapons,
+                              melee: newWeapons.melee.filter(w => !gearIds.includes(w.id))
+                            };
+                          }
+                          newAbilities = newAbilities.filter(a => !TEMPEST_BLADE_ABILITIES.map(aa => aa.name).includes(a));
+                          newTalents = newTalents.filter(t => t !== "Two-Handed Weapon Expertise");
+                      }
+
+                      if (val === "Tempest Blade") {
+                        const gear = SPECIALIZATION_GEAR["Tempest Blade"];
+                        if (gear && gear.weapons?.melee) {
+                          newWeapons = {
+                            ...newWeapons,
+                            melee: [...newWeapons.melee, ...gear.weapons.melee]
+                          };
+                        }
+                        TEMPEST_BLADE_ABILITIES.forEach(ability => {
+                          if (!newAbilities.includes(ability.name)) {
+                            newAbilities.push(ability.name);
+                          }
+                        });
+                        if (!newTalents.includes("Two-Handed Weapon Expertise")) {
+                          newTalents.push("Two-Handed Weapon Expertise");
+                        }
                       }
 
                       if (val === "Deathwatch Forge Master") {
@@ -2283,52 +2537,148 @@ export default function App() {
                         }
                       }
 
-                      const isDreadnought = (v: string) => ["Deathwatch Dreadnought", "Furioso Dreadnought", "Librarian Dreadnought"].includes(v);
+                      const isDreadnought = (v: string) => ["Deathwatch Dreadnought", "Furioso Dreadnought", "Librarian Dreadnought", "Ironclad Dreadnought"].includes(v);
+
+                      let newDreadnoughtWeapons = character.dreadnoughtWeapons;
+                      let newWounds = character.wounds;
+                      let newMarineWounds = character.marineWounds;
+                      let newStructuralIntegrity = character.structuralIntegrity;
 
                       if (isDreadnought(val)) {
-                        // Set Strength to 70 and Agility to 20
-                        newCharacteristics.S.base = 70;
-                        newCharacteristics.Ag.base = 20;
+                        // Set Strength to 70 and Agility to 0
+                        newCharacteristics.S.base = val === "Ironclad Dreadnought" ? 75 : 70;
+                        newCharacteristics.Ag.base = val === "Furioso Dreadnought" ? 35 : 0;
 
-                        // Add Talent
-                        if (!newTalents.includes("Peer (Adeptus Astartes)")) {
-                          newTalents.push("Peer (Adeptus Astartes)");
-                        }
+                        // Add Talents
+                        const dreadnoughtTalents = ["Peer (Adeptus Astartes)", "Two-Weapon Wielder (Melee)", "Two-Weapon Wielder (Ballistic)", "Fearless"];
+                        dreadnoughtTalents.forEach(t => {
+                          if (!newTalents.includes(t)) {
+                            newTalents.push(t);
+                          }
+                        });
 
                         // Add Traits
                         const dreadnoughtTraits = ["Auto-stabilised", "Engine of War", "Size (Enormous)", "Sturdy", "Weight of Years"];
+                        if (val === "Librarian Dreadnought") dreadnoughtTraits.push("The price of eternal service");
+                        
                         dreadnoughtTraits.forEach(t => {
                           if (!newTraits.includes(t)) {
                             newTraits.push(t);
                           }
                         });
+
+                        // Set up dreadnought weapons and clear normal ones
+                        if (!isDreadnought(character.advancedSpeciality) || character.advancedSpeciality !== val) {
+                          if (!isDreadnought(character.advancedSpeciality)) {
+                            newWeapons = { ranged: [], melee: [], explosives: [] };
+                            // Halve wounds and set structural integrity
+                            const halvedWounds = Math.ceil(character.wounds.max / 2);
+                            newWounds = { current: halvedWounds, max: halvedWounds };
+                            newMarineWounds = character.wounds.max;
+                          }
+                          
+                          newDreadnoughtWeapons = {
+                            rightArm: (val === "Furioso Dreadnought" || val === "Librarian Dreadnought") ? "Bloodfist (with Storm Bolter)" : (val === "Ironclad Dreadnought" ? "Dreadnought Close Combat Weapon (with Storm Bolter)" : "Assault Cannon"),
+                            leftArm: (val === "Furioso Dreadnought" || val === "Librarian Dreadnought") ? "Bloodfist (with Meltagun)" : (val === "Ironclad Dreadnought" ? "Seismic Hammer (with Astartes Heavy Flamer)" : "Dreadnought Close Combat Weapon (with Storm Bolter)")
+                          };
+                          
+                          newStructuralIntegrity = { current: (val === "Ironclad Dreadnought" || val === "Furioso Dreadnought" || val === "Librarian Dreadnought") ? 35 : 45, max: (val === "Ironclad Dreadnought" || val === "Furioso Dreadnought" || val === "Librarian Dreadnought") ? 35 : 45 };
+                          
+                          // Set Armor
+                          const ad = ARMOR_PATTERNS[val === "Ironclad Dreadnought" ? "Ironclad Dreadnought" : (val === "Furioso Dreadnought" ? "Furioso Dreadnought" : (val === "Librarian Dreadnought" ? "Librarian Dreadnought" : "Astartes Dreadnought"))];
+                          if (ad) {
+                              newArmor = {
+                                  name: ad.name,
+                                  pattern: ad.name,
+                                  head: ad.head, torso: ad.torso, rightArm: ad.rightArm, leftArm: ad.leftArm, rightLeg: ad.rightLeg, leftLeg: ad.leftLeg,
+                                  abilities: ad.abilities,
+                                  historySlots: ad.historySlots,
+                                  histories: [],
+                                  trappings: newArmor.trappings
+                              };
+                              if (val === "Librarian Dreadnought") {
+                                if (Array.isArray(newArmor.trappings)) {
+                                  if (!newArmor.trappings.includes("Psychic Hood")) newArmor.trappings.push("Psychic Hood");
+                                } else {
+                                  newArmor.trappings = [...(newArmor.trappings ? [newArmor.trappings] : []), "Psychic Hood"];
+                                }
+                              }
+                          }
+                        }
                       } else if (isDreadnought(character.advancedSpeciality)) {
                         // Reset Strength and Agility to base 40
                         newCharacteristics.S.base = 40;
                         newCharacteristics.Ag.base = 40;
 
-                        // Remove Talent
-                        newTalents = newTalents.filter(t => t !== "Peer (Adeptus Astartes)");
+                        // Remove Talents
+                        const dreadnoughtTalents = ["Peer (Adeptus Astartes)", "Two-Weapon Wielder (Melee)", "Two-Weapon Wielder (Ballistic)", "Fearless"];
+                        newTalents = newTalents.filter(t => !dreadnoughtTalents.includes(t));
 
                         // Remove Traits
                         const dreadnoughtTraits = ["Auto-stabilised", "Engine of War", "Size (Enormous)", "Sturdy", "Weight of Years"];
                         newTraits = newTraits.filter(t => !dreadnoughtTraits.includes(t));
+
+                        // Clear dreadnought weapons
+                        newDreadnoughtWeapons = undefined;
+                        
+                        // Restore Marine Wounds
+                        if (character.marineWounds) {
+                           newWounds = { current: character.marineWounds, max: character.marineWounds };
+                           newMarineWounds = undefined;
+                        }
+                        
+                        // Clear structural integrity
+                        newStructuralIntegrity = undefined;
+                        
+                        // Clear structural integrity
+                        newStructuralIntegrity = undefined;
+                        
+                        // Reset Armor
+                        const mk7 = ARMOR_PATTERNS["MK VII Aquila"];
+                        if (mk7) {
+                            newArmor = {
+                                name: "Mk VII Aquila Power Armor",
+                                pattern: "MK VII Aquila",
+                                head: mk7.head, torso: mk7.torso, rightArm: mk7.rightArm, leftArm: mk7.leftArm, rightLeg: mk7.rightLeg, leftLeg: mk7.leftLeg,
+                                abilities: mk7.abilities,
+                                historySlots: mk7.historySlots,
+                                histories: [],
+                                trappings: []
+                            };
+                        }
+                      }
+
+                      const newHistory = character.advancementHistory ? [...character.advancementHistory] : [];
+                      
+                      if (val !== "None" && val !== character.advancedSpeciality) {
+                        newHistory.push({
+                          type: 'advanced specialty',
+                          name: val,
+                          cost: newCost
+                        });
                       }
 
                       setCharacter({
                         ...character, 
                         advancedSpeciality: val,
+                        xpSpent: character.xpSpent + costDiff,
                         weapons: newWeapons,
                         additionalWargear: newAdditionalWargear,
+                        dreadnoughtWeapons: newDreadnoughtWeapons,
+                        wounds: newWounds,
+                        marineWounds: newMarineWounds,
+                        structuralIntegrity: newStructuralIntegrity,
+                        armor: newArmor,
                         abilities: newAbilities,
                         talents: newTalents,
                         skills: newSkills,
                         traits: newTraits,
                         characteristics: newCharacteristics,
-                        armor: newArmor,
                         cybernetics: newCybernetics,
                         cohesion: newCohesion,
                         renown: newRenown,
+                        tempestBladeDreadnought: newTempestBladeDreadnought,
+                        advancementHistory: newHistory,
                         ...(val === "Deathwatch Black Shield" && !character.blackShieldChoices ? {
                           blackShieldChoices: {
                             attackPattern: "",
@@ -2345,64 +2695,213 @@ export default function App() {
                       }
                       };
 
-  const handleChapterChange = (chapterName: string) => {
-    const data = CHAPTER_DATA[chapterName];
-    if (!data) {
-      setCharacter(prev => ({ ...prev, chapter: chapterName }));
-      return;
+  const handleChapterChange = (chapterName: string, customDemeanor?: string, customPurity?: string, customDeficiency?: string, additionalDeficiencies?: string[], customPrimogenitor?: string, usePrimogenitorRules?: boolean, customLostZygotes?: string[], customModName?: string, customModChoices?: string[], customSoloModeName?: string, customSoloModeSkillChoices?: string[], customSoloModeCharChoice?: string, customSoloModeAbility?: string, customSquadModeAttackPattern?: string, customSquadModeChosenAttackPattern?: string, customSquadModeDefensiveStance?: string, customSquadModeChosenDefensiveStance?: string, customPsychicPowers?: string, customRestrictedSpecializations?: string[], customCustomRestrictions?: string) => {
+    let data = CHAPTER_DATA[chapterName];
+    let applyPrimogenitorRules = false;
+
+    // Use primogenitor data if it's a custom chapter and usePrimogenitorRules is true
+    if (!data && customPrimogenitor && usePrimogenitorRules) {
+      data = CHAPTER_DATA[customPrimogenitor];
+      applyPrimogenitorRules = true;
     }
+
     const newChars = { ...character.characteristics };
+
     // Reset bonuses
     (Object.keys(newChars) as Array<keyof Characteristics>).forEach(key => newChars[key].bonus = 0);
-    // Apply new bonuses
-    Object.entries(data.modifiers).forEach(([stat, val]) => {
-      const key = stat as keyof Characteristics;
-      if (newChars[key]) newChars[key].bonus = val;
-    });
+
+    // Apply new bonuses based on data (primogenitor or existing chapter)
+    let woundsBonus = 0;
+    if (data && data.modifiers) {
+      Object.entries(data.modifiers).forEach(([stat, val]) => {
+        if (stat === 'woundsBonus') {
+          woundsBonus = val;
+        } else {
+          const key = stat as keyof Characteristics;
+          if (newChars[key]) newChars[key].bonus = val;
+        }
+      });
+    }
+
+    // Apply custom modifiers if no data or not using primogenitor rules, and customModName is provided
+    if (!data && customModName) {
+      const customMod = CUSTOM_CHAPTER_MODIFIERS.find(m => m.name === customModName);
+      if (customMod && customMod.modifiers) {
+        Object.entries(customMod.modifiers).forEach(([stat, val]) => {
+          if (stat === 'woundsBonus') {
+            woundsBonus = val;
+          } else {
+            const key = stat as keyof Characteristics;
+            if (newChars[key]) newChars[key].bonus = val;
+          }
+        });
+        
+        // Handle choices for +5 to any characteristic
+        if (customModChoices && customModChoices.length > 0) {
+          customModChoices.forEach(choice => {
+             const key = choice as keyof Characteristics;
+             if (newChars[key]) {
+               newChars[key].bonus += 5; // accumulate in case they picked the same or there are two
+             }
+          });
+        }
+      }
+    }
+
+    let resolvedSoloMode = "";
+    if (data) {
+      resolvedSoloMode = data.soloAbility;
+    } else if (customSoloModeName) {
+      resolvedSoloMode = customSoloModeName;
+    }
 
     // Check if current specialization is restricted
     let newSpecialization = character.specialization;
     let newWeapons = character.weapons;
     let newAdditionalWargear = character.additionalWargear;
     let newCybernetics = character.cybernetics;
+    
+    let activeRestrictions = [...(data?.restrictions || []), ...(customRestrictedSpecializations || [])];
 
-    if (data.restrictions.includes(newSpecialization)) {
-      // Default to Tactical Marine if restricted, or the first available one
-      newSpecialization = SPECIALIZATIONS.find(s => !data.restrictions.includes(s)) || "Tactical Marine";
-      const gear = getGearForSpec(newSpecialization);
+    if (activeRestrictions.includes(newSpecialization)) {
+      alert(`The currently selected specialization (${newSpecialization}) is restricted by this chapter. Please choose another specialization.`);
+      newSpecialization = "Awaiting astartes specialization";
+      const gear = getGearForSpec(newSpecialization, chapterName);
       newWeapons = gear.weapons;
       newAdditionalWargear = gear.additionalWargear;
       newCybernetics = gear.cybernetics || [];
     }
 
-    const chapterAttackPatterns = Object.values(CHAPTER_ATTACK_PATTERNS)
-      .filter(p => p.chapter === chapterName)
-      .map(p => p.name);
+    const chapterNameForAbilities = applyPrimogenitorRules ? customPrimogenitor! : chapterName;
 
-    const chapterDefensiveStances = Object.values(CHAPTER_DEFENSIVE_STANCES)
-      .filter(p => p.chapter === chapterName)
-      .map(p => p.name);
+    const chapterAttackPatterns = Object.entries(CHAPTER_ATTACK_PATTERNS)
+      .filter(([_, p]) => p.chapter === chapterNameForAbilities)
+      .map(([k, _]) => k);
 
-    setCharacter(prev => ({
-      ...prev,
-      chapter: chapterName,
-      specialization: newSpecialization,
-      characteristics: newChars,
-      chapterDemeanor: data.demeanorName,
-      soloModeAbility: data.soloAbility,
-      talents: [...new Set([...INITIAL_CHARACTER.talents, ...data.talents])],
-      wounds: {
-        ...prev.wounds,
-        max: INITIAL_CHARACTER.wounds.max + (data.woundsBonus || 0)
-      },
-      weapons: newWeapons,
-      additionalWargear: newAdditionalWargear,
-      cybernetics: newCybernetics,
-      squadModeAbilities: {
-        defensive: [...INITIAL_CHARACTER.squadModeAbilities.defensive, ...chapterDefensiveStances],
-        attack: [...INITIAL_CHARACTER.squadModeAbilities.attack, ...chapterAttackPatterns]
+    const chapterDefensiveStances = Object.entries(CHAPTER_DEFENSIVE_STANCES)
+      .filter(([_, p]) => p.chapter === chapterNameForAbilities)
+      .map(([k, _]) => k);
+
+    setCharacter(prev => {
+      let newAbilities = prev.abilities || [];
+      if (prev.specialization === "Apothecary" && newSpecialization !== "Apothecary") {
+        newAbilities = newAbilities.filter(a => !APOTHECARY_ABILITIES.map(aa => aa.name).includes(a));
       }
-    }));
+      if (prev.specialization === "Assault Marine" && newSpecialization !== "Assault Marine") {
+        newAbilities = newAbilities.filter(a => !ASSAULT_MARINE_ABILITIES.map(aa => aa.name).includes(a));
+        newAbilities = newAbilities.filter(a => a !== "Angel of Death");
+      }
+      if (prev.specialization === "Devastator Marine" && newSpecialization !== "Devastator Marine") {
+        newAbilities = newAbilities.filter(a => !DEVASTATOR_MARINE_ABILITIES.map(aa => aa.name).includes(a));
+      }
+      if (prev.specialization === "Tactical Marine" && newSpecialization !== "Tactical Marine") {
+        newAbilities = newAbilities.filter(a => !TACTICAL_MARINE_ABILITIES.map(aa => aa.name).includes(a));
+      }
+      if (prev.specialization === "Techmarine" && newSpecialization !== "Techmarine") {
+        newAbilities = newAbilities.filter(a => a !== "Improve Cover");
+      }
+      if (prev.specialization === "Librarian" && newSpecialization !== "Librarian") {
+        newAbilities = newAbilities.filter(a => a !== "Battle-psyker");
+      }
+
+      let newTraits = prev.traits || [];
+      if (prev.specialization === "Techmarine" && newSpecialization !== "Techmarine") {
+        newTraits = newTraits.filter(t => t !== "Mechanicus Implants");
+      }
+
+      const newChar = {
+        ...prev,
+        chapter: chapterName,
+        customChapterDemeanor: customDemeanor || "",
+        geneSeedPurity: customPurity || "Pure",
+        geneSeedDeficiency: customDeficiency || "",
+        additionalGeneSeedDeficiencies: additionalDeficiencies || [],
+        customLostZygotes: customLostZygotes || [],
+        customChapterPrimogenitor: customPrimogenitor || "",
+        usePrimogenitorRules: usePrimogenitorRules || false,
+        customChapterModifierName: customModName || "",
+        customChapterModifierChoices: customModChoices || [],
+        customSoloModeName: customSoloModeName || "",
+        customSoloModeSkillChoices: customSoloModeSkillChoices || [],
+        customSoloModeCharacteristicChoice: customSoloModeCharChoice || "",
+        customSoloModeChosenAbility: customSoloModeAbility || "",
+        customSquadModeAttackPattern: customSquadModeAttackPattern || "",
+        customSquadModeChosenAttackPattern: customSquadModeChosenAttackPattern || "",
+        customSquadModeDefensiveStance: customSquadModeDefensiveStance || "",
+        customSquadModeChosenDefensiveStance: customSquadModeChosenDefensiveStance || "",
+        customChapterPsychicPowers: customPsychicPowers || "",
+        customChapterRestrictedSpecializations: customRestrictedSpecializations || [],
+        customChapterCustomRestrictions: customCustomRestrictions || "",
+        specialization: newSpecialization,
+        characteristics: newChars,
+        chapterDemeanor: data?.demeanorName || "",
+        soloModeAbility: resolvedSoloMode,
+        abilities: newAbilities,
+        traits: newTraits,
+        talents: [...new Set([...INITIAL_CHARACTER.talents, ...(data?.talents || [])])],
+        skills: [...INITIAL_CHARACTER.skills],
+        wounds: {
+          ...prev.wounds,
+          max: INITIAL_CHARACTER.wounds.max + woundsBonus,
+          current: Math.min(prev.wounds.current, INITIAL_CHARACTER.wounds.max + woundsBonus)
+        },
+        weapons: newWeapons,
+        additionalWargear: newAdditionalWargear,
+        cybernetics: newCybernetics,
+        squadModeAbilities: {
+          defensive: [...INITIAL_CHARACTER.squadModeAbilities.defensive, ...chapterDefensiveStances],
+          attack: [...INITIAL_CHARACTER.squadModeAbilities.attack, ...chapterAttackPatterns]
+        }
+      };
+
+      // Merge new skills (if any specified by chapter) using the Experience Tab logic
+      const newChapterSkills = (data as any)?.skills || [];
+      newChapterSkills.forEach((skillName: string) => {
+        const matchedSkill = ALL_SKILLS.find(s => s.name.toLowerCase() === skillName.toLowerCase());
+        const finalName = matchedSkill ? matchedSkill.name : skillName;
+        
+        // Treat as if bought via XP if it doesn't already exist from base stats
+        const existingSkillIndex = newChar.skills.findIndex(s => s.name.toLowerCase() === finalName.toLowerCase());
+        
+        if (existingSkillIndex >= 0) {
+          // If it already existed in base skills, increase mastery by 1 
+          // (matching how buying a known skill via XP increments the mastery bonus)
+          newChar.skills[existingSkillIndex] = {
+            ...newChar.skills[existingSkillIndex],
+            mastery: newChar.skills[existingSkillIndex].mastery + 1
+          };
+        } else {
+          // Add it to skills
+          newChar.skills = [...newChar.skills, {
+            name: finalName,
+            characteristic: matchedSkill ? matchedSkill.characteristic as any : "Int",
+            mastery: 1, // Start with mastery 1
+            description: matchedSkill && 'description' in matchedSkill ? matchedSkill.description : ""
+          }].sort((a, b) => a.name.localeCompare(b.name));
+        }
+        
+        // Also add an entry to advancement history to show it was granted by the chapter
+        const newHistory = newChar.advancementHistory ? [...newChar.advancementHistory] : [];
+        // Avoid duplicate entries in history
+        if (!newHistory.some(adv => adv.name === finalName && adv.type === 'skill')) {
+          newHistory.push({
+            type: 'skill',
+            name: finalName,
+            cost: 0 // Free
+          });
+          newChar.advancementHistory = newHistory;
+        }
+      });
+      
+      return newChar;
+    });
+
+    if (chapterName === "Blood Ravens") {
+      setShowBloodRavensModal(true);
+    }
+    if (chapterName === "Novamarines") {
+      setShowNovamarinesModal(true);
+    }
   };
 
   const getAvailablePsychicPowers = () => {
@@ -2413,6 +2912,8 @@ export default function App() {
       if (!cat) return true;
       if (cat === "Telepathy powers" || cat === "Divination powers" || cat === "Codex powers" || cat === "Epistolary powers") return true;
       if (cat === `${character.chapter} powers`) return true;
+      if (character.usePrimogenitorRules && character.customChapterPrimogenitor && cat === `${character.customChapterPrimogenitor} powers`) return true;
+      if (character.customChapterPsychicPowers && cat === `${character.customChapterPsychicPowers} powers`) return true;
       return false;
     });
   };
@@ -2431,6 +2932,12 @@ export default function App() {
     
     const reqs: { condition: boolean, description: string }[] = [];
     switch (powerName) {
+      case "Ancestral Strength":
+        reqs.push({ condition: wp >= 40, description: "WP 40+" });
+        break;
+      case "Vulnerability":
+        reqs.push({ condition: wp >= 40, description: "WP 40+" });
+        break;
       case "Astrotelepathy":
         reqs.push({ condition: telepathyPowers.length > 0, description: "One or more Telepathic powers" });
         break;
@@ -2452,10 +2959,52 @@ export default function App() {
       case "Divination":
         reqs.push({ condition: wp >= 40, description: "WP 40+" });
         break;
+      case "Battle Sight":
+        reqs.push({ condition: getCharScore(characterState.characteristics.Int) >= 40, description: "Int 40+" });
+        break;
+      case "Truth Seeker":
+        reqs.push({ condition: getCharScore(characterState.characteristics.Int) >= 40, description: "Int 40+" });
+        break;
+      case "Warp Whispers":
+        reqs.push({ condition: wp >= 40, description: "WP 40+" });
+        break;
+      case "Darkness Gate":
+        reqs.push({ condition: getCharScore(characterState.characteristics.Per) >= 40, description: "Per 40+" });
+        break;
+      case "Void Hammer":
+        reqs.push({ condition: wp >= 40, description: "WP 40+" });
+        break;
+      case "Summon Guardian":
+        reqs.push({ condition: wp >= 40, description: "WP 40+" });
+        break;
+      case "Bone Breaker":
+        reqs.push({ condition: getCharScore(characterState.characteristics.S) >= 45, description: "S 45+" });
+        break;
+      case "Tormented Flesh":
+        reqs.push({ condition: wp >= 40, description: "WP 40+" });
+        break;
+      case "Word of the Codex Astartes":
+        reqs.push({ condition: getCharScore(characterState.characteristics.Fel) >= 40, description: "Fel 40+" });
+        break;
+      case "Screaming Eagles":
+        reqs.push({ condition: wp >= 35, description: "WP 35+" });
+        break;
+      case "Raptor's Wings":
+        reqs.push({ condition: wp >= 40, description: "WP 40+" });
+        break;
+      case "From the Depths":
+        reqs.push({ condition: characterState.skills.some(s => s.name === "Concealment" && s.mastery >= 2) && characterState.skills.some(s => s.name === "Silent Move" && s.mastery >= 2), description: "Concealment +10, Silent Move +10" });
+        break;
+      case "Rending Maw":
+        reqs.push({ condition: wp >= 50, description: "WP 50+" });
+        break;
       case "Lifting the Veil":
         reqs.push({ condition: powers.includes("Psychometry") && wp >= 40, description: "Psychometry, WP 40+" });
         break;
       case "Possibility Shield":
+        reqs.push({ condition: wp >= 40, description: "WP 40+" });
+        break;
+      case "Periclitor's Bane":
         reqs.push({ condition: wp >= 40, description: "WP 40+" });
         break;
       case "Psychometry":
@@ -2499,6 +3048,9 @@ export default function App() {
         break;
       case "Mind Worm":
         reqs.push({ condition: rank >= 5 && wp >= 50, description: "Rank 5, WP 50+" });
+        break;
+      case "Razor Blades":
+        reqs.push({ condition: wp >= 35, description: "WP 35+" });
         break;
       case "Fury of the Wolf Spirits":
         reqs.push({ condition: rank >= 5 && wp >= 40, description: "Rank 5, WP 40+" });
@@ -2564,6 +3116,12 @@ export default function App() {
       case "Bond of Brotherhood":
         reqs.push({ condition: characterState.advancedSpeciality === "Deathwatch Epistolary", description: "Must be Deathwatch Epistolary" });
         break;
+      case "Bloody Fist":
+        reqs.push({ condition: wp >= 45, description: "WP 45+" });
+        break;
+      case "Hammer of Man":
+        reqs.push({ condition: wp >= 35, description: "WP 35+" });
+        break;
     }
     
     if (reqs.length === 0) return { isRedacted: false, description: "" };
@@ -2575,26 +3133,42 @@ export default function App() {
   };
 
   const getActiveDefensiveStances = () => {
+    let base = [...(character.squadModeAbilities?.defensive || [])].filter(a => a !== "Overwatch" && a !== "Stealth Advance");
+    
     if (character.advancedSpeciality === "Deathwatch Black Shield") {
-      const base = character.squadModeAbilities.defensive.filter(a => !CHAPTER_DEFENSIVE_STANCES[a]);
+      base = base.filter(a => !CHAPTER_DEFENSIVE_STANCES[a]);
       if (character.blackShieldChoices?.defensiveStance) {
         base.push(character.blackShieldChoices.defensiveStance);
       }
-      return base;
+    } else if (character.customSquadModeDefensiveStance) {
+       base = base.filter(a => !CHAPTER_DEFENSIVE_STANCES[a]);
+       if (character.customSquadModeDefensiveStance === "Followers of the doctrine" && character.customSquadModeChosenDefensiveStance) {
+         base.push(character.customSquadModeChosenDefensiveStance);
+       } else {
+         base.push(character.customSquadModeDefensiveStance);
+       }
     }
-    return character.squadModeAbilities.defensive;
+    return base;
   };
 
   const getActiveAttackPatterns = () => {
     if (!character.squadModeAbilities || Array.isArray(character.squadModeAbilities) || !character.squadModeAbilities.attack) return [];
+    let base = [...character.squadModeAbilities.attack];
+    
     if (character.advancedSpeciality === "Deathwatch Black Shield") {
-      const base = character.squadModeAbilities.attack.filter(a => !CHAPTER_ATTACK_PATTERNS[a]);
+      base = base.filter(a => !CHAPTER_ATTACK_PATTERNS[a]);
       if (character.blackShieldChoices?.attackPattern) {
         base.push(character.blackShieldChoices.attackPattern);
       }
-      return base;
+    } else if (character.customSquadModeAttackPattern) {
+       base = base.filter(a => !CHAPTER_ATTACK_PATTERNS[a]);
+       if (character.customSquadModeAttackPattern === "Followers of the doctrine" && character.customSquadModeChosenAttackPattern) {
+         base.push(character.customSquadModeChosenAttackPattern);
+       } else {
+         base.push(character.customSquadModeAttackPattern);
+       }
     }
-    return character.squadModeAbilities.attack;
+    return base;
   };
 
   const renderSquadModeAbilities = () => (
@@ -2605,13 +3179,31 @@ export default function App() {
           {getActiveDefensiveStances().length > 0 ? (
             getActiveDefensiveStances().map(a => {
               const codexAbility = CODEX_DEFENSIVE_STANCES.find(stance => stance.name === a);
-              const chapterAbility = CHAPTER_DEFENSIVE_STANCES[a];
+              let chapterAbility = CHAPTER_DEFENSIVE_STANCES[a];
+              if (!chapterAbility) {
+                chapterAbility = Object.values(CHAPTER_DEFENSIVE_STANCES).find(p => p.name === a && p.chapter === character.chapter);
+              }
+              const customChapterAbilityDesc = CUSTOM_CHAPTER_DEFENSIVE_STANCES.find(stance => stance.name === a);
+              let customChapterAbility;
+              if (customChapterAbilityDesc) {
+                  customChapterAbility = {
+                      name: customChapterAbilityDesc.name,
+                      chapter: character.chapter,
+                      action: customChapterAbilityDesc.description.split("Action: ")[1]?.split(",")[0] || "Custom",
+                      cost: parseInt(customChapterAbilityDesc.description.split("Cost: ")[1]?.split(",")[0]) || 0,
+                      sustained: customChapterAbilityDesc.description.split("Sustained: ")[1]?.split(".")[0] === "Yes",
+                      effects: (customChapterAbilityDesc as any).effects || customChapterAbilityDesc.description,
+                      improvement: (customChapterAbilityDesc as any).improvement || ""
+                  }
+              }
               const customName = (character.advancedSpeciality === "Deathwatch Black Shield" && a === character.blackShieldChoices?.defensiveStance && character.blackShieldChoices?.defensiveStanceName) ? character.blackShieldChoices.defensiveStanceName : undefined;
               
               if (codexAbility) {
                 return <SquadModeAbilityTag key={a} ability={codexAbility} customName={customName} />;
               } else if (chapterAbility) {
                 return <SquadModeAbilityTag key={a} ability={chapterAbility} customName={customName} />;
+              } else if (customChapterAbility) {
+                return <SquadModeAbilityTag key={a} ability={customChapterAbility} customName={customName} />;
               }
               return (
                 <span key={a} className="text-[10px] bg-[#ffd700]/10 border border-[#ffd700] px-3 py-1 rounded text-[#ffd700] font-bold uppercase tracking-widest">{customName || a}</span>
@@ -2628,13 +3220,32 @@ export default function App() {
           {getActiveAttackPatterns().length > 0 ? (
             getActiveAttackPatterns().map(a => {
               const codexAbility = CODEX_ATTACK_PATTERNS.find(pattern => pattern.name === a);
-              const chapterAbility = CHAPTER_ATTACK_PATTERNS[a];
+              let chapterAbility = CHAPTER_ATTACK_PATTERNS[a];
+              if (!chapterAbility) {
+                // Graceful fallback for outdated localized names in cache
+                chapterAbility = Object.values(CHAPTER_ATTACK_PATTERNS).find(p => p.name === a && p.chapter === character.chapter);
+              }
+              const customChapterAbilityDesc = CUSTOM_CHAPTER_ATTACK_PATTERNS.find(stance => stance.name === a);
+              let customChapterAbility;
+              if (customChapterAbilityDesc) {
+                  customChapterAbility = {
+                      name: customChapterAbilityDesc.name,
+                      chapter: character.chapter,
+                      action: customChapterAbilityDesc.description.split("Action: ")[1]?.split(",")[0] || "Custom",
+                      cost: parseInt(customChapterAbilityDesc.description.split("Cost: ")[1]?.split(",")[0]) || 0,
+                      sustained: customChapterAbilityDesc.description.split("Sustained: ")[1]?.split(".")[0] === "Yes",
+                      effects: (customChapterAbilityDesc as any).effects || customChapterAbilityDesc.description,
+                      improvement: (customChapterAbilityDesc as any).improvement || ""
+                  }
+              }
               const customName = (character.advancedSpeciality === "Deathwatch Black Shield" && a === character.blackShieldChoices?.attackPattern && character.blackShieldChoices?.attackPatternName) ? character.blackShieldChoices.attackPatternName : undefined;
 
               if (codexAbility) {
                 return <SquadModeAbilityTag key={a} ability={codexAbility} customName={customName} />;
               } else if (chapterAbility) {
                 return <SquadModeAbilityTag key={a} ability={chapterAbility} customName={customName} />;
+              } else if (customChapterAbility) {
+                return <SquadModeAbilityTag key={a} ability={customChapterAbility} customName={customName} />;
               }
               return (
                 <span key={a} className="text-[10px] bg-[#ffd700]/10 border border-[#ffd700] px-3 py-1 rounded text-[#ffd700] font-bold uppercase tracking-widest">{customName || a}</span>
@@ -2665,9 +3276,31 @@ export default function App() {
         );
       }
     } else if (character.advancedSpeciality !== "Deathwatch Black Shield") {
-      const abilities = Object.values(CHAPTER_SOLO_MODE_ABILITIES).filter(ability => ability.chapter === character.chapter || ability.name === character.soloModeAbility);
-      if (abilities.length > 0) {
-        specificSoloAbility = abilities.map(ability => (
+      let activeAbilities = Object.values(CHAPTER_SOLO_MODE_ABILITIES).filter(ability => ability.chapter === character.chapter || ability.name === character.soloModeAbility);
+      
+      if (character.customSoloModeName === "Parent Chapter Doctrine" && character.customSoloModeChosenAbility) {
+        activeAbilities = Object.values(CHAPTER_SOLO_MODE_ABILITIES).filter(ability => ability.name === character.customSoloModeChosenAbility);
+      } else if (character.customSoloModeName && character.customSoloModeName !== "Parent Chapter Doctrine") {
+        const customMod = CUSTOM_CHAPTER_SOLO_MODES.find(m => m.name === character.customSoloModeName);
+        if (customMod) {
+          let effects = (customMod as any).effects || customMod.description;
+          if (character.customSoloModeSkillChoices && character.customSoloModeSkillChoices.length > 0) {
+            effects += `\nChosen Skills: ${character.customSoloModeSkillChoices.join(', ')}`;
+          }
+          if (character.customSoloModeCharacteristicChoice) {
+            effects += `\nChosen Characteristic: ${character.customSoloModeCharacteristicChoice}`;
+          }
+          activeAbilities = [{
+            name: customMod.name,
+            requiredRank: 1,
+            effects: effects,
+            improvement: (customMod as any).improvement || "See description for improvements based on Rank."
+          }];
+        }
+      }
+
+      if (activeAbilities.length > 0) {
+        specificSoloAbility = activeAbilities.map(ability => (
           <SoloModeAbilityTag 
             key={ability.name} 
             ability={ability} 
@@ -2754,6 +3387,25 @@ export default function App() {
         }));
       } else {
         const selectedAmmo = AMMO_DATABASE.find(a => a.name === weaponAmmoType);
+        let combiProfileData = undefined;
+        if (isCombiWeapon) {
+           const combiSelectedAmmo = AMMO_DATABASE.find(a => a.name === combiWeaponProfile.ammoType);
+           const combiDamageStr = `${combiWeaponDamageDice}d10${combiWeaponDamageBonus !== 0 ? (combiWeaponDamageBonus > 0 ? '+' : '') + combiWeaponDamageBonus : ''} ${combiWeaponDamageType}`;
+           combiProfileData = {
+               class: combiWeaponProfile.class,
+               damage: combiDamageStr,
+               pen: combiWeaponProfile.pen || 0,
+               special: combiWeaponProfile.special || '-',
+               range: combiWeaponProfile.range || '-',
+               rof: combiWeaponProfile.rof || '-',
+               reload: combiWeaponProfile.reload || '-',
+               clip: combiWeaponProfile.clip || { current: 10, max: 10 },
+               ammoType: combiWeaponProfile.ammoType,
+               ammoClass: combiSelectedAmmo?.compatibleClass,
+               ammoCategory: combiSelectedAmmo?.ammoCategory
+           };
+        }
+
         const weapon: RangedWeapon = {
           id,
           name: newWeapon.name || 'Unidentified Firearm',
@@ -2767,7 +3419,9 @@ export default function App() {
           clip: newWeapon.clip || { current: 10, max: 10 },
           ammoType: weaponAmmoType,
           ammoClass: selectedAmmo?.compatibleClass,
-          ammoCategory: selectedAmmo?.ammoCategory
+          ammoCategory: selectedAmmo?.ammoCategory,
+          isCombiWeapon,
+          combiProfile: combiProfileData
         };
         setCharacter(prev => ({
           ...prev,
@@ -2792,17 +3446,24 @@ export default function App() {
       setWeaponDamageBonus(0);
       setWeaponDamageType('X');
       setWeaponAmmoType('Standard Bolt Rounds');
+      setIsCombiWeapon(false);
+      setCombiWeaponProfile({ class: 'Basic', damage: '', pen: 0, special: '', range: '', rof: '', reload: '', clip: { current: 0, max: 0 }, ammoType: 'Standard Bolt Rounds' });
+      setCombiWeaponDamageDice(1);
+      setCombiWeaponDamageBonus(0);
+      setCombiWeaponDamageType('X');
       setShowWeaponModal(false);
       setIsWeaponSubmitting(false);
     }, 1000);
   };
 
   const getCharScoreWrapper = (key: keyof Characteristics) => {
-    const armorBonus = key === 'S' ? (ARMOR_PATTERNS[character.armor.pattern]?.strengthBonus || 0) : 0;
+    let armorBonus = 0;
+    if (key === 'S') armorBonus = ARMOR_PATTERNS[character.armor.pattern]?.strengthBonus || 0;
+    if (key === 'Ag') armorBonus = ARMOR_PATTERNS[character.armor.pattern]?.agilityBonus || 0;
     return getCharScore(character.characteristics[key], armorBonus);
   };
-  const currentChapterData = CHAPTER_DATA[character.chapter];
-  const isSpecializationRestricted = currentChapterData?.restrictions.includes(character.specialization);
+  const currentChapterData = CHAPTER_DATA[character.chapter] || (character.usePrimogenitorRules && character.customChapterPrimogenitor ? CHAPTER_DATA[character.customChapterPrimogenitor] : undefined);
+  const isSpecializationRestricted = currentChapterData?.restrictions?.includes(character.specialization) || character.customChapterRestrictedSpecializations?.includes(character.specialization);
   const toughnessBonus = getCharBonus(character.characteristics.T, 'T');
   const isDreadnoughtChar = ["Deathwatch Dreadnought", "Furioso Dreadnought", "Librarian Dreadnought"].includes(character.advancedSpeciality);
   const isFatigued = isDreadnoughtChar ? false : character.fatigue > 0;
@@ -2988,10 +3649,41 @@ export default function App() {
     "Trade"
   ];
 
+  const effectiveSkills = [...character.skills];
+  const effectiveChapterForSkills = (character.usePrimogenitorRules && character.customChapterPrimogenitor) ? character.customChapterPrimogenitor : character.chapter;
+  
+  if (effectiveChapterForSkills === "Blood Ravens") {
+    if (character.bloodRavensChoices?.scholasticLore && !effectiveSkills.some(s => s.name === character.bloodRavensChoices?.scholasticLore)) {
+      const allSkillRef = ALL_SKILLS.find(s => s.name === character.bloodRavensChoices?.scholasticLore);
+      effectiveSkills.push({ name: character.bloodRavensChoices.scholasticLore, characteristic: allSkillRef ? allSkillRef.characteristic as any : "Int", mastery: 1, description: allSkillRef && 'description' in allSkillRef ? allSkillRef.description : "" });
+    }
+    if (character.bloodRavensChoices?.forbiddenLore && !effectiveSkills.some(s => s.name === character.bloodRavensChoices?.forbiddenLore)) {
+      const allSkillRef = ALL_SKILLS.find(s => s.name === character.bloodRavensChoices?.forbiddenLore);
+      effectiveSkills.push({ name: character.bloodRavensChoices.forbiddenLore, characteristic: allSkillRef ? allSkillRef.characteristic as any : "Int", mastery: 1, description: allSkillRef && 'description' in allSkillRef ? allSkillRef.description : "" });
+    }
+    
+    const hasLibrariumTexts = (character.armor.trappings || []).some(t => t.name === "Librarium Texts");
+    if (hasLibrariumTexts && character.bloodRavensChoices?.librariumTextsFocus && !effectiveSkills.some(s => s.name === character.bloodRavensChoices?.librariumTextsFocus)) {
+      const allSkillRef = ALL_SKILLS.find(s => s.name === character.bloodRavensChoices?.librariumTextsFocus);
+      effectiveSkills.push({ name: character.bloodRavensChoices.librariumTextsFocus, characteristic: allSkillRef ? allSkillRef.characteristic as any : "Int", mastery: 1, description: allSkillRef && 'description' in allSkillRef ? allSkillRef.description : "" });
+    }
+  }
+
+  if (character.customSoloModeName === "Highly Skilled" && character.customSoloModeSkillChoices) {
+    character.customSoloModeSkillChoices.forEach(skillName => {
+      if (skillName && !effectiveSkills.some(s => s.name === skillName)) {
+        const allSkillRef = ALL_SKILLS.find(s => s.name === skillName);
+        effectiveSkills.push({ name: skillName, characteristic: allSkillRef ? allSkillRef.characteristic as any : "Int", mastery: 1, description: allSkillRef && 'description' in allSkillRef ? allSkillRef.description : "" });
+      }
+    });
+  }
+
+  effectiveSkills.sort((a, b) => a.name.localeCompare(b.name));
+  
   const processedSkills: (Skill | { isCategory: true, name: string, description: string })[] = [];
   const addedCategories = new Set<string>();
 
-  character.skills.forEach(skill => {
+  effectiveSkills.forEach(skill => {
     const categoryMatch = categoryPrefixes.find(cat => skill.name.startsWith(cat + " ("));
     
     if (categoryMatch) {
@@ -3020,7 +3712,7 @@ export default function App() {
       return false;
     }
     return true;
-  });
+  }).sort((a, b) => a.name.localeCompare(b.name));
 
   availableAllSkills.forEach(skill => {
     const categoryMatch = categoryPrefixes.find(cat => skill.name.startsWith(cat + " ("));
@@ -3040,12 +3732,59 @@ export default function App() {
     }
   });
 
+  const handleSaveCharacter = () => {
+    if (isSpecializationRestricted || character.specialization === "Awaiting astartes specialization") {
+      alert("Validation Error: Invalid or restricted specialization selected.");
+      return;
+    }
+    const dataToSave = { ...character, portrait };
+    const json = JSON.stringify(dataToSave, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${character.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_save.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleLoadCharacter = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target?.result as string);
+        if (data && data.name && data.chapter) {
+          setCharacter(data);
+          if (data.portrait) {
+            setPortrait(data.portrait);
+          } else {
+            setPortrait('https://i.redd.it/7w14tvb9rahb1.jpg');
+          }
+        } else {
+          setToastMessage('Invalid character data.');
+        }
+      } catch (err) {
+        console.error('Failed to load character:', err);
+        setToastMessage('Could not parse character file.');
+      }
+    };
+    reader.readAsText(file);
+    // Reset file input so same file can be loaded again
+    event.target.value = '';
+  };
+
+  const saveFileInputRef = useRef<HTMLInputElement>(null);
+
   return (
     <div className="min-h-screen flex flex-col bg-black text-gray-300">
       <header className="bg-[#0c0c0c] border-b border-[#333] p-4 flex justify-between items-center shadow-md">
         <div className="flex items-center gap-4">
-          <div className="p-2 border-2 border-[#8b0000] rounded w-10 h-10 flex items-center justify-center">
-            <Icons.Skull />
+          <div className="p-2 w-12 h-12 flex items-center justify-center shrink-0">
+            <img src="https://i.ibb.co/C3z1DdsL/Deathwatch-icon.png" alt="Deathwatch Icon" className="w-full h-full object-contain drop-shadow-[0_0_4px_rgba(255,215,0,0.3)]" />
           </div>
           <div>
             <h1 className="text-xl gothic-font text-white tracking-widest uppercase">Deathwatch Archivum</h1>
@@ -3053,11 +3792,86 @@ export default function App() {
           </div>
         </div>
         <div className="flex gap-4 items-center">
+          <div className="flex bg-[#1a1a1a] p-1 rounded border border-[#333]">
+            <button
+              onClick={() => setAppMode('creation')}
+              className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded transition-colors ${
+                appMode === 'creation' 
+                  ? 'bg-[#333] text-white shadow-sm' 
+                  : 'text-gray-500 hover:text-gray-300'
+              }`}
+            >
+              Dossier
+            </button>
+            <button
+              onClick={() => setAppMode('mission')}
+              className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded transition-colors ${
+                appMode === 'mission' 
+                  ? 'bg-[#333] text-yellow-500 shadow-sm' 
+                  : 'text-gray-500 hover:text-gray-300'
+              }`}
+            >
+              Operational Interface
+            </button>
+          </div>
+          <div className="flex gap-2 items-center mr-4">
+            {gmConnectionStatus === 'connected' ? (
+              <button
+                onClick={disconnectFromGM}
+                className="px-3 py-1.5 border border-green-800 text-green-500 bg-green-950/30 hover:bg-green-900/50 hover:text-green-400 transition-colors uppercase font-bold text-[10px] tracking-widest rounded flex items-center gap-2"
+                title="Disconnect from GM Session"
+              >
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                GM Connected
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowGMModal(true)}
+                className="px-3 py-1.5 border border-yellow-800 text-yellow-500 bg-yellow-950/30 hover:bg-yellow-900/50 hover:text-yellow-400 transition-colors uppercase font-bold text-[10px] tracking-widest rounded flex items-center gap-2"
+                title="Connect to GM Session"
+              >
+                <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                Connect to GM
+              </button>
+            )}
+            <input 
+              type="file" 
+              accept=".json" 
+              ref={saveFileInputRef} 
+              style={{ display: 'none' }} 
+              onChange={handleLoadCharacter} 
+            />
+            <button
+              onClick={() => saveFileInputRef.current?.click()}
+              className="px-3 py-1.5 border border-[#555] text-gray-300 bg-[#333]/50 hover:bg-[#444] transition-colors uppercase font-bold text-[10px] tracking-widest rounded"
+              title="Summon Inquisitorial Dossier"
+            >
+              Summon Inquisitorial Dossier
+            </button>
+            <button
+              onClick={handleSaveCharacter}
+              disabled={isSpecializationRestricted || character.specialization === "Awaiting astartes specialization"}
+              className={`px-3 py-1.5 border border-[#555] text-gray-300 bg-[#333]/50 hover:bg-[#444] transition-colors uppercase font-bold text-[10px] tracking-widest rounded ${(isSpecializationRestricted || character.specialization === "Awaiting astartes specialization") ? 'opacity-50 cursor-not-allowed' : ''}`}
+              title="Bury Inquisitorial Dossier"
+            >
+              Bury Inquisitorial Dossier
+            </button>
+            <button
+              onClick={() => setShowPurgeConfirm(true)}
+              className="px-3 py-1.5 border border-red-800 text-red-500 bg-red-950/30 hover:bg-red-900/50 hover:text-red-400 transition-colors uppercase font-bold text-[10px] tracking-widest rounded"
+              title="Purge Inquisitorial Dossier"
+            >
+              Purge Inquisitorial Dossier
+            </button>
+          </div>
           <button
-            onClick={() => setShowOathModal(true)}
+            onClick={() => {
+              setSelectedOath(character.currentOath || '');
+              setShowOathModal(true);
+            }}
             className="px-4 py-2 border-2 border-purple-800 text-purple-400 bg-purple-900/10 uppercase font-bold text-sm tracking-widest hover:bg-purple-900/30 transition-colors shadow-[0_0_10px_rgba(128,0,128,0.2)]"
           >
-            Take Oath
+            {character.currentOath ? character.currentOath.replace(/_/g, ' ') : 'Take Oath'}
           </button>
           <button
             onClick={() => setCharacter(prev => ({ ...prev, isSquadMode: !prev.isSquadMode }))}
@@ -3076,6 +3890,9 @@ export default function App() {
         </div>
       </header>
 
+      {appMode === 'mission' ? (
+        <MissionMode character={character} updateCharacter={setCharacter} />
+      ) : (
       <main className="flex-1 flex overflow-hidden">
         <nav className="w-16 bg-[#111] border-r border-[#333] flex flex-col items-center py-6 gap-6">
           {[
@@ -3118,23 +3935,56 @@ export default function App() {
                 </div>
               </div>
               <div className="md:col-span-3 grid grid-cols-2 gap-x-4 gap-y-2">
-                <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Name</label>
-                  <input value={character.name} onChange={e => setCharacter({...character, name: e.target.value})} className="w-full bg-[#1a1a1a] border border-[#333] h-10 px-3 rounded text-white gothic-font tracking-wide focus:border-[#8b0000] outline-none transition-colors" />
+                <div className="space-y-1 relative">
+                  <div className="flex justify-between items-center h-5">
+                    <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Name</label>
+                  </div>
+                  <div className="flex gap-2">
+                    <input value={character.name} onChange={e => setCharacter({...character, name: e.target.value})} className="flex-1 bg-[#1a1a1a] border border-[#333] h-10 px-3 rounded text-white gothic-font tracking-wide focus:border-[#8b0000] outline-none transition-colors" />
+                    <button 
+                      onClick={() => {
+                        const chapterNames = CHAPTER_NAMES[character.chapter];
+                        if (chapterNames) {
+                          const first = chapterNames.first[Math.floor(Math.random() * chapterNames.first.length)];
+                          const last = chapterNames.last[Math.floor(Math.random() * chapterNames.last.length)];
+                          // Some chapters format differently, but standard is First Last.
+                          // Space wolves might not have a space if it's Iceblade, but let's just do First Last
+                          let newName = `${first} ${last}`;
+                          const nameChapter = (character.usePrimogenitorRules && character.customChapterPrimogenitor) ? character.customChapterPrimogenitor : character.chapter;
+                          if (nameChapter === "Iron Hands" && last.includes("Clan")) {
+                            newName = `${first} ${last}`;
+                          } else if (nameChapter === "Dark Angels" && last.includes("of ")) {
+                             newName = `${first} ${last}`;
+                          } else if (nameChapter === "Raven Guard" && first === "Mor Deythan") {
+                             newName = `${first} ${last}`; // actually Mor Deythan is last in our data
+                          }
+                          // Simplest is just always First Space Last
+                          setCharacter({...character, name: newName});
+                        }
+                      }}
+                      className="bg-[#1a1a1a] border border-[#8b0000] p-0 rounded overflow-hidden hover:border-[#ffd700] transition-all shadow-[0_0_8px_rgba(139,0,0,0.5)] w-10 h-10 flex-shrink-0 flex items-center justify-center group"
+                      title="Generate randomly based on Chapter"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8b0000" className="group-hover:stroke-[#ffd700]" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.5 2v6h-6M2.13 15.57a10 10 0 1 0 3.84-10.46l-4.8 4.8M21.5 22v-6h-6M2.13 8.43a10 10 0 1 1 3.84 10.46l-4.8-4.8"/></svg>
+                    </button>
+                  </div>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">
-                    Chapter
-                  </label>
+                  <div className="flex justify-between items-center h-5">
+                    <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">
+                      Chapter
+                    </label>
+                  </div>
                   <div className="flex gap-2">
-                    <select value={character.chapter} onChange={e => handleChapterChange(e.target.value)} className="flex-1 bg-[#1a1a1a] border border-[#333] h-10 px-3 rounded text-white focus:border-[#8b0000] outline-none transition-colors">
-                      {character.chapter === "Awaiting chapter assignment" && (
-                        <option value="Awaiting chapter assignment" disabled hidden>
-                          Awaiting chapter assignment
-                        </option>
-                      )}
-                      {CHAPTERS.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
+                    <button
+                      onClick={() => setShowChapterModal(true)}
+                      className="flex-1 bg-[#1a1a1a] border border-[#333] h-10 px-3 rounded text-white text-left hover:border-[#8b0000] outline-none transition-colors relative"
+                    >
+                      <span className={character.chapter === "Awaiting chapter assignment" ? "text-gray-500" : ""}>
+                        {character.chapter}
+                      </span>
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs">▼</span>
+                    </button>
                     <button 
                       onClick={() => setShowHonorsModal(true)}
                       className="bg-[#1a1a1a] border border-[#8b0000] p-0 rounded overflow-hidden hover:border-[#ffd700] transition-all shadow-[0_0_8px_rgba(139,0,0,0.5)] w-10 h-10 flex-shrink-0 flex items-center justify-center group"
@@ -3148,8 +3998,11 @@ export default function App() {
                     </button>
                   </div>
                 </div>
+
                 <div className="space-y-1">
-                  <label className={`text-[10px] uppercase font-bold tracking-widest ${isSpecializationRestricted ? 'text-red-600' : 'text-gray-500'}`}>Specialization</label>
+                  <div className="flex justify-between items-center h-5">
+                    <label className={`text-[10px] uppercase font-bold tracking-widest ${isSpecializationRestricted ? 'text-red-600' : 'text-gray-500'}`}>Specialization</label>
+                  </div>
                   <select value={character.specialization} onChange={e => handleSpecializationChange(e.target.value)} className={`w-full bg-[#1a1a1a] border h-10 px-3 rounded text-white border-[#333] focus:border-[#8b0000] outline-none transition-colors`}>
                     {character.specialization === "Awaiting astartes specialization" && (
                       <option value="Awaiting astartes specialization" disabled hidden>
@@ -3157,10 +4010,10 @@ export default function App() {
                       </option>
                     )}
                     {SPECIALIZATIONS.map(s => {
-                      const isRestricted = currentChapterData?.restrictions.includes(s);
+                      const isRestricted = currentChapterData?.restrictions?.includes(s) || character.customChapterRestrictedSpecializations?.includes(s);
                       return (
-                        <option key={s} value={s} disabled={isRestricted} className={isRestricted ? "text-red-600 font-bold" : ""}>
-                          {s} {isRestricted ? '(REDACTED)' : ''}
+                        <option key={s} value={s} disabled={isRestricted} className={isRestricted ? "text-red-600 font-bold bg-[#331111]" : ""}>
+                          {s} {isRestricted ? '(RESTRICTED BY CHAPTER)' : ''}
                         </option>
                       );
                     })}
@@ -3168,7 +4021,9 @@ export default function App() {
                 </div>
                 
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-[#ffd700] tracking-widest">Advanced Speciality</label>
+                  <div className="flex justify-between items-center h-5">
+                    <label className="text-[10px] uppercase font-bold text-[#ffd700] tracking-widest">Advanced Speciality</label>
+                  </div>
                   <select 
                     value={character.advancedSpeciality} 
                     onChange={e => handleAdvancedSpecialityChange(e.target.value)} 
@@ -3176,8 +4031,9 @@ export default function App() {
                   >
                     <option value="None">None</option>
                     {ADVANCED_SPECIALITY_RULES.filter(rule => {
-                      if (rule.requiredChapter && rule.requiredChapter !== character.chapter) return false;
-                      if (rule.forbiddenChapter && rule.forbiddenChapter === character.chapter) return false;
+                      const effectiveChapter = (character.usePrimogenitorRules && character.customChapterPrimogenitor) ? character.customChapterPrimogenitor : character.chapter;
+                      if (rule.requiredChapter && rule.requiredChapter !== effectiveChapter) return false;
+                      if (rule.forbiddenChapter && rule.forbiddenChapter === effectiveChapter) return false;
                       return true;
                     }).map(rule => {
                       const result = rule.check(character, getCharScoreWrapper);
@@ -3262,11 +4118,11 @@ export default function App() {
                 <div className={`grid ${character.specialization === "Librarian" ? "grid-cols-4" : "grid-cols-3"} gap-2 col-span-2`}>
                   <div className="space-y-1">
                     <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Rank</label>
-                    <input type="number" value={character.rank} onChange={e => setCharacter({...character, rank: parseInt(e.target.value) || 1})} className="w-full bg-[#1a1a1a] border border-[#333] p-2 rounded text-white text-center" />
+                    <input type="number" value={character.rank === 0 ? '' : character.rank} onChange={e => setCharacter({...character, rank: e.target.value === '' ? 0 : parseInt(e.target.value) || 0})} className="w-full bg-[#1a1a1a] border border-[#333] p-2 rounded text-white text-center" />
                   </div>
                   <div className="space-y-1">
                     <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Renown</label>
-                    <input type="number" min="1" value={character.renown} onChange={e => setCharacter({...character, renown: Math.max(1, parseInt(e.target.value) || 1)})} className="w-full bg-[#1a1a1a] border border-[#333] p-2 rounded text-white text-center font-bold" />
+                    <input type="number" min="0" value={character.renown === 0 ? '' : character.renown} onChange={e => setCharacter({...character, renown: e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value) || 0)})} className="w-full bg-[#1a1a1a] border border-[#333] p-2 rounded text-white text-center font-bold" />
                   </div>
                   <div className="space-y-1">
                     <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Title</label>
@@ -3293,7 +4149,9 @@ export default function App() {
                 <SectionHeader title="Characteristics" icon={<Icons.Info />} />
                 <div className="grid grid-cols-3 md:grid-cols-9 gap-2">
                   {(Object.keys(character.characteristics) as Array<keyof Characteristics>).map(key => {
-                    const armorBonus = key === 'S' ? (ARMOR_PATTERNS[character.armor.pattern]?.strengthBonus || 0) : 0;
+                    let armorBonus = 0;
+                    if (key === 'S') armorBonus = ARMOR_PATTERNS[character.armor.pattern]?.strengthBonus || 0;
+                    if (key === 'Ag') armorBonus = ARMOR_PATTERNS[character.armor.pattern]?.agilityBonus || 0;
                     return <StatBlock key={key} label={key} stat={character.characteristics[key]} onChange={(v) => updateStatBase(key, v)} armorBonus={armorBonus} />;
                   })}
                 </div>
@@ -3313,48 +4171,140 @@ export default function App() {
                       onClick={() => setShowFullDemeanor(!showFullDemeanor)}
                    >
                       <label className="text-[10px] font-bold text-[#8b0000] uppercase tracking-widest block mb-1">
-                        Chapter Demeanor: {character.chapterDemeanor}
+                        Chapter Demeanor: {character.chapterDemeanor || character.customChapterDemeanor || "None"}
                       </label>
                       <div className="relative flex-1">
                         <div className={`text-[10px] text-gray-400 leading-tight italic transition-all duration-300 ${showFullDemeanor ? 'opacity-0 h-0 overflow-hidden' : 'opacity-100'}`}>
-                          {currentChapterData?.demeanorSummary || "Standard traits apply."}
+                          {currentChapterData?.demeanorSummary || (character.customChapterDemeanor ? "Custom Chapter Demeanor" : "Standard traits apply.")}
                         </div>
                         <div className={`text-[10px] text-gray-300 leading-relaxed transition-all duration-300 ${showFullDemeanor ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
-                          {currentChapterData?.demeanorDescription}
+                          {currentChapterData?.demeanorDescription || (character.customChapterDemeanor ? CUSTOM_CHAPTER_DEMEANORS[character.customChapterDemeanor]?.demeanorDescription : "Standard traits apply.")}
                         </div>
                       </div>
                    </div>
                 </div>
 
-                {(currentChapterData?.restrictions.length > 0 || currentChapterData?.implantsNote) && (
+                {(currentChapterData?.restrictions?.length > 0 || currentChapterData?.implantsNote || (character.geneSeedPurity && character.geneSeedPurity !== "Pure") || character.customChapterPrimogenitor || character.customChapterModifierName || character.customSoloModeName || character.customSquadModeAttackPattern || character.customSquadModeDefensiveStance || character.customChapterPsychicPowers || character.customChapterRestrictedSpecializations?.length > 0 || character.customChapterCustomRestrictions) && (
                   <div className="bg-[#8b0000]/10 border border-[#8b0000]/30 p-4 rounded">
                     <h4 className="text-[10px] font-bold text-[#8b0000] uppercase tracking-widest mb-2 border-b border-[#8b0000]/20 pb-1">+++ Alert - Anomaly in Inquisitorial datagrave encountered +++</h4>
                     <ul className="text-[10px] space-y-1">
-                      {currentChapterData.restrictions.map(r => (
+                      {currentChapterData?.restrictions?.map((r: string) => (
                         <li key={r} className="flex items-center gap-2 text-red-500 font-bold">
                           <span className="w-1 h-1 bg-red-600 rounded-full"></span>
                           RESTRICTED: {r} Speciality
                         </li>
                       ))}
-                      {currentChapterData.implantsNote && (
+                      {character.customChapterRestrictedSpecializations?.map((r: string) => (
+                        <li key={r} className="flex items-center gap-2 text-red-500 font-bold">
+                          <span className="w-1 h-1 bg-red-600 rounded-full"></span>
+                          RESTRICTED: {r} Speciality
+                        </li>
+                      ))}
+                      {character.customChapterCustomRestrictions && (
+                        <li className="flex items-start gap-2 text-red-500 font-bold">
+                          <span className="w-1 h-1 bg-red-600 rounded-full mt-1 flex-shrink-0"></span>
+                          RESTRICTED: {character.customChapterCustomRestrictions}
+                        </li>
+                      )}
+                      {currentChapterData?.implantsNote && (
                         <li className="flex items-start gap-2 text-gray-400 italic">
                            <span className="w-1 h-1 bg-gray-600 rounded-full mt-1 flex-shrink-0"></span>
                            {currentChapterData.implantsNote}
                         </li>
                       )}
+                      {character.customChapterPrimogenitor && (
+                        <li className="flex items-start gap-2 text-gray-400 italic">
+                           <span className="w-1 h-1 bg-[#ffd700] rounded-full mt-1 flex-shrink-0"></span>
+                           Primogenitor Chapter: <span className="font-bold text-[#ffd700]">{character.customChapterPrimogenitor}</span> {character.usePrimogenitorRules ? "(Inheriting rules)" : "(Cosmetic only)"}
+                        </li>
+                      )}
+                      {character.customChapterModifierName && (
+                        <li className="flex items-start gap-2 text-gray-400 italic">
+                           <span className="w-1 h-1 bg-green-500 rounded-full mt-1 flex-shrink-0"></span>
+                           Combat Doctrine: {character.customChapterModifierName} {character.customChapterModifierChoices && character.customChapterModifierChoices.length > 0 ? `(${character.customChapterModifierChoices.join(', ')})` : ''} - {CUSTOM_CHAPTER_MODIFIERS.find(m => m.name === character.customChapterModifierName)?.description}
+                        </li>
+                      )}
+                      {character.customSoloModeName && (
+                        <li className="flex items-start gap-2 text-gray-400 italic">
+                           <span className="w-1 h-1 bg-purple-500 rounded-full mt-1 flex-shrink-0"></span>
+                           Solo Mode Doctrine: {character.customSoloModeName}
+                           {character.customSoloModeChosenAbility && ` (${character.customSoloModeChosenAbility})`}
+                           {character.customSoloModeSkillChoices && character.customSoloModeSkillChoices.length > 0 && ` (${character.customSoloModeSkillChoices.join(', ')})`}
+                           {character.customSoloModeCharacteristicChoice && ` (${character.customSoloModeCharacteristicChoice})`}
+                           {" "} - {CUSTOM_CHAPTER_SOLO_MODES.find(m => m.name === character.customSoloModeName)?.description}
+                        </li>
+                      )}
+                      {character.customSquadModeAttackPattern && (
+                        <li className="flex items-start gap-2 text-gray-400 italic">
+                           <span className="w-1 h-1 bg-blue-500 rounded-full mt-1 flex-shrink-0"></span>
+                           Squad Mode Attack Pattern: {character.customSquadModeAttackPattern}
+                           {character.customSquadModeChosenAttackPattern && ` (${character.customSquadModeChosenAttackPattern})`}
+                        </li>
+                      )}
+                      {character.customSquadModeDefensiveStance && (
+                        <li className="flex items-start gap-2 text-gray-400 italic">
+                           <span className="w-1 h-1 bg-blue-500 rounded-full mt-1 flex-shrink-0"></span>
+                           Squad Mode Defensive Stance: {character.customSquadModeDefensiveStance}
+                           {character.customSquadModeChosenDefensiveStance && ` (${character.customSquadModeChosenDefensiveStance})`}
+                        </li>
+                      )}
+                      {character.customChapterPsychicPowers && (
+                        <li className="flex items-start gap-2 text-gray-400 italic">
+                           <span className="w-1 h-1 bg-purple-500 rounded-full mt-1 flex-shrink-0"></span>
+                           Librarian Psychic Discipline: {character.customChapterPsychicPowers}
+                        </li>
+                      )}
+                      {character.geneSeedPurity && character.geneSeedPurity !== "Pure" && (
+                        <>
+                          <li className="flex items-start gap-2 text-gray-400 italic">
+                             <span className="w-1 h-1 bg-red-600 rounded-full mt-1 flex-shrink-0"></span>
+                             Purity: {character.geneSeedPurity} - {GENE_SEED_PURITIES[character.geneSeedPurity]?.description}
+                          </li>
+                          {character.geneSeedDeficiency && (
+                            <>
+                              <li className="flex items-start gap-2 text-gray-400 italic mt-2">
+                                 <span className="w-1 h-1 bg-red-600 rounded-full mt-1 flex-shrink-0"></span>
+                                 Deficiency: {character.geneSeedDeficiency} - {GENE_SEED_DEFICIENCIES[character.geneSeedDeficiency]?.description}
+                              </li>
+                              {character.geneSeedDeficiency === "Multiple Instabilities" && character.additionalGeneSeedDeficiencies && character.additionalGeneSeedDeficiencies.map((def, idx) => (
+                                <li key={idx} className="flex items-start gap-2 text-gray-400 italic mt-2 ml-4">
+                                   <span className="w-1 h-1 bg-red-800 rounded-full mt-1 flex-shrink-0"></span>
+                                   Additional {idx + 1}: {def} - {GENE_SEED_DEFICIENCIES[def]?.description}
+                                </li>
+                              ))}
+                              {character.customLostZygotes && character.customLostZygotes.length > 0 && (
+                                <li className="flex items-start gap-2 text-red-500 font-bold mt-2 ml-4">
+                                   <span className="w-1 h-1 bg-red-600 rounded-full mt-1 flex-shrink-0"></span>
+                                   Lost Zygotes: {character.customLostZygotes.join(', ')}
+                                </li>
+                              )}
+                            </>
+                          )}
+                        </>
+                      )}
                     </ul>
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   <div className="bg-[#1a1a1a] border border-[#333] p-4 rounded space-y-4">
                     <h4 className="text-xs font-bold text-red-800 uppercase tracking-widest border-b border-[#333] pb-1">Vitals</h4>
                     <div className="flex justify-between items-center"><span className="text-xs font-bold">Cohesion</span><div className="flex gap-2 items-center"><input className="w-10 bg-black border border-[#444] text-center rounded text-sm text-white" value={character.cohesion?.current ?? 0} onChange={e => setCharacter({...character, cohesion: {...(character.cohesion || {max: 0}), current: parseInt(e.target.value) || 0}})}/><span className="text-gray-600">/</span><input className="w-10 bg-black border border-[#444] text-center rounded text-sm text-white" value={character.cohesion?.max ?? 0} onChange={e => setCharacter({...character, cohesion: {...(character.cohesion || {current: 0}), max: parseInt(e.target.value) || 0}})}/></div></div>
-                    <div className="flex justify-between items-center"><span className="text-xs font-bold">Wounds</span><div className="flex gap-2 items-center"><input className="w-10 bg-black border border-[#444] text-center rounded text-sm text-white" value={character.wounds.current} onChange={e => setCharacter({...character, wounds: {...character.wounds, current: parseInt(e.target.value) || 0}})}/><span className="text-gray-600">/</span><input className="w-10 bg-black border border-[#444] text-center rounded text-sm text-white" value={character.wounds.max} readOnly /></div></div>
+                    <div className="flex justify-between items-center"><span className="text-xs font-bold">Wounds</span><div className="flex gap-2 items-center"><input className="w-10 bg-black border border-[#444] text-center rounded text-sm text-white" value={character.wounds.current} onChange={e => setCharacter({...character, wounds: {...character.wounds, current: parseInt(e.target.value) || 0}})}/><span className="text-gray-600">/</span><input className="w-10 bg-black border border-[#444] text-center rounded text-sm text-white" value={character.wounds.max} onChange={e => setCharacter({...character, wounds: {...character.wounds, max: parseInt(e.target.value) || 0}})} /></div></div>
                     {["Deathwatch Dreadnought", "Furioso Dreadnought", "Librarian Dreadnought"].includes(character.advancedSpeciality) && (
-                      <div className="text-[9px] text-red-500 italic mt-1">
-                        Dreadnoughts can only be healed (repaired) using the Tech-use Skill.
-                      </div>
+                      <>
+                        <div className="flex justify-between items-center mt-2 border-t border-[#333] pt-2">
+                          <span className="text-xs font-bold text-blue-500">Structural Integrity</span>
+                          <div className="flex gap-2 items-center">
+                            <input className="w-10 bg-black border border-blue-900 text-center rounded text-sm text-white focus:border-blue-500" value={character.structuralIntegrity?.current || 0} onChange={e => setCharacter({...character, structuralIntegrity: {...(character.structuralIntegrity || {max: 0}), current: parseInt(e.target.value) || 0}})}/>
+                            <span className="text-gray-600">/</span>
+                            <input className="w-10 bg-black border border-[#444] text-center rounded text-sm text-white" value={character.structuralIntegrity?.max || 0} readOnly />
+                          </div>
+                        </div>
+                        <div className="text-[9px] text-blue-400 italic mt-1">
+                          Dreadnoughts can only be healed (repaired) using the Tech-use Skill.
+                        </div>
+                      </>
                     )}
                     <div className="space-y-2"><div className="flex justify-between items-center"><div className="flex items-center gap-1 group relative"><span className="text-xs font-bold">Fatigue</span><div className="hidden group-hover:block absolute left-full ml-2 w-48 bg-black border border-[#444] p-2 text-[9px] text-gray-400 z-10">Fatigue {'>'} TB ({toughnessBonus}) = Unconscious. All tests -10.</div></div><div className="flex gap-2 items-center"><input className="w-10 bg-black border border-[#444] text-center rounded text-sm text-white" value={character.fatigue} onChange={e => setCharacter({...character, fatigue: parseInt(e.target.value) || 0})}/><span className="text-gray-600">/</span><input className="w-10 bg-black border border-[#444] text-center rounded text-sm text-gray-500" value={toughnessBonus} readOnly /></div></div>{isFatigued && <div className="bg-[#8b0000]/20 border border-[#8b0000]/40 p-1.5 rounded text-[9px] font-bold text-red-500 uppercase flex flex-col gap-1"><span className="animate-pulse">● -10 Penalty Active</span>{isUnconscious && <span className="text-red-700 italic">UNCONSCIOUS</span>}</div>}</div>
                     <div className="flex justify-between items-center"><span className="text-xs font-bold text-red-600">Critical Wounds</span><div className="flex gap-2 items-center"><input className="w-10 bg-black border border-[#444] text-center rounded text-sm text-white" value={character.criticalWounds} onChange={e => setCharacter({...character, criticalWounds: Math.min(8, Math.max(0, parseInt(e.target.value) || 0))})}/><span className="text-gray-600">/</span><input className="w-10 bg-black border border-[#444] text-center rounded text-sm text-gray-500" value="8" readOnly /></div></div>
@@ -3369,6 +4319,24 @@ export default function App() {
                         </div>
                       </div>
                     )}
+                  </div>
+                  
+                  <div className="bg-[#1a1a1a] border border-[#333] p-4 rounded space-y-4">
+                    <h4 className="text-xs font-bold text-[#ffd700] uppercase tracking-widest border-b border-[#333] pb-1">Fate Point Usage</h4>
+                    <div className="text-[10px] text-gray-400 leading-tight space-y-1.5 h-[90%] overflow-y-auto pr-1">
+                      <p>Spending one Fate Point allows a Space Marine to do one of the following:</p>
+                      <ul className="list-disc pl-4 space-y-1 mt-2 text-gray-300">
+                        <li>Re-roll a failed test once. The results of the re-roll are final.</li>
+                        <li>Gain a +10 bonus to a test. This must be chosen before dice are rolled.</li>
+                        <li>Add an extra Degree of Success to a test. This may be chosen after dice are rolled.</li>
+                        <li>Count as having rolled a 10 for Initiative.</li>
+                        <li>Instantly remove 1d10 Damage (this cannot affect Critical Damage).</li>
+                        <li>Instantly recover from being Stunned.</li>
+                        <li>Enter Squad Mode without a Cohesion Test.</li>
+                        <li>Gain a +1 bonus to your Rank for the benefits of a Solo Mode ability.</li>
+                        <li>Remove one level of Fatigue.</li>
+                      </ul>
+                    </div>
                   </div>
                   <div className="bg-[#1a1a1a] border border-[#333] p-4 rounded space-y-4">
                     <h4 className="text-xs font-bold text-purple-800 uppercase tracking-widest border-b border-[#333] pb-1">Afflictions</h4>
@@ -3480,8 +4448,27 @@ export default function App() {
                     <h4 className="text-xs font-bold text-gray-600 uppercase tracking-widest border-b border-[#333] pb-1">Movement</h4>
                     <div className="grid grid-cols-2 text-[10px] gap-2">
                       {(() => {
-                        const hasJumpPack = character.additionalWargear?.some(item => item.name === "Jump Pack");
-                        const baseMove = (Math.floor(getCharScoreWrapper('Ag') / 10) + (character.armor.abilities.includes("Giant Among Men") ? 1 : 0)) * (hasJumpPack ? 2 : 1);
+                        if (character.dreadnoughtWeapons) {
+                          return (
+                            <>
+                              <div>Tactical: {character.advancedSpeciality === "Ironclad Dreadnought" ? "8m" : "7m"}</div>
+                              <div>Cruising Speed: 10 kph</div>
+                            </>
+                          );
+                        }
+                        
+                        const hasTripleJumpPack = character.additionalWargear?.some(item => 
+                          item.name === "Wings of the Raven" || 
+                          item.name === "Wings of Saronath"
+                        );
+                        const hasDoubleJumpPack = character.additionalWargear?.some(item => 
+                          item.name === "Jump Pack" || 
+                          item.name === "Winged Jump Pack" || 
+                          item.name === "Diomedes' Grace" ||
+                          item.name.toLowerCase().includes("jump pack")
+                        );
+                        const moveMultiplier = hasTripleJumpPack ? 3 : (hasDoubleJumpPack ? 2 : 1);
+                        const baseMove = (Math.floor(getCharScoreWrapper('Ag') / 10) + (character.armor.abilities.includes("Giant Among Men") ? 1 : 0)) * moveMultiplier;
                         return (
                           <>
                             <div>Half: {baseMove}m</div><div>Full: {baseMove * 2}m</div>
@@ -3504,16 +4491,18 @@ export default function App() {
                     <ImplantCard name="Secondary Heart/Ossmodula/Biscopea/Haemastamen" effect="Trait: Unnatural Strength & Toughness. Bonus Doubled (e.g. Strength 41 has SB 8 instead of 4). Reflected in the Gold Character Bonus Badges above." />
                   </div>
                   <ImplantCard name="Larraman’s Organ" effect="You do not suffer from Blood Loss." />
-                  <ImplantCard name="Catalepsean Node" effect="No penalties to Perception-based Tests when awake for long periods." />
-                  <ImplantCard name="Preomnor" effect="+20 to Toughness Tests against ingested poisons." />
-                  <ImplantCard name="Omophagea" effect="Gain a Skill by devouring a portion of an enemy." />
+                  <ImplantCard name="Catalepsean Node" effect="No penalties to Perception-based Tests when awake for long periods." redacted={character.customLostZygotes?.includes('Catalepsean Node')} />
+                  <ImplantCard name="Preomnor" effect="+20 to Toughness Tests against ingested poisons." redacted={character.customLostZygotes?.includes('Preomnor')} />
+                  <ImplantCard name="Omophagea" effect="Gain a Skill by devouring a portion of an enemy." redacted={character.customLostZygotes?.includes('Omophagea')} />
                   <ImplantCard name="Multi-Lung" effect="Re-roll failed Toughness for drowning/asphyxiation. +30 vs gases." />
-                  <ImplantCard name="Occulube and Lyman’s Ear" effect="Heightened Senses (Sight/Hearing), +10 Awareness Tests." />
-                  <ImplantCard name="Sus-an Membrane" effect="May enter suspended animation." />
-                  <ImplantCard name="Oolotic Kidney" effect="Re-roll failed Toughness to resist poisons and toxins." />
-                  <ImplantCard name="Neuroglottis" effect="Detect poison by taste (Awareness). +10 Tracking if tasted." />
-                  <ImplantCard name="Mucranoid" effect="Re-roll failed Toughness Tests for temperature extremes." />
-                  <ImplantCard name="Betcher’s Gland" effect="Acid Spit (3m; 1d5 Dmg; Pen 4; Toxic). Blind on 3+ DoS." />
+                  <ImplantCard name="Occulobe" effect="Heightened Senses (Sight)." redacted={character.customLostZygotes?.includes('Occulobe')} />
+                  <ImplantCard name="Lyman’s Ear" effect="Heightened Senses (Hearing), +10 Awareness Tests." redacted={character.customLostZygotes?.includes('Lyman’s Ear')} />
+                  <ImplantCard name="Sus-an Membrane" effect="May enter suspended animation." redacted={character.customLostZygotes?.includes('Sus-an Membrane')} />
+                  <ImplantCard name="Melanchromic Organ" effect="Protects from radiation extremes." redacted={character.customLostZygotes?.includes('Melanchromic Organ')} />
+                  <ImplantCard name="Oolitic Kidney" effect="Re-roll failed Toughness to resist poisons and toxins." redacted={character.customLostZygotes?.includes('Oolitic Kidney')} />
+                  <ImplantCard name="Neuroglottis" effect="Detect poison by taste (Awareness). +10 Tracking if tasted." redacted={character.customLostZygotes?.includes('Neuroglottis')} />
+                  <ImplantCard name="Mucranoid" effect="Re-roll failed Toughness Tests for temperature extremes." redacted={character.customLostZygotes?.includes('Mucranoid')} />
+                  <ImplantCard name="Betcher’s Gland" effect="Acid Spit (3m; 1d5 Dmg; Pen 4; Toxic). Blind on 3+ DoS." redacted={character.customLostZygotes?.includes('Betcher’s Gland')} />
                   <ImplantCard name="Progenoids" effect="Retrievable with successful Medicae Test." />
                   <ImplantCard name="Black Carapace" effect="Power Armour negates size hit bonuses for enemies." />
                 </div>
@@ -3522,8 +4511,10 @@ export default function App() {
 
             {activeTab === 'wargear' && (
               <div className="space-y-8 animate-fadeIn">
-                <div className="space-y-6">
-                  <SectionHeader title="Tactical Ordnance (Ranged)" icon={<Icons.Wargear />} />
+                {!character.dreadnoughtWeapons && (
+                  <>
+                    <div className="space-y-6">
+                      <SectionHeader title="Tactical Ordnance (Ranged)" icon={<Icons.Wargear />} />
                   <div className="space-y-4">
                     {character.weapons.ranged.map(baseWeapon => {
                       const weapon = calculateRangedWeaponProfile(baseWeapon);
@@ -3697,10 +4688,10 @@ export default function App() {
                                 let ammoClass = weapon.ammoClass;
                                 if (!ammoClass) {
                                     if (weapon.name.includes("Bolt")) ammoClass = "Bolt";
-                                    else if (weapon.name.includes("Shotgun")) ammoClass = "Shotgun";
+                                    else if (weapon.name.includes("Shotgun") || weapon.name === "Linebreaker") ammoClass = "Shotgun";
                                     else if (weapon.name.includes("Plasma")) ammoClass = "Plasma";
                                     else if (weapon.name.includes("Melta")) ammoClass = "Melta";
-                                    else if (weapon.name.includes("Flamer")) ammoClass = "Flame";
+                                    else if (weapon.name.includes("Flamer") || weapon.name === "Surturs Breath") ammoClass = "Flame";
                                 }
 
                                 const compatibleAmmo = character.ammunition.filter(invItem => {
@@ -3737,6 +4728,44 @@ export default function App() {
                             })()}
                           </div>
                         </div>
+
+                        {weapon.isCombiWeapon && weapon.combiProfile && (
+                          <div className="mt-3 pt-3 border-t border-[#333] bg-black/20 rounded p-2">
+                            <div className="text-[9px] font-bold uppercase text-[#ffd700] mb-2 tracking-widest">Secondary Profile (Combi)</div>
+                            <div className="grid grid-cols-2 md:grid-cols-6 gap-4 items-start pr-8">
+                               <div className="md:col-span-2">
+                                 <div className="flex items-center gap-2">
+                                    <div className="text-xs text-gray-300 font-bold">{weapon.name} (Secondary)</div>
+                                    {weapon.combiProfile.class && (
+                                      <span className="text-[8px] px-1 py-0.5 rounded bg-[#222] text-gray-400 uppercase font-bold tracking-wider border border-[#333]">
+                                        {weapon.combiProfile.class}
+                                      </span>
+                                    )}
+                                 </div>
+                                 <div className="text-[9px] text-[#8b0000] mt-1 uppercase font-mono flex flex-wrap gap-1 items-center">
+                                    Special: {weapon.combiProfile.special}
+                                 </div>
+                               </div>
+                               <div>
+                                 <div className="text-[9px] uppercase text-gray-500">Range / ROF</div>
+                                 <div className="text-xs text-gray-400 font-mono">{weapon.combiProfile.range} / {weapon.combiProfile.rof}</div>
+                               </div>
+                               <div>
+                                 <div className="text-[9px] uppercase text-gray-500">Damage / Pen</div>
+                                 <div className="text-xs text-gray-300 font-bold">{weapon.combiProfile.damage} / {weapon.combiProfile.pen}</div>
+                               </div>
+                               <div>
+                                 <div className="text-[9px] uppercase text-gray-500">Reload</div>
+                                 <div className="text-xs text-gray-400 font-mono">({weapon.combiProfile.reload})</div>
+                               </div>
+                               <div>
+                                 <div className="text-[9px] uppercase text-gray-500 mb-1">Ammo Type</div>
+                                 <div className="text-[10px] text-gray-300 bg-black border border-[#222] p-1 rounded px-2">{weapon.combiProfile.ammoType || "Standard"}</div>
+                               </div>
+                            </div>
+                          </div>
+                        )}
+
                       </div>
                     );
                     })}
@@ -3922,13 +4951,285 @@ export default function App() {
                     })}
                   </div>
 
-                  <button 
-                    onClick={() => setShowWeaponModal(true)}
-                    className="w-full border-2 border-dashed border-[#333] p-4 text-xs hover:border-[#8b0000] hover:text-white transition-colors rounded uppercase tracking-widest font-bold"
-                  >
-                    + REQUEST ADDITIONAL ORDNANCE
-                  </button>
-                </div>
+                    <button 
+                      onClick={() => setShowWeaponModal(true)}
+                      className="w-full border-2 border-dashed border-[#333] p-4 text-xs hover:border-[#8b0000] hover:text-white transition-colors rounded uppercase tracking-widest font-bold"
+                    >
+                      + REQUEST ADDITIONAL ORDNANCE
+                    </button>
+                  </div>
+                  </>
+                )}
+                
+                {character.dreadnoughtWeapons && (
+                  <div className="space-y-6">
+                    <SectionHeader title="Dreadnought Armaments" icon={<Icons.Wargear />} />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="bg-[#1a1a1a] p-4 rounded border border-[#333] space-y-4">
+                        <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest block border-b border-[#333] pb-1">Right Arm Configuration</label>
+                        <select 
+                          className="w-full bg-black border border-[#444] text-[11px] text-gray-300 p-2 rounded focus:border-red-800 focus:outline-none uppercase font-mono tracking-widest font-bold"
+                          value={character.dreadnoughtWeapons.rightArm}
+                          onChange={e => setCharacter({...character, dreadnoughtWeapons: { ...character.dreadnoughtWeapons!, rightArm: e.target.value }})}
+                        >
+                          <optgroup label="Standard Issue">
+                            {character.advancedSpeciality === "Ironclad Dreadnought" && (
+                              <>
+                                <option value="Dreadnought Close Combat Weapon (with Storm Bolter)">DCCW (Storm Bolter)</option>
+                                <option value="Dreadnought Close Combat Weapon (with Heavy Flamer)">DCCW (Heavy Flamer)</option>
+                                <option value="Dreadnought Chainfist (with Storm Bolter)">Chainfist (Storm Bolter)</option>
+                                <option value="Dreadnought Chainfist (with Heavy Flamer)">Chainfist (Heavy Flamer)</option>
+                                <option value="Hurricane Bolters">Hurricane Bolters</option>
+                              </>
+                            )}
+                            {(character.advancedSpeciality === "Furioso Dreadnought" || character.advancedSpeciality === "Librarian Dreadnought") && (
+                              <>
+                                <option value="Bloodfist (with Storm Bolter)">Bloodfist (Storm Bolter)</option>
+                                <option value="Bloodfist (with Heavy Flamer)">Bloodfist (Heavy Flamer)</option>
+                                <option value="Bloodfist (with Meltagun)">Bloodfist (Meltagun)</option>
+                                <option value="Blood Talon (with Storm Bolter)">Blood Talon (Storm Bolter)</option>
+                                <option value="Blood Talon (with Heavy Flamer)">Blood Talon (Heavy Flamer)</option>
+                                <option value="Blood Talon (with Meltagun)">Blood Talon (Meltagun)</option>
+                                <option value="Frag Cannon">Frag Cannon</option>
+                                <option value="Magna-Grapple">Magna-Grapple</option>
+                                {character.advancedSpeciality === "Librarian Dreadnought" && <option value="Dreadnought Force Halberd">Dreadnought Force Halberd</option>}
+                              </>
+                            )}
+                            {(character.advancedSpeciality !== "Ironclad Dreadnought" && character.advancedSpeciality !== "Furioso Dreadnought" && character.advancedSpeciality !== "Librarian Dreadnought") && (
+                              <>
+                                <option value="Assault Cannon">Assault Cannon</option>
+                                <option value="Twin-linked Heavy Bolters">Twin-linked Heavy Bolters</option>
+                                <option value="Twin-linked Autocannons">Twin-linked Autocannons</option>
+                                <option value="Twin-linked Lascannons">Twin-linked Lascannons</option>
+                                <option value="Multi-melta">Multi-melta</option>
+                                <option value="Plasma Cannon">Plasma Cannon</option>
+                                <option value="Missile Launcher">Missile Launcher</option>
+                              </>
+                            )}
+                          </optgroup>
+                          <optgroup label="Custom Requisitions">
+                            {character.weapons.ranged.map((w, i) => <option key={`cr-${i}`} value={w.name}>{w.name}</option>)}
+                            {character.weapons.melee.map((w, i) => <option key={`cm-${i}`} value={w.name}>{w.name}</option>)}
+                          </optgroup>
+                        </select>
+                        
+                        {(() => {
+                          const w = character.dreadnoughtWeapons.rightArm;
+                          let m_dmg = "-", m_pen = "-", m_special = "-";
+                          let b_wep = "", range = "-", rof = "-", dmg = "-", pen = "-", clip = "-", reload = "-", special = "-";
+                          
+                          if (w === "Assault Cannon") { range = "150m"; rof = "-/-/10"; dmg = "2d10+12 I"; pen = "6"; clip = "400"; reload = "-"; special = "Tearing, Devastating (1)"; }
+                          else if (w === "Twin-linked Heavy Bolters") { range = "150m"; rof = "-/-/10"; dmg = "1d10+12 X"; pen = "5"; clip = "400"; reload = "-"; special = "Tearing, Twin-linked"; }
+                          else if (w === "Twin-linked Autocannons") { range = "300m"; rof = "S/2/5"; dmg = "4d10+5 I"; pen = "4"; clip = "200"; reload = "-"; special = "Twin-linked"; }
+                          else if (w === "Twin-linked Lascannons") { range = "300m"; rof = "S/-/-"; dmg = "5d10+10 E"; pen = "10"; clip = "30"; reload = "-"; special = "Proven (3), Twin-linked"; }
+                          else if (w === "Multi-melta") { range = "60m"; rof = "S/-/-"; dmg = "2d10+16 E"; pen = "12"; clip = "30"; reload = "-"; special = "Blast (1)"; }
+                          else if (w === "Plasma Cannon") { range = "150m"; rof = "S/-/-"; dmg = "2d10+12 E"; pen = "10"; clip = "30"; reload = "-"; special = "Blast (3), Volatile, Maximal"; }
+                          else if (w === "Missile Launcher") { range = "250m"; rof = "S/-/-"; dmg = "Varies"; pen = "-"; clip = "-"; reload = "-"; special = "-"; }
+                          else if (w === "Hurricane Bolters") { range = "50m"; rof = "-/6/12"; dmg = "2d10+5 X"; pen = "4"; clip = "300"; reload = "3Full"; special = "Tearing, Twin-linked"; }
+                          else if (w === "Frag Cannon") { range = "20m"; rof = "S/2/-"; dmg = "3d10+5 R"; pen = "4"; clip = "40"; reload = "-"; special = "Blast (3), Razor-Sharp, Scatter"; }
+                          else if (w === "Magna-Grapple") { range = "20m"; rof = "S/-/-"; dmg = "As Melee"; pen = "As Melee"; clip = "-"; reload = "-"; special = "Drags target towards dreadnought"; }
+                          else if (w.includes("Dreadnought Close Combat Weapon") || w.includes("Dreadnought Chainfist") || w.includes("Bloodfist") || w.includes("Blood Talon") || w === "Dreadnought Force Halberd") {
+                              if (w.includes("Chainfist")) {
+                                m_dmg = "2d10+22 R"; m_pen = "8"; m_special = "Tearing";
+                              } else if (w.includes("Blood Talon")) {
+                                m_dmg = "2d10+5 E"; m_pen = "6"; m_special = "Devastating (2), Power Field, Tearing, +2 dmg per DoS";
+                              } else if (w.includes("Bloodfist")) {
+                                m_dmg = "2d10+10 E"; m_pen = "6"; m_special = "Power Field, Tearing";
+                              } else if (w === "Dreadnought Force Halberd") {
+                                m_dmg = "2d10+2 R"; m_pen = "4"; m_special = "Balanced, Force Weapon";
+                              } else {
+                                m_dmg = "2d10+24 E"; m_pen = "6"; m_special = "Power Field";
+                              }
+                              if (w.includes("Storm Bolter")) {
+                                  b_wep = "Astartes Storm Bolter";
+                                  range = "100m"; rof = "S/2/4"; dmg = "1d10+9 X"; pen = "4"; clip = "200"; reload = "-"; special = "Storm, Tearing";
+                              } else if (w.includes("Heavy Flamer")) {
+                                  b_wep = "Astartes Heavy Flamer";
+                                  range = "30m"; rof = "S/-/-"; dmg = "1d10+12 E"; pen = "6"; clip = "20"; reload = "-"; special = "Flame";
+                              } else if (w.includes("Meltagun")) {
+                                  b_wep = "Astartes Meltagun";
+                                  range = "20m"; rof = "S/-/-"; dmg = "2d10+8 E"; pen = "13"; clip = "5"; reload = "-"; special = "-";
+                              }
+                          }
+                          else {
+                            const customWeapon = character.weapons.ranged.find(x => x.name === w) || character.weapons.melee.find(x => x.name === w);
+                            if (customWeapon) {
+                              range = (customWeapon as RangedWeapon).range || "Melee";
+                              rof = (customWeapon as RangedWeapon).rof || "-";
+                              dmg = customWeapon.damage || "-";
+                              pen = customWeapon.pen?.toString() || "0";
+                              clip = (customWeapon as RangedWeapon).clip?.max?.toString() || "-";
+                              reload = (customWeapon as RangedWeapon).reload || "-";
+                              special = customWeapon.special || "-";
+                            }
+                          }
+
+                          return (
+                            <>
+                              {(w.includes("Dreadnought Close Combat Weapon") || w.includes("Dreadnought Chainfist") || w.includes("Bloodfist") || w.includes("Blood Talon") || w === "Dreadnought Force Halberd") && (
+                                <div className="grid grid-cols-2 gap-4 text-xs mt-4 pt-4 border-t border-[#333]">
+                                  <div className="col-span-2 text-[10px] uppercase font-bold text-white mb-[-8px]">Melee Profile</div>
+                                  <div className="col-span-2">
+                                    <div className="text-[9px] uppercase text-gray-500">Damage / Pen</div>
+                                    <div className="text-white font-bold">{m_dmg} / {m_pen}</div>
+                                  </div>
+                                  <div className="col-span-2">
+                                    <div className="text-[9px] uppercase text-gray-500">Special Rules</div>
+                                    <div className="text-[#8b0000] italic uppercase font-mono text-[9px]">{m_special}</div>
+                                  </div>
+                                </div>
+                              )}
+                              
+                              <div className={`grid grid-cols-2 gap-4 text-xs ${(!w.includes("Dreadnought Close Combat Weapon") && !w.includes("Dreadnought Chainfist") && !w.includes("Bloodfist") && !w.includes("Blood Talon") && w !== "Dreadnought Force Halberd") ? 'mt-4 pt-4 border-t border-[#333]' : 'pt-4 border-t border-[#222]'}`}>
+                                  {b_wep && <div className="col-span-2 text-[10px] uppercase font-bold text-[#ff8c00] mb-[-8px]">{b_wep}</div>}
+                                  <div><div className="text-[9px] uppercase text-gray-500">Range / ROF</div><div className="text-gray-300 font-mono">{range} / {rof}</div></div>
+                                  <div><div className="text-[9px] uppercase text-gray-500">Damage / Pen</div><div className="text-white font-bold">{dmg} / {pen}</div></div>
+                                  <div><div className="text-[9px] uppercase text-gray-500">Clip / Reload</div><div className="text-gray-400 font-mono">{clip} / {reload}</div></div>
+                                  <div><div className="text-[9px] uppercase text-gray-500">Special Rules</div><div className="text-[#8b0000] italic uppercase font-mono text-[9px]">{special}</div></div>
+                              </div>
+                            </>
+                          );
+                        })()}
+                      </div>
+                      <div className="bg-[#1a1a1a] p-4 rounded border border-[#333] space-y-4">
+                        <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest block border-b border-[#333] pb-1">Left Arm Configuration</label>
+                        <select 
+                          className="w-full bg-black border border-[#444] text-[11px] text-gray-300 p-2 rounded focus:border-red-800 focus:outline-none uppercase font-mono tracking-widest font-bold"
+                          value={character.dreadnoughtWeapons.leftArm}
+                          onChange={e => setCharacter({...character, dreadnoughtWeapons: { ...character.dreadnoughtWeapons!, leftArm: e.target.value }})}
+                        >
+                          <optgroup label="Standard Issue">
+                            {character.advancedSpeciality === "Ironclad Dreadnought" && (
+                              <>
+                                <option value="Seismic Hammer (with Astartes Heavy Flamer)">Seismic Hammer (Heavy Flamer)</option>
+                                <option value="Seismic Hammer (with Astartes Meltagun)">Seismic Hammer (Meltagun)</option>
+                              </>
+                            )}
+                            {(character.advancedSpeciality === "Furioso Dreadnought" || character.advancedSpeciality === "Librarian Dreadnought") && (
+                              <>
+                                <option value="Bloodfist (with Storm Bolter)">Bloodfist (Storm Bolter)</option>
+                                <option value="Bloodfist (with Heavy Flamer)">Bloodfist (Heavy Flamer)</option>
+                                <option value="Bloodfist (with Meltagun)">Bloodfist (Meltagun)</option>
+                                <option value="Blood Talon (with Storm Bolter)">Blood Talon (Storm Bolter)</option>
+                                <option value="Blood Talon (with Heavy Flamer)">Blood Talon (Heavy Flamer)</option>
+                                <option value="Blood Talon (with Meltagun)">Blood Talon (Meltagun)</option>
+                                <option value="Frag Cannon">Frag Cannon</option>
+                                <option value="Magna-Grapple">Magna-Grapple</option>
+                                {character.advancedSpeciality === "Librarian Dreadnought" && <option value="Dreadnought Force Halberd">Dreadnought Force Halberd</option>}
+                              </>
+                            )}
+                            {(character.advancedSpeciality !== "Ironclad Dreadnought" && character.advancedSpeciality !== "Furioso Dreadnought" && character.advancedSpeciality !== "Librarian Dreadnought") && (
+                              <>
+                                <option value="Dreadnought Close Combat Weapon (with Storm Bolter)">DCCW (Storm Bolter)</option>
+                                <option value="Dreadnought Close Combat Weapon (with Heavy Flamer)">DCCW (Heavy Flamer)</option>
+                                <option value="Missile Launcher">Missile Launcher</option>
+                              </>
+                            )}
+                          </optgroup>
+                          <optgroup label="Custom Requisitions">
+                            {character.weapons.ranged.map((w, i) => <option key={`cl-r-${i}`} value={w.name}>{w.name}</option>)}
+                            {character.weapons.melee.map((w, i) => <option key={`cl-m-${i}`} value={w.name}>{w.name}</option>)}
+                          </optgroup>
+                        </select>
+                        
+                        {(() => {
+                          const w = character.dreadnoughtWeapons.leftArm;
+                          let m_dmg = "-", m_pen = "-", m_special = "-";
+                          let b_wep = "", b_range = "-", b_rof = "-", b_dmg = "-", b_pen = "-", b_clip = "-", b_reload = "-", b_spec = "-";
+                          
+                          if (w === "Missile Launcher") {
+                              b_wep = "Missile Launcher";
+                              b_range = "250m"; b_rof = "S/-/-"; b_dmg = "Varies"; b_pen = "-"; b_clip = "-"; b_reload = "-"; b_spec = "-";
+                          } else if (w === "Frag Cannon") {
+                              b_wep = "Frag Cannon";
+                              b_range = "20m"; b_rof = "S/2/-"; b_dmg = "3d10+5 R"; b_pen = "4"; b_clip = "40"; b_reload = "-"; b_spec = "Blast (3), Razor-Sharp, Scatter";
+                          } else if (w === "Magna-Grapple") {
+                              b_wep = "Magna-Grapple";
+                              b_range = "20m"; b_rof = "S/-/-"; b_dmg = "As Melee"; b_pen = "As Melee"; b_clip = "-"; b_reload = "-"; b_spec = "Drags target towards dreadnought";
+                          } else if (w.includes("Dreadnought Close Combat Weapon") || w.includes("Seismic Hammer") || w.includes("Bloodfist") || w.includes("Blood Talon") || w === "Dreadnought Force Halberd") {
+                              if (w.includes("Seismic Hammer")) {
+                                m_dmg = "2d10+25 I"; m_pen = "5"; m_special = "Unwieldy, Deals extra 2d10 damage to structures";
+                              } else if (w.includes("Blood Talon")) {
+                                m_dmg = "2d10+5 E"; m_pen = "6"; m_special = "Devastating (2), Power Field, Tearing, +2 dmg per DoS";
+                              } else if (w.includes("Bloodfist")) {
+                                m_dmg = "2d10+10 E"; m_pen = "6"; m_special = "Power Field, Tearing";
+                              } else if (w === "Dreadnought Force Halberd") {
+                                m_dmg = "2d10+2 R"; m_pen = "4"; m_special = "Balanced, Force Weapon";
+                              } else {
+                                m_dmg = "2d10+24 E"; m_pen = "6"; m_special = "Power Field";
+                              }
+                              
+                              if (w.includes("Storm Bolter")) {
+                                  b_wep = "Astartes Storm Bolter";
+                                  b_range = "100m"; b_rof = "S/2/4"; b_dmg = "1d10+9 X"; b_pen = "4"; b_clip = "200"; b_reload = "-"; b_spec = "Storm, Tearing";
+                              } else if (w.includes("Heavy Flamer")) {
+                                  b_wep = "Astartes Heavy Flamer";
+                                  b_range = "30m"; b_rof = "S/-/-"; b_dmg = "1d10+12 E"; b_pen = "6"; b_clip = "20"; b_reload = "-"; b_spec = "Flame";
+                              } else if (w.includes("Meltagun")) {
+                                  b_wep = "Astartes Meltagun";
+                                  b_range = "20m"; b_rof = "S/-/-"; b_dmg = "2d10+8 E"; b_pen = "13"; b_clip = "5"; b_reload = "-"; b_spec = "-";
+                              }
+                          } else {
+                            const customWeapon = character.weapons.ranged.find(x => x.name === w) || character.weapons.melee.find(x => x.name === w);
+                            if (customWeapon) {
+                              b_wep = customWeapon.name;
+                              b_range = (customWeapon as RangedWeapon).range || "Melee";
+                              b_rof = (customWeapon as RangedWeapon).rof || "-";
+                              b_dmg = customWeapon.damage || "-";
+                              b_pen = customWeapon.pen?.toString() || "0";
+                              b_clip = (customWeapon as RangedWeapon).clip?.max?.toString() || "-";
+                              b_reload = (customWeapon as RangedWeapon).reload || "-";
+                              b_spec = customWeapon.special || "-";
+                            }
+                          }
+
+                          return (
+                            <div className="space-y-4 mt-4 pt-4 border-t border-[#333]">
+                                {(w.includes("Dreadnought Close Combat Weapon") || w.includes("Seismic Hammer") || w.includes("Bloodfist") || w.includes("Blood Talon") || w === "Dreadnought Force Halberd") && (
+                                  <div className="grid grid-cols-2 gap-4 text-xs">
+                                    <div className="col-span-2 text-[10px] uppercase font-bold text-white mb-[-8px]">Melee Profile</div>
+                                    <div className="col-span-2">
+                                        <div className="text-[9px] uppercase text-gray-500">Damage / Pen</div>
+                                        <div className="text-white font-bold">{m_dmg} <span className="text-gray-400 font-normal">/ {m_pen}</span></div>
+                                    </div>
+                                    <div className="col-span-2">
+                                        <div className="text-[9px] uppercase text-gray-500">Special Rules</div>
+                                        <div className="text-[#8b0000] italic uppercase font-mono text-[9px]">{m_special}</div>
+                                    </div>
+                                  </div>
+                                )}
+                                
+                             <div className={`grid grid-cols-2 gap-4 text-xs ${(w.includes("Dreadnought Close Combat Weapon") || w.includes("Seismic Hammer") || w.includes("Bloodfist") || w.includes("Blood Talon") || w === "Dreadnought Force Halberd") ? 'pt-4 border-t border-[#222]' : ''}`}>
+                                  {b_wep && <div className="col-span-2 text-[10px] uppercase font-bold text-[#ff8c00] mb-[-8px]">{b_wep}</div>}
+                                  <div><div className="text-[9px] uppercase text-gray-500">Range / ROF</div><div className="text-gray-300 font-mono">{b_range} / {b_rof}</div></div>
+                                  <div><div className="text-[9px] uppercase text-gray-500">Damage / Pen</div><div className="text-white font-bold">{b_dmg} / {b_pen}</div></div>
+                                  <div><div className="text-[9px] uppercase text-gray-500">Clip / Reload</div><div className="text-gray-400 font-mono">{b_clip} / {b_reload}</div></div>
+                                  <div><div className="text-[9px] uppercase text-gray-500">Special Rules</div><div className="text-[#8b0000] italic uppercase font-mono text-[9px]">{b_spec}</div></div>
+                                </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        setIsRequisitioningDreadWargear(true);
+                        setTimeout(() => {
+                          setIsRequisitioningDreadWargear(false);
+                          setShowWeaponModal(true);
+                        }, 1000);
+                      }}
+                      className={`w-full border-2 border-dashed p-4 text-xs transition-colors rounded uppercase tracking-widest font-bold mt-4 block ${
+                        isRequisitioningDreadWargear 
+                          ? 'border-green-500 text-green-500 bg-green-500/10' 
+                          : 'border-[#333] text-gray-400 hover:border-[#8b0000] hover:text-white'
+                      }`}
+                      disabled={isRequisitioningDreadWargear}
+                    >
+                      {isRequisitioningDreadWargear ? "+++ accessing inquisitorial arsenal +++" : "+ REQUISITION ADDITIONAL WARGEAR FOR DREADNOUGHTS"}
+                    </button>
+                  </div>
+                )}
 
                 <SectionHeader title="Armour" icon={<Icons.Shield />} />
                 <div className="space-y-6">
@@ -3940,7 +5241,9 @@ export default function App() {
                         onChange={e => handleArmorPatternChange(e.target.value)} 
                         className="w-full bg-black border border-[#333] p-2 rounded text-white gothic-font"
                       >
-                        {Object.keys(ARMOR_PATTERNS).map(p => <option key={p} value={p}>{p}</option>)}
+                        {Object.keys(ARMOR_PATTERNS)
+                          .filter(p => character.dreadnoughtWeapons ? p.includes("Dreadnought") : !p.includes("Dreadnought"))
+                          .map(p => <option key={p} value={p}>{p}</option>)}
                       </select>
                     </div>
                     <div className="flex-1 space-y-1">
@@ -3984,60 +5287,64 @@ export default function App() {
                       <img 
                         src={ARMOR_PATTERNS[character.armor.pattern]?.imageUrl || portrait} 
                         alt="Armour Profile" 
-                        className="absolute inset-0 w-full h-full object-cover opacity-60 grayscale brightness-125 contrast-110" 
+                        className={`absolute inset-0 w-full h-full opacity-60 grayscale brightness-125 contrast-110 ${character.dreadnoughtWeapons ? 'object-contain scale-x-90 scale-y-105' : 'object-cover'}`} 
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/60"></div>
                       
                       <div className="text-[8px] absolute top-2 left-2 text-red-800 font-bold uppercase z-10">Armour Profile</div>
                       <div className="text-[10px] absolute top-2 right-2 text-gray-400 font-bold uppercase z-10">{character.armor.pattern}</div>
                       
-                      {/* Head */}
-                      <div className="absolute top-4 left-1/2 -translate-x-1/2 flex flex-col items-center z-10">
-                          <span className="text-[7px] text-gray-400 uppercase font-bold tracking-widest bg-black/60 px-1 rounded">Head</span>
-                          <span className="text-2xl font-bold text-white leading-none drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] gothic-font">
-                            {character.armor.head + (character.armor.craftsmanship === "Master-Crafted" && character.armor.pattern !== "Artificer" && character.armor.pattern !== "Artificer Armour" ? 1 : 0)}
-                          </span>
-                      </div>
+                      {!character.dreadnoughtWeapons && (
+                        <>
+                          {/* Head */}
+                          <div className="absolute top-4 left-1/2 -translate-x-1/2 flex flex-col items-center z-10">
+                              <span className="text-[7px] text-gray-400 uppercase font-bold tracking-widest bg-black/60 px-1 rounded">Head</span>
+                              <span className="text-2xl font-bold text-white leading-none drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] gothic-font">
+                                {character.armor.head + (character.armor.craftsmanship === "Master-Crafted" && character.armor.pattern !== "Artificer" && character.armor.pattern !== "Artificer Armour" && character.armor.pattern !== "Armour of Faith" ? 1 : 0)}
+                              </span>
+                          </div>
 
-                      {/* Torso */}
-                      <div className="absolute top-[26%] left-1/2 -translate-x-1/2 flex flex-col items-center z-10">
-                          <span className="text-[7px] text-gray-400 uppercase font-bold tracking-widest bg-black/60 px-1 rounded">Torso</span>
-                          <span className="text-2xl font-bold text-white leading-none drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] gothic-font">
-                            {character.armor.torso + (character.armor.craftsmanship === "Master-Crafted" && character.armor.pattern !== "Artificer" && character.armor.pattern !== "Artificer Armour" ? 1 : 0)}
-                          </span>
-                      </div>
+                          {/* Torso */}
+                          <div className="absolute top-[26%] left-1/2 -translate-x-1/2 flex flex-col items-center z-10">
+                              <span className="text-[7px] text-gray-400 uppercase font-bold tracking-widest bg-black/60 px-1 rounded">Torso</span>
+                              <span className="text-2xl font-bold text-white leading-none drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] gothic-font">
+                                {character.armor.torso + (character.armor.craftsmanship === "Master-Crafted" && character.armor.pattern !== "Artificer" && character.armor.pattern !== "Artificer Armour" && character.armor.pattern !== "Armour of Faith" ? 1 : 0)}
+                              </span>
+                          </div>
 
-                      {/* Arms */}
-                      <div className="absolute top-[35%] left-4 flex flex-col items-center z-10">
-                          <span className="text-[7px] text-gray-400 uppercase font-bold tracking-widest bg-black/60 px-1 rounded">L.Arm</span>
-                          <span className="text-2xl font-bold text-red-600 leading-none drop-shadow-[0_0_8px_rgba(220,38,38,0.5)] gothic-font">
-                            {character.armor.leftArm + (character.armor.craftsmanship === "Master-Crafted" && character.armor.pattern !== "Artificer" && character.armor.pattern !== "Artificer Armour" ? 1 : 0)}
-                          </span>
-                      </div>
-                      <div className="absolute top-[35%] right-4 flex flex-col items-center z-10">
-                          <span className="text-[7px] text-gray-400 uppercase font-bold tracking-widest bg-black/60 px-1 rounded">R.Arm</span>
-                          <span className="text-2xl font-bold text-red-600 leading-none drop-shadow-[0_0_8px_rgba(220,38,38,0.5)] gothic-font">
-                            {character.armor.rightArm + (character.armor.craftsmanship === "Master-Crafted" && character.armor.pattern !== "Artificer" && character.armor.pattern !== "Artificer Armour" ? 1 : 0)}
-                          </span>
-                      </div>
+                          {/* Arms */}
+                          <div className="absolute top-[35%] left-4 flex flex-col items-center z-10">
+                              <span className="text-[7px] text-gray-400 uppercase font-bold tracking-widest bg-black/60 px-1 rounded">L.Arm</span>
+                              <span className="text-2xl font-bold text-red-600 leading-none drop-shadow-[0_0_8px_rgba(220,38,38,0.5)] gothic-font">
+                                {character.armor.leftArm + (character.armor.craftsmanship === "Master-Crafted" && character.armor.pattern !== "Artificer" && character.armor.pattern !== "Artificer Armour" && character.armor.pattern !== "Armour of Faith" ? 1 : 0)}
+                              </span>
+                          </div>
+                          <div className="absolute top-[35%] right-4 flex flex-col items-center z-10">
+                              <span className="text-[7px] text-gray-400 uppercase font-bold tracking-widest bg-black/60 px-1 rounded">R.Arm</span>
+                              <span className="text-2xl font-bold text-red-600 leading-none drop-shadow-[0_0_8px_rgba(220,38,38,0.5)] gothic-font">
+                                {character.armor.rightArm + (character.armor.craftsmanship === "Master-Crafted" && character.armor.pattern !== "Artificer" && character.armor.pattern !== "Artificer Armour" && character.armor.pattern !== "Armour of Faith" ? 1 : 0)}
+                              </span>
+                          </div>
 
-                      {/* Legs */}
-                      <div className="absolute bottom-12 left-6 flex flex-col items-center z-10">
-                          <span className="text-[7px] text-gray-400 uppercase font-bold tracking-widest bg-black/60 px-1 rounded">L.Leg</span>
-                          <span className="text-2xl font-bold text-red-600 leading-none drop-shadow-[0_0_8px_rgba(220,38,38,0.5)] gothic-font">
-                            {character.armor.leftLeg + (character.armor.craftsmanship === "Master-Crafted" && character.armor.pattern !== "Artificer" && character.armor.pattern !== "Artificer Armour" ? 1 : 0)}
-                          </span>
-                      </div>
-                      <div className="absolute bottom-12 right-6 flex flex-col items-center z-10">
-                          <span className="text-[7px] text-gray-400 uppercase font-bold tracking-widest bg-black/60 px-1 rounded">R.Leg</span>
-                          <span className="text-2xl font-bold text-red-600 leading-none drop-shadow-[0_0_8px_rgba(220,38,38,0.5)] gothic-font">
-                            {character.armor.rightLeg + (character.armor.craftsmanship === "Master-Crafted" && character.armor.pattern !== "Artificer" && character.armor.pattern !== "Artificer Armour" ? 1 : 0)}
-                          </span>
-                      </div>
+                          {/* Legs */}
+                          <div className="absolute bottom-12 left-6 flex flex-col items-center z-10">
+                              <span className="text-[7px] text-gray-400 uppercase font-bold tracking-widest bg-black/60 px-1 rounded">L.Leg</span>
+                              <span className="text-2xl font-bold text-red-600 leading-none drop-shadow-[0_0_8px_rgba(220,38,38,0.5)] gothic-font">
+                                {character.armor.leftLeg + (character.armor.craftsmanship === "Master-Crafted" && character.armor.pattern !== "Artificer" && character.armor.pattern !== "Artificer Armour" && character.armor.pattern !== "Armour of Faith" ? 1 : 0)}
+                              </span>
+                          </div>
+                          <div className="absolute bottom-12 right-6 flex flex-col items-center z-10">
+                              <span className="text-[7px] text-gray-400 uppercase font-bold tracking-widest bg-black/60 px-1 rounded">R.Leg</span>
+                              <span className="text-2xl font-bold text-red-600 leading-none drop-shadow-[0_0_8px_rgba(220,38,38,0.5)] gothic-font">
+                                {character.armor.rightLeg + (character.armor.craftsmanship === "Master-Crafted" && character.armor.pattern !== "Artificer" && character.armor.pattern !== "Artificer Armour" && character.armor.pattern !== "Armour of Faith" ? 1 : 0)}
+                              </span>
+                          </div>
+                        </>
+                      )}
                     </div>
 
                     <div className="flex-1 grid grid-cols-2 gap-3">
-                      {(['head', 'torso', 'leftArm', 'rightArm', 'leftLeg', 'rightLeg'] as Array<keyof Armor>).map(part => {
+                      {!character.dreadnoughtWeapons ? (['head', 'torso', 'leftArm', 'rightArm', 'leftLeg', 'rightLeg'] as Array<keyof Armor>).map(part => {
                         if (part === 'name' || part === 'pattern' || part === 'abilities') return null;
                         return (
                           <div key={part} className="p-3 bg-black border border-[#333] rounded group hover:border-[#8b0000] transition-colors">
@@ -4049,11 +5356,26 @@ export default function App() {
                               </div>
                             </div>
                             <div className="text-2xl font-bold text-white gothic-font">
-                              {(character.armor[part as keyof Armor] as number) + (character.armor.craftsmanship === "Master-Crafted" && character.armor.pattern !== "Artificer" && character.armor.pattern !== "Artificer Armour" ? 1 : 0)}
+                              {(character.armor[part as keyof Armor] as number) + (character.armor.craftsmanship === "Master-Crafted" && character.armor.pattern !== "Artificer" && character.armor.pattern !== "Artificer Armour" && character.armor.pattern !== "Armour of Faith" ? 1 : 0)}
                             </div>
                           </div>
                         );
-                      })}
+                      }) : (
+                        [
+                          { name: 'Sarcophagus', ap: 30 },
+                          { name: 'Front', ap: 37 },
+                          { name: 'L. Side', ap: 37 },
+                          { name: 'R. Side', ap: 37 },
+                          { name: 'Rear', ap: 20 },
+                        ].map(part => (
+                           <div key={part.name} className="p-3 bg-black border border-[#333] rounded">
+                             <div className="flex justify-between items-center mb-1">
+                               <div className="text-[9px] text-gray-500 uppercase font-bold tracking-tighter">{part.name} AP</div>
+                             </div>
+                             <div className="text-2xl font-bold text-white gothic-font">{part.ap}</div>
+                           </div>
+                        ))
+                      )}
                       {character.armor.craftsmanship === "Exceptional" && (
                         <div className="col-span-2 text-[10px] text-[#ffd700] font-bold uppercase tracking-widest text-center mt-2">
                           Exceptional: +1 AP against first attack in any round
@@ -4188,6 +5510,43 @@ export default function App() {
                             </div>
                             <div className="text-[10px] text-gray-400 leading-tight mb-1">{trapping.description}</div>
                             
+                            {trapping.name === "Librarium Texts" && (
+                              <div className="mt-2 space-y-1">
+                                <label className="text-[9px] text-gray-500 uppercase tracking-widest block font-bold">Focus Area</label>
+                                <select 
+                                  value={character.bloodRavensChoices?.librariumTextsFocus || ""}
+                                  onChange={e => {
+                                      const newVal = e.target.value;
+                                      const oldVal = character.bloodRavensChoices?.librariumTextsFocus;
+                                      
+                                      let newSkills = (character.skills || []).map(s => {
+                                        if (oldVal && s.name === oldVal && s.mastery === 1) {
+                                          return { ...s, mastery: 0 };
+                                        }
+                                        if (newVal && s.name === newVal && s.mastery === 0) {
+                                          return { ...s, mastery: 1 };
+                                        }
+                                        return s;
+                                      });
+
+                                      const ref = ALL_SKILLS.find(s => s.name === newVal);
+                                      if (ref && !newSkills.some(s => s.name === newVal)) {
+                                          newSkills.push({ name: newVal, characteristic: ref.characteristic as any, mastery: 1, description: 'description' in ref ? ref.description : "" });
+                                      }
+                                      
+                                      newSkills.sort((a, b) => a.name.localeCompare(b.name));
+                                      setCharacter({...character, bloodRavensChoices: {...(character.bloodRavensChoices || {scholasticLore: "", forbiddenLore: "", librariumTextsFocus: ""}), librariumTextsFocus: newVal}, skills: newSkills});
+                                  }}
+                                  className="w-full bg-black border border-[#333] text-[9px] text-[#ffd700] p-1.5 rounded focus:border-[#ffd700] outline-none font-bold"
+                                >
+                                  <option value="">Select Lore Field...</option>
+                                  {ALL_SKILLS.filter(s => s.name.startsWith("Scholastic Lore") || s.name.startsWith("Forbidden Lore") || s.name.startsWith("Common Lore")).map(s => (
+                                    <option key={s.name} value={s.name}>{s.name}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            )}
+
                             {trapping.options ? (
                               <div className="mt-2 space-y-1">
                                 <select
@@ -4649,7 +6008,9 @@ export default function App() {
 
                               const skill = item as Skill;
                               const charStat = character.characteristics[skill.characteristic];
-                              const armorBonus = skill.characteristic === 'S' ? (ARMOR_PATTERNS[character.armor.pattern]?.strengthBonus || 0) : 0;
+                              let armorBonus = 0;
+                              if (skill.characteristic === 'S') armorBonus = ARMOR_PATTERNS[character.armor.pattern]?.strengthBonus || 0;
+                              if (skill.characteristic === 'Ag') armorBonus = ARMOR_PATTERNS[character.armor.pattern]?.agilityBonus || 0;
                               const score = getCharScore(charStat, armorBonus);
                               const masteryBonus = (skill.mastery - 1) * 10;
                               const isAdvanced = isAdvancedSkill(skill.name);
@@ -4664,6 +6025,16 @@ export default function App() {
                                 }
                               } else {
                                 finalScore = score + masteryBonus + (isFatigued ? -10 : 0) + cursePenalty;
+                              }
+
+                              const hasLibrariumTexts = (character.armor.trappings || []).some(t => t.name === "Librarium Texts");
+                              if (hasLibrariumTexts && character.bloodRavensChoices?.librariumTextsFocus === skill.name && finalScore > 0) {
+                                finalScore += 3;
+                              }
+
+                              const isHighlySkilled = character.customSoloModeName === "Highly Skilled" && character.customSoloModeSkillChoices?.includes(skill.name);
+                              if (isHighlySkilled && (character.rank || 1) >= 4 && finalScore > 0) {
+                                finalScore += 10;
                               }
 
                               let dreadnoughtNote = "";
@@ -4691,6 +6062,8 @@ export default function App() {
                                       <div className={`flex items-center gap-1 ${categoryPrefixes.some(prefix => skill.name.startsWith(prefix + " (")) ? "pl-4" : ""}`}>
                                         {skill.name}
                                         {dreadnoughtNote && <span className="text-red-500 text-[10px] ml-1">{dreadnoughtNote}</span>}
+                                        {hasLibrariumTexts && character.bloodRavensChoices?.librariumTextsFocus === skill.name && <span className="text-[#ffd700] text-[10px] ml-1">(+3 Librarium Texts)</span>}
+                                        {isHighlySkilled && <span className="text-[#ffd700] text-[10px] ml-1">{(character.rank || 1) >= 8 ? "(+10, +1 DoS, Re-roll)" : (character.rank || 1) >= 4 ? "(+10, Re-roll)" : "(Re-roll)"}</span>}
                                         {skill.description && (
                                           <span className="text-gray-500 text-[10px] opacity-50">
                                             {expandedSkill === skill.name ? '▼' : '▶'}
@@ -5018,6 +6391,34 @@ export default function App() {
                         </div>
                       </>
                     )}
+                    
+                    {character.isEmperorsChampion && (
+                      <div className="p-4 bg-[#1a1a1a] border border-[#ffd700] rounded shadow-[0_0_15px_rgba(255,215,0,0.15)] mt-4">
+                        <h5 className="text-[10px] font-bold text-[#ffd700] uppercase mb-3 border-b border-[#ffd700]/30 pb-1">The Emperor's Champion</h5>
+                        <div className="mb-4">
+                          <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest block mb-1">Active Vow</label>
+                          <select 
+                            value={character.emperorsChampionVow || ""}
+                            onChange={e => setCharacter({...character, emperorsChampionVow: e.target.value})}
+                            className="w-full bg-black border border-[#ffd700]/50 p-2 rounded text-[#ffd700] font-bold uppercase text-[10px] tracking-widest outline-none focus:border-[#ffd700]"
+                          >
+                            {Object.keys(EMPERORS_CHAMPION_VOWS).map(vow => (
+                              <option key={vow} value={vow}>{vow}</option>
+                            ))}
+                          </select>
+                        </div>
+                        {character.emperorsChampionVow && EMPERORS_CHAMPION_VOWS[character.emperorsChampionVow] && (
+                          <div className="bg-[#111] p-3 rounded border border-[#222]">
+                            <p className="text-[10px] text-gray-300 italic">
+                              "{EMPERORS_CHAMPION_VOWS[character.emperorsChampionVow]}"
+                            </p>
+                          </div>
+                        )}
+                        <div className="mt-4 pt-4 border-t border-[#333]">
+                          <AbilityTag ability="Slayer of Champions" character={character} setCharacter={setCharacter} />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -5034,8 +6435,8 @@ export default function App() {
                         <label className="block text-[10px] text-gray-500 uppercase font-bold mb-1">Total XP</label>
                         <input 
                           type="number" 
-                          value={character.xpTotal} 
-                          onChange={e => setCharacter({...character, xpTotal: parseInt(e.target.value) || 0})}
+                          value={character.xpTotal === 0 ? '' : character.xpTotal} 
+                          onChange={e => setCharacter({...character, xpTotal: e.target.value === '' ? 0 : parseInt(e.target.value) || 0})}
                           className="w-full bg-black border border-[#333] p-2 rounded text-white font-mono"
                         />
                       </div>
@@ -5043,8 +6444,8 @@ export default function App() {
                         <label className="block text-[10px] text-gray-500 uppercase font-bold mb-1">Spent XP</label>
                         <input 
                           type="number" 
-                          value={character.xpSpent} 
-                          onChange={e => setCharacter({...character, xpSpent: parseInt(e.target.value) || 0})}
+                          value={character.xpSpent === 0 ? '' : character.xpSpent} 
+                          onChange={e => setCharacter({...character, xpSpent: e.target.value === '' ? 0 : parseInt(e.target.value) || 0})}
                           className="w-full bg-black border border-[#333] p-2 rounded text-white font-mono"
                         />
                       </div>
@@ -5087,8 +6488,9 @@ export default function App() {
                             </button>
                           )}
                           {ADVANCED_SPECIALITY_RULES.filter(rule => {
-                            if (rule.requiredChapter && rule.requiredChapter !== character.chapter) return false;
-                            if (rule.forbiddenChapter && rule.forbiddenChapter === character.chapter) return false;
+                            const effectiveChapter = (character.usePrimogenitorRules && character.customChapterPrimogenitor) ? character.customChapterPrimogenitor : character.chapter;
+                            if (rule.requiredChapter && rule.requiredChapter !== effectiveChapter) return false;
+                            if (rule.forbiddenChapter && rule.forbiddenChapter === effectiveChapter) return false;
                             return true;
                           }).map(rule => {
                             const result = rule.check(character, getCharScoreWrapper);
@@ -5105,6 +6507,116 @@ export default function App() {
                             }
                             return null;
                           })}
+                          {((character.chapter === 'Black Templars' || (character.usePrimogenitorRules && character.customChapterPrimogenitor === 'Black Templars')) && character.renown >= 60 && getCharScoreWrapper('WS') >= 50 && character.specialization !== 'Apothecary' && character.specialization !== 'Techmarine' && !character.isEmperorsChampion) && (
+                            <div className="w-full col-span-2 space-y-2 mt-4 border-t border-[#333] pt-4">
+                              {!showEmperorsChampionConfirm ? (
+                                <button
+                                  onClick={() => setShowEmperorsChampionConfirm(true)}
+                                  className="w-full bg-[#ffd700] hover:bg-white text-black font-bold uppercase tracking-widest text-[10px] py-2 rounded transition-colors"
+                                >
+                                  Become the Emperor's Champion
+                                </button>
+                              ) : (
+                                <div className="bg-[#1a1a1a] p-3 rounded border border-[#ffd700]/50 animate-fadeIn">
+                                  <div className="text-[10px] text-gray-300 font-bold uppercase mb-2 text-center leading-tight">
+                                    Warning: This will replace your current armour and weapons with the Armour of Faith and The Black Sword.
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => setShowEmperorsChampionConfirm(false)}
+                                      className="flex-1 bg-[#111] hover:bg-[#222] border border-[#333] text-gray-400 font-bold uppercase tracking-widest text-[9px] py-2 rounded transition-colors"
+                                    >
+                                      Cancel
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        if (character.xpTotal - character.xpSpent < 500) {
+                                          setToastMessage("Not enough XP to become the Emperor's Champion. Requires 500 XP.");
+                                          setShowEmperorsChampionConfirm(false);
+                                          return;
+                                        }
+                                        setShowEmperorsChampionConfirm(false);
+                                        setCharacter({ 
+                                          ...character, 
+                                          isEmperorsChampion: true,
+                                          emperorsChampionVow: "Uphold the Honour of the Emperor",
+                                          xpSpent: character.xpSpent + 500,
+                                          armor: {
+                                            pattern: "Armour of Faith",
+                                            craftsmanship: "Master-Crafted",
+                                            histories: [],
+                                            abilities: ARMOR_PATTERNS["Armour of Faith"]?.abilities || ["Force Field (PR 30, Overload 01-05)"],
+                                            trappings: [],
+                                            head: 12, torso: 12, rightArm: 12, leftArm: 12, rightLeg: 12, leftLeg: 12
+                                          },
+                                          weapons: {
+                                            melee: [
+                                              { id: `ec_sword_${Date.now()}`, name: "The Black Sword", class: "Melee", damage: "1d10+6 E / 2d10+6 E", pen: 6, special: "Balanced, Power Field, Can be used 1H or 2H", quantity: { current: 1, max: 1 } },
+                                              { id: `ec_blade_${Date.now()}`, name: "Astartes Combat Blade", class: "Melee", damage: "1d10+2 R", pen: 2, special: "", quantity: { current: 1, max: 1 } }
+                                            ],
+                                            ranged: [
+                                              { id: `ec_pistol_${Date.now()}`, name: "Astartes Bolt Pistol", class: "Pistol", range: "30m", rof: "S/2/-", damage: "1d10+9 X", pen: 4, clip: { current: 14, max: 14 }, reload: "Full", special: "Tearing", quantity: { current: 1, max: 1 } }
+                                            ],
+                                            explosives: []
+                                          }
+                                        });
+                                      }}
+                                      className="flex-1 bg-[#ffd700] hover:bg-white text-black font-bold uppercase tracking-widest text-[9px] py-2 rounded transition-colors"
+                                    >
+                                      Proceed
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {character.isEmperorsChampion && (
+                            <div className="w-full col-span-2 space-y-2 mt-4 border-t border-[#333] pt-4">
+                              {!showRelinquishConfirm ? (
+                                <button
+                                  onClick={() => setShowRelinquishConfirm(true)}
+                                  className="w-full bg-[#111] hover:bg-red-900 border border-red-900 text-red-500 font-bold uppercase tracking-widest text-[10px] py-2 rounded transition-colors"
+                                >
+                                  Relinquish the Black Sword
+                                </button>
+                              ) : (
+                                <div className="bg-[#1a1a1a] p-3 rounded border border-red-900/50 animate-fadeIn">
+                                  <div className="text-[10px] text-gray-300 font-bold uppercase mb-2 text-center leading-tight">
+                                    Warning: You will need to manually re-equip your standard wargear in the Wargear tab.
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => setShowRelinquishConfirm(false)}
+                                      className="flex-1 bg-[#111] hover:bg-[#222] border border-[#333] text-gray-400 font-bold uppercase tracking-widest text-[9px] py-2 rounded transition-colors"
+                                    >
+                                      Cancel
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setShowRelinquishConfirm(false);
+                                        setCharacter({
+                                          ...character,
+                                          isEmperorsChampion: false,
+                                          emperorsChampionVow: undefined,
+                                          armor: {
+                                            pattern: "MK VII Aquilla",
+                                            craftsmanship: "Common",
+                                            histories: [],
+                                            abilities: [],
+                                            trappings: [],
+                                            head: 8, torso: 10, rightArm: 8, leftArm: 8, rightLeg: 8, leftLeg: 8
+                                          }
+                                        });
+                                      }}
+                                      className="flex-1 bg-red-900 hover:bg-red-800 text-white font-bold uppercase tracking-widest text-[9px] py-2 rounded transition-colors"
+                                    >
+                                      Proceed
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -5116,10 +6628,10 @@ export default function App() {
                         <label className="block text-[10px] text-gray-500 uppercase font-bold mb-1">Rank</label>
                         <input 
                           type="number" 
-                          min="1"
+                          min="0"
                           max="8"
-                          value={character.rank} 
-                          onChange={e => setCharacter({...character, rank: parseInt(e.target.value) || 1})}
+                          value={character.rank === 0 ? '' : character.rank} 
+                          onChange={e => setCharacter({...character, rank: e.target.value === '' ? 0 : parseInt(e.target.value) || 0})}
                           className="w-full bg-black border border-[#333] p-2 rounded text-white font-mono"
                         />
                       </div>
@@ -5127,8 +6639,9 @@ export default function App() {
                         <label className="block text-[10px] text-gray-500 uppercase font-bold mb-1">Renown</label>
                         <input 
                           type="number" 
-                          value={character.renown} 
-                          onChange={e => setCharacter({...character, renown: parseInt(e.target.value) || 0})}
+                          min="0"
+                          value={character.renown === 0 ? '' : character.renown} 
+                          onChange={e => setCharacter({...character, renown: e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value) || 0)})}
                           className="w-full bg-black border border-[#333] p-2 rounded text-white font-mono"
                         />
                       </div>
@@ -5167,6 +6680,638 @@ export default function App() {
         </div>
         <aside className="w-80 hidden lg:block"><ServoSkullChat character={character} /></aside>
       </main>
+      )}
+
+      {/* Chapter Selection Modal */}
+      {showChapterModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-[#111] border-2 border-[#8b0000] rounded-lg w-full max-w-5xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-4 bg-[#8b0000] flex justify-between items-center shrink-0">
+              <h3 className="text-white flex items-center gap-2 gothic-font uppercase tracking-widest text-lg">
+                {isCreatingCustomChapter ? (
+                  <button onClick={() => {
+                    setIsCreatingCustomChapter(false);
+                    setCustomChapterDemeanorSelection("");
+                    setCustomChapterPuritySelection("Pure");
+                    setCustomChapterDeficiencySelection("");
+                    setCustomChapterAdditionalDeficiencies([]);
+                    setCustomChapterPrimogenitorSelection("");
+                    setCustomChapterUsePrimogenitorSelection(false);
+                    setCustomLostZygoteSelections([]);
+                    setCustomChapterModifierSelection("");
+                    setCustomChapterModifierChoices([]);
+                    setCustomSoloModeSelection("");
+                    setCustomSoloModeSkillChoices([]);
+                    setCustomSoloModeCharacteristicChoice("");
+                    setCustomSoloModeChosenAbility("");
+                    setCustomSquadModeAttackPattern("");
+                    setCustomSquadModeChosenAttackPattern("");
+                    setCustomSquadModeDefensiveStance("");
+                    setCustomSquadModeChosenDefensiveStance("");
+                    setCustomChapterPsychicPowers("");
+                  }} className="hover:text-black/50 transition-colors" title="Back to Chapter List">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                  </button>
+                ) : (
+                  <img src="https://i.ibb.co/C3z1DdsL/Deathwatch-icon.png" alt="Deathwatch Icon" className="w-6 h-6 object-contain drop-shadow-[0_0_2px_rgba(255,215,0,0.5)]" />
+                )}
+                {isCreatingCustomChapter ? "Forge Custom Chapter" : "Assign Chapter"}
+              </h3>
+              <button onClick={() => setShowChapterModal(false)} className="text-white/70 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto custom-scrollbar">
+              {isCreatingCustomChapter ? (
+                <div className="flex flex-col items-center justify-center py-8">
+                  <h4 className="text-white gothic-font text-2xl mb-4">Forge Your Own Legacy</h4>
+                  <div className="w-full max-w-2xl space-y-6">
+                    <div>
+                      <label className="block text-gray-400 text-sm uppercase tracking-wider mb-2 font-bold text-center">Chapter Name</label>
+                      <input
+                        type="text"
+                        value={customChapterName}
+                        onChange={(e) => setCustomChapterName(e.target.value)}
+                        className="w-full bg-black border border-[#333] p-3 rounded text-white text-center focus:border-[#8b0000] outline-none text-xl gothic-font"
+                        placeholder="Enter Chapter Name"
+                        autoFocus
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-gray-400 text-sm uppercase tracking-wider mb-2 font-bold text-center">Chapter Demeanour</label>
+                      <select 
+                        value={customChapterDemeanorSelection}
+                        onChange={(e) => setCustomChapterDemeanorSelection(e.target.value)}
+                        className="w-full bg-[#1a1a1a] border border-[#333] p-3 rounded text-white focus:border-[#8b0000] outline-none"
+                      >
+                        <option value="" disabled>Select a Demeanour...</option>
+                        {Object.keys(CUSTOM_CHAPTER_DEMEANORS).map(dem => (
+                          <option key={dem} value={dem}>{dem}</option>
+                        ))}
+                      </select>
+                      {customChapterDemeanorSelection && (
+                        <div className="mt-4 p-4 bg-[#111] border border-[#333] rounded text-sm text-gray-300 italic h-32 overflow-y-auto custom-scrollbar">
+                          {CUSTOM_CHAPTER_DEMEANORS[customChapterDemeanorSelection].demeanorDescription}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-gray-400 text-sm uppercase tracking-wider mb-2 font-bold text-center">Gene Stock Purity</label>
+                      <select 
+                        value={customChapterPuritySelection}
+                        onChange={(e) => {
+                          setCustomChapterPuritySelection(e.target.value);
+                          if (e.target.value === "Pure") setCustomChapterDeficiencySelection("");
+                        }}
+                        className="w-full bg-[#1a1a1a] border border-[#333] p-3 rounded text-white focus:border-[#8b0000] outline-none"
+                      >
+                        {Object.keys(GENE_SEED_PURITIES).map(purity => (
+                          <option key={purity} value={purity}>{purity}</option>
+                        ))}
+                      </select>
+                      {customChapterPuritySelection && (
+                        <div className="mt-4 p-4 bg-[#111] border border-[#333] rounded text-sm text-gray-300 italic h-24 overflow-y-auto custom-scrollbar">
+                          {GENE_SEED_PURITIES[customChapterPuritySelection].description}
+                        </div>
+                      )}
+                    </div>
+                    {customChapterPuritySelection !== "Pure" && (
+                      <div>
+                        <label className="block text-gray-400 text-sm uppercase tracking-wider mb-2 font-bold text-center">Gene-Seed Deficiency</label>
+                        <select 
+                          value={customChapterDeficiencySelection}
+                          onChange={(e) => {
+                            setCustomChapterDeficiencySelection(e.target.value);
+                            setCustomChapterAdditionalDeficiencies([]);
+                          }}
+                          className="w-full bg-[#1a1a1a] border border-[#333] p-3 rounded text-white focus:border-[#8b0000] outline-none"
+                        >
+                          <option value="" disabled>Select a Deficiency...</option>
+                          {Object.keys(GENE_SEED_DEFICIENCIES).map(def => (
+                            <option key={def} value={def}>{def}</option>
+                          ))}
+                        </select>
+                        {customChapterDeficiencySelection && (
+                          <div className="mt-4 p-4 bg-[#111] border border-[#333] rounded text-sm text-gray-300 italic h-24 overflow-y-auto custom-scrollbar">
+                            {GENE_SEED_DEFICIENCIES[customChapterDeficiencySelection].description}
+                          </div>
+                        )}
+                        {customChapterDeficiencySelection === "Multiple Instabilities" && (
+                          <div className="mt-4 space-y-4">
+                            <label className="block text-gray-400 text-sm uppercase tracking-wider mb-1 font-bold text-center border-t border-[#333] pt-4">Additional Deficiencies (Select 2)</label>
+                            {[0, 1].map((index) => (
+                              <select
+                                key={index}
+                                value={customChapterAdditionalDeficiencies[index] || ""}
+                                onChange={(e) => {
+                                  const newArr = [...customChapterAdditionalDeficiencies];
+                                  newArr[index] = e.target.value;
+                                  setCustomChapterAdditionalDeficiencies(newArr);
+                                }}
+                                className="w-full bg-[#1a1a1a] border border-[#333] p-3 rounded text-white focus:border-[#8b0000] outline-none"
+                              >
+                                <option value="" disabled>Select Additional Deficiency {index + 1}...</option>
+                                {Object.keys(GENE_SEED_DEFICIENCIES).filter(d => d !== "Multiple Instabilities").map(def => (
+                                  <option key={def} value={def}>{def}</option>
+                                ))}
+                              </select>
+                            ))}
+                          </div>
+                        )}
+                        {(customChapterDeficiencySelection === "Lost Zygote" || customChapterAdditionalDeficiencies.includes("Lost Zygote")) && (
+                          <div className="mt-4 space-y-4">
+                            <label className="block text-gray-400 text-sm uppercase tracking-wider mb-1 font-bold text-center border-t border-[#333] pt-4">Lost Zygotes (Select up to 2)</label>
+                            {[0, 1].map((index) => (
+                              <select
+                                key={index}
+                                value={customLostZygoteSelections[index] || ""}
+                                onChange={(e) => {
+                                  const newArr = [...customLostZygoteSelections];
+                                  newArr[index] = e.target.value;
+                                  setCustomLostZygoteSelections(newArr);
+                                }}
+                                className="w-full bg-[#1a1a1a] border border-[#333] p-3 rounded text-white focus:border-[#8b0000] outline-none"
+                              >
+                                <option value="">None / Intact</option>
+                                {["Catalepsean Node", "Preomnor", "Omophagea", "Occulobe", "Lyman’s Ear", "Sus-an Membrane", "Oolitic Kidney", "Neuroglottis", "Mucranoid", "Betcher’s Gland", "Melanchromic Organ"].map(zygote => (
+                                  <option key={zygote} value={zygote} disabled={customLostZygoteSelections.includes(zygote) && customLostZygoteSelections[index] !== zygote}>{zygote}</option>
+                                ))}
+                              </select>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    <div>
+                      <label className="block text-gray-400 text-sm uppercase tracking-wider mb-2 font-bold text-center">Primogenitor Chapter (Optional)</label>
+                      <select 
+                        value={customChapterPrimogenitorSelection}
+                        onChange={(e) => setCustomChapterPrimogenitorSelection(e.target.value)}
+                        className="w-full bg-[#1a1a1a] border border-[#333] p-3 rounded text-white focus:border-[#8b0000] outline-none mb-4"
+                      >
+                        <option value="">None / Unknown</option>
+                        {["Ultramarines", "Blood Angels", "Dark Angels", "Space Wolves", "Imperial Fists", "Iron Hands", "White Scars", "Salamanders", "Raven Guard"].sort().map(chapter => (
+                          <option key={chapter} value={chapter}>{chapter}</option>
+                        ))}
+                      </select>
+                      {customChapterPrimogenitorSelection && (
+                        <label className="flex items-center gap-2 text-gray-300 text-sm cursor-pointer justify-center p-2 bg-[#111] border border-[#333] rounded hover:border-[#8b0000] transition-colors">
+                          <input 
+                            type="checkbox" 
+                            checked={customChapterUsePrimogenitorSelection}
+                            onChange={(e) => setCustomChapterUsePrimogenitorSelection(e.target.checked)}
+                            className="w-4 h-4 accent-[#8b0000]"
+                          />
+                          Use Primogenitor Rules (Demeanour, Abilities, Modifiers)
+                        </label>
+                      )}
+                    </div>
+                    {!customChapterUsePrimogenitorSelection && (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-gray-400 text-sm uppercase tracking-wider mb-2 font-bold text-center">Characteristic Modifiers</label>
+                          <select 
+                            value={customChapterModifierSelection}
+                            onChange={(e) => {
+                              setCustomChapterModifierSelection(e.target.value);
+                              setCustomChapterModifierChoices([]);
+                            }}
+                            className="w-full bg-[#1a1a1a] border border-[#333] p-3 rounded text-white focus:border-[#8b0000] outline-none"
+                          >
+                            <option value="" disabled>Select Modifiers...</option>
+                            {CUSTOM_CHAPTER_MODIFIERS.map(mod => (
+                              <option key={mod.name} value={mod.name}>{mod.name}</option>
+                            ))}
+                          </select>
+                          {customChapterModifierSelection && (
+                            <div className="mt-4 p-4 bg-[#111] border border-[#333] rounded text-sm text-gray-300 italic">
+                              {CUSTOM_CHAPTER_MODIFIERS.find(m => m.name === customChapterModifierSelection)?.description}
+                            </div>
+                          )}
+                          {customChapterModifierSelection && CUSTOM_CHAPTER_MODIFIERS.find(m => m.name === customChapterModifierSelection)?.needsChoice && (
+                            <div className="mt-4 space-y-4">
+                              <label className="block text-gray-400 text-sm uppercase tracking-wider mb-1 font-bold text-center border-t border-[#333] pt-4">Choose Characteristic(s)</label>
+                              {Array.from({ length: CUSTOM_CHAPTER_MODIFIERS.find(m => m.name === customChapterModifierSelection)!.needsChoice! }).map((_, index) => (
+                                <select
+                                  key={index}
+                                  value={customChapterModifierChoices[index] || ""}
+                                  onChange={(e) => {
+                                    const newArr = [...customChapterModifierChoices];
+                                    newArr[index] = e.target.value;
+                                    setCustomChapterModifierChoices(newArr);
+                                  }}
+                                  className="w-full bg-[#1a1a1a] border border-[#333] p-3 rounded text-white focus:border-[#8b0000] outline-none"
+                                >
+                                  <option value="" disabled>Select Characteristic...</option>
+                                  {['WS', 'BS', 'S', 'T', 'Ag', 'Int', 'Per', 'WP', 'Fel'].map(char => (
+                                    <option key={char} value={char} disabled={customChapterModifierChoices.includes(char) && customChapterModifierChoices[index] !== char}>{char}</option>
+                                  ))}
+                                </select>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="block text-gray-400 text-sm uppercase tracking-wider mb-2 font-bold text-center border-t border-[#333] pt-4">Solo Mode Ability</label>
+                          <select 
+                            value={customSoloModeSelection}
+                            onChange={(e) => {
+                              setCustomSoloModeSelection(e.target.value);
+                              setCustomSoloModeSkillChoices([]);
+                              setCustomSoloModeCharacteristicChoice("");
+                              setCustomSoloModeChosenAbility("");
+                            }}
+                            className="w-full bg-[#1a1a1a] border border-[#333] p-3 rounded text-white focus:border-[#8b0000] outline-none"
+                          >
+                            <option value="" disabled>Select Solo Mode Ability...</option>
+                            {CUSTOM_CHAPTER_SOLO_MODES.map(mod => (
+                              <option key={mod.name} value={mod.name}>{mod.name}</option>
+                            ))}
+                          </select>
+                          {customSoloModeSelection && (
+                            <div className="mt-4 p-4 bg-[#111] border border-[#333] rounded text-sm text-gray-300 italic">
+                              {CUSTOM_CHAPTER_SOLO_MODES.find(m => m.name === customSoloModeSelection)?.description}
+                            </div>
+                          )}
+
+                          {customSoloModeSelection && CUSTOM_CHAPTER_SOLO_MODES.find(m => m.name === customSoloModeSelection)?.needsSoloChoice && (
+                            <div className="mt-4">
+                              <select
+                                value={customSoloModeChosenAbility}
+                                onChange={(e) => setCustomSoloModeChosenAbility(e.target.value)}
+                                className="w-full bg-[#1a1a1a] border border-[#333] p-3 rounded text-white focus:border-[#8b0000] outline-none"
+                              >
+                                <option value="" disabled>Select Existing Solo Ability...</option>
+                                {Object.values(CHAPTER_SOLO_MODE_ABILITIES).filter((v, i, a) => a.findIndex(t => t.name === v.name) === i).map(ability => (
+                                  <option key={ability.name} value={ability.name}>{ability.name}{ability.chapter ? ` (${ability.chapter})` : ''}</option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+
+                          {customSoloModeSelection && CUSTOM_CHAPTER_SOLO_MODES.find(m => m.name === customSoloModeSelection)?.needsSkillChoices && (
+                            <div className="mt-4 space-y-4">
+                              <label className="block text-gray-400 text-sm uppercase tracking-wider mb-1 font-bold text-center">Choose 2 Skills</label>
+                              {[0, 1].map((index) => (
+                                <select
+                                  key={index}
+                                  value={customSoloModeSkillChoices[index] || ""}
+                                  onChange={(e) => {
+                                    const newArr = [...customSoloModeSkillChoices];
+                                    newArr[index] = e.target.value;
+                                    setCustomSoloModeSkillChoices(newArr);
+                                  }}
+                                  className="w-full bg-[#1a1a1a] border border-[#333] p-3 rounded text-white focus:border-[#8b0000] outline-none"
+                                >
+                                  <option value="" disabled>Select Skill...</option>
+                                  {ALL_SKILLS.map(skill => (
+                                    <option key={skill.name} value={skill.name} disabled={customSoloModeSkillChoices.includes(skill.name) && customSoloModeSkillChoices[index] !== skill.name}>{skill.name}</option>
+                                  ))}
+                                </select>
+                              ))}
+                            </div>
+                          )}
+
+                          {customSoloModeSelection && CUSTOM_CHAPTER_SOLO_MODES.find(m => m.name === customSoloModeSelection)?.needsCharacteristicChoice && (
+                            <div className="mt-4">
+                              <select
+                                value={customSoloModeCharacteristicChoice}
+                                onChange={(e) => setCustomSoloModeCharacteristicChoice(e.target.value)}
+                                className="w-full bg-[#1a1a1a] border border-[#333] p-3 rounded text-white focus:border-[#8b0000] outline-none"
+                              >
+                                <option value="" disabled>Select Characteristic...</option>
+                                {Object.keys(INITIAL_CHARACTER.characteristics).map(char => (
+                                  <option key={char} value={char}>{char}</option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="block text-gray-400 text-sm uppercase tracking-wider mb-2 font-bold text-center border-t border-[#333] pt-4">Squad Mode Action Pattern</label>
+                          <select 
+                            value={customSquadModeAttackPattern}
+                            onChange={(e) => {
+                              setCustomSquadModeAttackPattern(e.target.value);
+                              setCustomSquadModeChosenAttackPattern("");
+                            }}
+                            className="w-full bg-[#1a1a1a] border border-[#333] p-3 rounded text-white focus:border-[#8b0000] outline-none"
+                          >
+                            <option value="" disabled>Select Attack Pattern...</option>
+                            {CUSTOM_CHAPTER_ATTACK_PATTERNS.map(mod => (
+                              <option key={mod.name} value={mod.name}>{mod.name}</option>
+                            ))}
+                          </select>
+                          {customSquadModeAttackPattern && (
+                            <div className="mt-4 p-4 bg-[#111] border border-[#333] rounded text-sm text-gray-300 italic">
+                              {CUSTOM_CHAPTER_ATTACK_PATTERNS.find(m => m.name === customSquadModeAttackPattern)?.description}
+                            </div>
+                          )}
+
+                          {customSquadModeAttackPattern && CUSTOM_CHAPTER_ATTACK_PATTERNS.find(m => m.name === customSquadModeAttackPattern)?.needsSquadChoice && (
+                            <div className="mt-4">
+                              <select
+                                value={customSquadModeChosenAttackPattern}
+                                onChange={(e) => setCustomSquadModeChosenAttackPattern(e.target.value)}
+                                className="w-full bg-[#1a1a1a] border border-[#333] p-3 rounded text-white focus:border-[#8b0000] outline-none"
+                              >
+                                <option value="" disabled>Select Existing Attack Pattern...</option>
+                                {Object.values(CHAPTER_ATTACK_PATTERNS).filter((v, i, a) => a.findIndex(t => t.name === v.name) === i).map(ability => (
+                                  <option key={ability.name} value={ability.name}>{ability.name}{ability.chapter ? ` (${ability.chapter})` : ''}</option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="block text-gray-400 text-sm uppercase tracking-wider mb-2 font-bold text-center border-t border-[#333] pt-4">Squad Mode Defensive Stance</label>
+                          <select 
+                            value={customSquadModeDefensiveStance}
+                            onChange={(e) => {
+                              setCustomSquadModeDefensiveStance(e.target.value);
+                              setCustomSquadModeChosenDefensiveStance("");
+                            }}
+                            className="w-full bg-[#1a1a1a] border border-[#333] p-3 rounded text-white focus:border-[#8b0000] outline-none"
+                          >
+                            <option value="" disabled>Select Defensive Stance...</option>
+                            {CUSTOM_CHAPTER_DEFENSIVE_STANCES.map(mod => (
+                              <option key={mod.name} value={mod.name}>{mod.name}</option>
+                            ))}
+                          </select>
+                          {customSquadModeDefensiveStance && (
+                            <div className="mt-4 p-4 bg-[#111] border border-[#333] rounded text-sm text-gray-300 italic">
+                              {CUSTOM_CHAPTER_DEFENSIVE_STANCES.find(m => m.name === customSquadModeDefensiveStance)?.description}
+                            </div>
+                          )}
+
+                          {customSquadModeDefensiveStance && CUSTOM_CHAPTER_DEFENSIVE_STANCES.find(m => m.name === customSquadModeDefensiveStance)?.needsSquadChoice && (
+                            <div className="mt-4">
+                              <select
+                                value={customSquadModeChosenDefensiveStance}
+                                onChange={(e) => setCustomSquadModeChosenDefensiveStance(e.target.value)}
+                                className="w-full bg-[#1a1a1a] border border-[#333] p-3 rounded text-white focus:border-[#8b0000] outline-none"
+                              >
+                                <option value="" disabled>Select Existing Defensive Stance...</option>
+                                {Object.values(CHAPTER_DEFENSIVE_STANCES).filter((v, i, a) => a.findIndex(t => t.name === v.name) === i).map(ability => (
+                                  <option key={ability.name} value={ability.name}>{ability.name}{ability.chapter ? ` (${ability.chapter})` : ''}</option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="block text-gray-400 text-sm uppercase tracking-wider mb-2 font-bold text-center border-t border-[#333] pt-4">Chapter Restrictions</label>
+                          <div className="space-y-4">
+                            <div>
+                              <label className="block text-gray-400 text-xs uppercase tracking-wider mb-2">Restricted Specializations</label>
+                              <div className="grid grid-cols-2 gap-2">
+                                {SPECIALIZATIONS.filter(s => s !== "Tactical Marine").map(spec => (
+                                  <label key={spec} className="flex items-center gap-2 text-sm text-gray-300">
+                                    <input 
+                                      type="checkbox"
+                                      className="form-checkbox text-[#8b0000] bg-[#1a1a1a] border-[#333] rounded"
+                                      checked={customChapterRestrictedSpecializations.includes(spec)}
+                                      onChange={(e) => {
+                                        if (e.target.checked) {
+                                          setCustomChapterRestrictedSpecializations([...customChapterRestrictedSpecializations, spec]);
+                                        } else {
+                                          setCustomChapterRestrictedSpecializations(customChapterRestrictedSpecializations.filter(s => s !== spec));
+                                        }
+                                      }}
+                                    />
+                                    {spec}
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                            <div>
+                              <label className="block text-gray-400 text-xs uppercase tracking-wider mb-2">Custom Narrative Restrictions</label>
+                              <textarea
+                                value={customChapterCustomRestrictions}
+                                onChange={(e) => setCustomChapterCustomRestrictions(e.target.value)}
+                                placeholder="e.g. Forbidden from using Plasma weapons..."
+                                className="w-full bg-[#1a1a1a] border border-[#333] p-3 rounded text-white focus:border-[#8b0000] outline-none resize-none h-24"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-gray-400 text-sm uppercase tracking-wider mb-2 font-bold text-center border-t border-[#333] pt-4">Chapter Psychic Discipline (Librarians Only)</label>
+                          <select
+                            value={customChapterPsychicPowers}
+                            onChange={(e) => setCustomChapterPsychicPowers(e.target.value)}
+                            className="w-full bg-[#1a1a1a] border border-[#333] p-3 rounded text-white focus:border-[#8b0000] outline-none"
+                          >
+                            <option value="">Standard (Codex/Telepathy/Divination)</option>
+                            {Array.from(new Set(LIBRARIAN_PSYCHIC_POWERS.map(p => p.category).filter(c => c && c !== "Telepathy powers" && c !== "Divination powers" && c !== "Codex powers" && c !== "Epistolary powers"))).map(cat => {
+                               const chapterName = cat?.replace(/ powers/gi, '');
+                               return <option key={cat} value={chapterName}>{chapterName}</option>;
+                            })}
+                          </select>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-4 mt-8">
+                    <button
+                      onClick={() => {
+                        setIsCreatingCustomChapter(false);
+                        setCustomChapterDemeanorSelection("");
+                        setCustomChapterPuritySelection("Pure");
+                        setCustomChapterDeficiencySelection("");
+                        setCustomChapterAdditionalDeficiencies([]);
+                        setCustomChapterPrimogenitorSelection("");
+                        setCustomChapterUsePrimogenitorSelection(false);
+                        setCustomLostZygoteSelections([]);
+                        setCustomChapterModifierSelection("");
+                        setCustomChapterModifierChoices([]);
+                        setCustomSoloModeSelection("");
+                        setCustomSoloModeSkillChoices([]);
+                        setCustomSoloModeCharacteristicChoice("");
+                        setCustomSoloModeChosenAbility("");
+                        setCustomSquadModeAttackPattern("");
+                        setCustomSquadModeChosenAttackPattern("");
+                        setCustomSquadModeDefensiveStance("");
+                        setCustomSquadModeChosenDefensiveStance("");
+                        setCustomChapterPsychicPowers("");
+                        setCustomChapterRestrictedSpecializations([]);
+                        setCustomChapterCustomRestrictions("");
+                      }}
+                      className="bg-black border border-[#333] text-gray-400 px-6 py-2 rounded uppercase font-bold hover:bg-[#222] flex items-center gap-2"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                      Back to Chapters
+                    </button>
+                    <button
+                      onClick={() => {
+                        const isValidMultiple = customChapterDeficiencySelection !== "Multiple Instabilities" || (customChapterAdditionalDeficiencies[0] && customChapterAdditionalDeficiencies[1]);
+                        const isModValid = customChapterUsePrimogenitorSelection || !customChapterModifierSelection || (
+                          CUSTOM_CHAPTER_MODIFIERS.find(m => m.name === customChapterModifierSelection)?.needsChoice ? 
+                          (CUSTOM_CHAPTER_MODIFIERS.find(m => m.name === customChapterModifierSelection)?.needsChoice === customChapterModifierChoices.filter(Boolean).length) : true
+                        );
+                        
+                        let isSoloValid = true;
+                        if (!customChapterUsePrimogenitorSelection && customSoloModeSelection) {
+                          const soloMod = CUSTOM_CHAPTER_SOLO_MODES.find(m => m.name === customSoloModeSelection);
+                          if (soloMod?.needsSoloChoice && !customSoloModeChosenAbility) isSoloValid = false;
+                          if (soloMod?.needsSkillChoices && customSoloModeSkillChoices.filter(Boolean).length !== soloMod.needsSkillChoices) isSoloValid = false;
+                          if (soloMod?.needsCharacteristicChoice && !customSoloModeCharacteristicChoice) isSoloValid = false;
+                        }
+                        
+                        let isSquadValid = true;
+                        if (!customChapterUsePrimogenitorSelection) {
+                          if (customSquadModeAttackPattern) {
+                            const attackMod = CUSTOM_CHAPTER_ATTACK_PATTERNS.find(m => m.name === customSquadModeAttackPattern);
+                            if (attackMod?.needsSquadChoice && !customSquadModeChosenAttackPattern) isSquadValid = false;
+                          }
+                          if (customSquadModeDefensiveStance) {
+                            const defenseMod = CUSTOM_CHAPTER_DEFENSIVE_STANCES.find(m => m.name === customSquadModeDefensiveStance);
+                            if (defenseMod?.needsSquadChoice && !customSquadModeChosenDefensiveStance) isSquadValid = false;
+                          }
+                        }
+
+                        if (customChapterName.trim() && customChapterDemeanorSelection && (customChapterPuritySelection === "Pure" || (customChapterDeficiencySelection && isValidMultiple)) && isModValid && isSoloValid && isSquadValid) {
+                          let resolvedSoloAbilityName = customSoloModeChosenAbility;
+                          if (customSoloModeSelection === "Parent Chapter Doctrine" && !resolvedSoloAbilityName) {
+                            resolvedSoloAbilityName = "";
+                          }
+                          let resolvedAttackPattern = customSquadModeChosenAttackPattern;
+                          if (customSquadModeAttackPattern === "Followers of the doctrine" && !resolvedAttackPattern) {
+                            resolvedAttackPattern = "";
+                          }
+                          let resolvedDefensiveStance = customSquadModeChosenDefensiveStance;
+                          if (customSquadModeDefensiveStance === "Followers of the doctrine" && !resolvedDefensiveStance) {
+                            resolvedDefensiveStance = "";
+                          }
+                          handleChapterChange(customChapterName.trim(), customChapterDemeanorSelection, customChapterPuritySelection, customChapterDeficiencySelection, customChapterAdditionalDeficiencies, customChapterPrimogenitorSelection, customChapterUsePrimogenitorSelection, customLostZygoteSelections.filter(Boolean), customChapterModifierSelection, customChapterModifierChoices.filter(Boolean), customSoloModeSelection, customSoloModeSkillChoices.filter(Boolean), customSoloModeCharacteristicChoice, resolvedSoloAbilityName, customSquadModeAttackPattern, resolvedAttackPattern, customSquadModeDefensiveStance, resolvedDefensiveStance, customChapterPsychicPowers, customChapterRestrictedSpecializations, customChapterCustomRestrictions);
+                          setIsCreatingCustomChapter(false);
+                          setShowChapterModal(false);
+                          setCustomChapterName("");
+                          setCustomChapterDemeanorSelection("");
+                          setCustomChapterPuritySelection("Pure");
+                          setCustomChapterDeficiencySelection("");
+                          setCustomChapterAdditionalDeficiencies([]);
+                          setCustomChapterPrimogenitorSelection("");
+                          setCustomChapterUsePrimogenitorSelection(false);
+                          setCustomLostZygoteSelections([]);
+                          setCustomChapterModifierSelection("");
+                          setCustomChapterModifierChoices([]);
+                          setCustomSoloModeSelection("");
+                          setCustomSoloModeSkillChoices([]);
+                          setCustomSoloModeCharacteristicChoice("");
+                          setCustomSoloModeChosenAbility("");
+                          setCustomSquadModeAttackPattern("");
+                          setCustomSquadModeChosenAttackPattern("");
+                          setCustomSquadModeDefensiveStance("");
+                          setCustomSquadModeChosenDefensiveStance("");
+                          setCustomChapterPsychicPowers("");
+                          setCustomChapterRestrictedSpecializations([]);
+                          setCustomChapterCustomRestrictions("");
+                        }
+                      }}
+                      className="bg-[#8b0000] text-white px-6 py-2 rounded uppercase font-bold shadow-[0_0_10px_rgba(139,0,0,0.5)] hover:bg-[#a00000] disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={
+                        !customChapterName.trim() || 
+                        !customChapterDemeanorSelection || 
+                        (customChapterPuritySelection !== "Pure" && (!customChapterDeficiencySelection || (customChapterDeficiencySelection === "Multiple Instabilities" && (!customChapterAdditionalDeficiencies[0] || !customChapterAdditionalDeficiencies[1])))) || 
+                        (!customChapterUsePrimogenitorSelection && customChapterModifierSelection && CUSTOM_CHAPTER_MODIFIERS.find(m => m.name === customChapterModifierSelection)?.needsChoice && CUSTOM_CHAPTER_MODIFIERS.find(m => m.name === customChapterModifierSelection)?.needsChoice !== customChapterModifierChoices.filter(Boolean).length) ||
+                        (!customChapterUsePrimogenitorSelection && customSoloModeSelection && CUSTOM_CHAPTER_SOLO_MODES.find(m => m.name === customSoloModeSelection)?.needsSoloChoice && !customSoloModeChosenAbility) ||
+                        (!customChapterUsePrimogenitorSelection && customSoloModeSelection && CUSTOM_CHAPTER_SOLO_MODES.find(m => m.name === customSoloModeSelection)?.needsSkillChoices && CUSTOM_CHAPTER_SOLO_MODES.find(m => m.name === customSoloModeSelection)?.needsSkillChoices !== customSoloModeSkillChoices.filter(Boolean).length) ||
+                        (!customChapterUsePrimogenitorSelection && customSoloModeSelection && CUSTOM_CHAPTER_SOLO_MODES.find(m => m.name === customSoloModeSelection)?.needsCharacteristicChoice && !customSoloModeCharacteristicChoice) ||
+                        (!customChapterUsePrimogenitorSelection && customSquadModeAttackPattern && CUSTOM_CHAPTER_ATTACK_PATTERNS.find(m => m.name === customSquadModeAttackPattern)?.needsSquadChoice && !customSquadModeChosenAttackPattern) ||
+                        (!customChapterUsePrimogenitorSelection && customSquadModeDefensiveStance && CUSTOM_CHAPTER_DEFENSIVE_STANCES.find(m => m.name === customSquadModeDefensiveStance)?.needsSquadChoice && !customSquadModeChosenDefensiveStance)
+                      }
+                    >
+                      Create Chapter
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {[...CHAPTERS].sort().map(chapterName => {
+                    const data = CHAPTER_DATA[chapterName];
+                    const isCurrent = character.chapter === chapterName;
+                    return (
+                      <button
+                        key={chapterName}
+                        onClick={() => {
+                          handleChapterChange(chapterName);
+                          setShowChapterModal(false);
+                        }}
+                        className={`relative flex flex-col items-center bg-[#1a1a1a] border p-4 rounded transition-all group ${isCurrent ? 'border-[#ffd700] shadow-[0_0_15px_rgba(255,215,0,0.2)]' : 'border-[#333] hover:border-[#8b0000] hover:bg-[#222]'}`}
+                      >
+                        <h4 className={`font-bold gothic-font text-lg text-center mb-2 ${isCurrent ? 'text-[#ffd700]' : 'text-white'}`}>
+                          {chapterName}
+                        </h4>
+                        {data ? (
+                          <div className="text-xs text-gray-400 text-center line-clamp-3 mb-2 flex-grow">
+                            {data.summary || data.demeanorSummary || data.demeanorDescription || "Defenders of Humanity"}
+                          </div>
+                        ) : (
+                          <div className="text-xs text-gray-500 italic text-center mb-2 flex-grow">
+                            Adeptes Astartes
+                          </div>
+                        )}
+                        {data && data.modifiers && Object.keys(data.modifiers).length > 0 && (
+                          <div className="flex flex-wrap gap-1 justify-center mt-2 w-full pt-3 border-t border-[#333]">
+                            {Object.entries(data.modifiers).map(([stat, val]) => (
+                              <span key={stat} className="text-[9px] bg-black px-1.5 py-0.5 rounded text-red-400 font-mono border border-[#333]">
+                                +{val} {stat}
+                              </span>
+                            ))}
+                            {data.talents && data.talents.length > 0 && data.talents.slice(0, 1).map(talent => (
+                              <span key={talent} className="text-[9px] bg-black px-1.5 py-0.5 rounded text-gray-400 border border-[#333] whitespace-nowrap overflow-hidden text-ellipsis max-w-[80px]" title={talent}>
+                                {talent}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {isCurrent && (
+                          <div className="absolute top-2 right-2 text-[#ffd700]">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                  
+                  {/* Custom Chapter Button */}
+                  <button
+                    onClick={() => {
+                      setCustomChapterName("");
+                      setIsCreatingCustomChapter(true);
+                    }}
+                    className={`relative flex flex-col items-center bg-[#1a1a1a] border border-dashed border-[#8b0000] p-4 rounded transition-all group hover:bg-[#8b0000]/10`}
+                  >
+                    <h4 className="font-bold gothic-font text-lg text-center mb-2 text-[#8b0000] group-hover:text-red-500 transition-colors">
+                      + Custom Chapter
+                    </h4>
+                    <div className="text-xs text-gray-400 text-center mb-2 flex-grow">
+                      Forge your own legacy in the stars.
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
+            
+            <div className="p-4 bg-[#1a1a1a] border-t border-[#333] flex justify-end shrink-0">
+              <button 
+                onClick={() => setShowChapterModal(false)}
+                className="bg-black hover:bg-[#222] border border-[#333] text-white px-6 py-2 rounded text-sm uppercase tracking-wider font-bold transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Level Up Modal */}
       {showLevelUpModal && (
@@ -5220,7 +7365,7 @@ export default function App() {
                             }
 
                             const skill = item;
-                            const existing = character.skills.find(s => s.name.toLowerCase() === skill.name.toLowerCase());
+                            const existing = effectiveSkills.find(s => s.name.toLowerCase() === skill.name.toLowerCase());
                             const mastery = existing ? existing.mastery : 0;
                             const isSelected = levelUpName === skill.name;
                             const categoryMatch = categoryPrefixes.find(cat => skill.name.startsWith(cat + " ("));
@@ -5548,7 +7693,9 @@ export default function App() {
                                       if (!hasPower && !showRedacted) {
                                         setLevelUpName(power.name);
                                         if ('cost' in power) {
-                                          setLevelUpCost(power.cost);
+                                          setLevelUpCost((power as any).cost);
+                                        } else if ('xpCost' in power) {
+                                          setLevelUpCost((power as any).xpCost);
                                         }
                                       }
                                     }}
@@ -5731,12 +7878,14 @@ export default function App() {
                           }
                         }
                       } else if (levelUpType === 'skill') {
+                        const existingInEffective = effectiveSkills.find(s => s.name.toLowerCase() === finalName.toLowerCase());
+                        const baseMastery = existingInEffective ? existingInEffective.mastery : 0;
                         const existingSkillIndex = newChar.skills.findIndex(s => s.name.toLowerCase() === finalName.toLowerCase());
                         if (existingSkillIndex >= 0) {
                           const newSkills = [...newChar.skills];
                           newSkills[existingSkillIndex] = {
                             ...newSkills[existingSkillIndex],
-                            mastery: newSkills[existingSkillIndex].mastery + 1
+                            mastery: baseMastery + 1
                           };
                           newChar.skills = newSkills;
                         } else {
@@ -5744,8 +7893,8 @@ export default function App() {
                           newChar.skills = [...newChar.skills, {
                             name: matchedSkill ? matchedSkill.name : finalName,
                             characteristic: matchedSkill ? matchedSkill.characteristic as any : "Int",
-                            mastery: 1,
-                            description: matchedSkill ? "" : "Custom skill"
+                            mastery: baseMastery + 1,
+                            description: matchedSkill && 'description' in matchedSkill ? matchedSkill.description : ""
                           }].sort((a, b) => a.name.localeCompare(b.name));
                         }
                       } else if (levelUpType === 'characteristic') {
@@ -6253,6 +8402,198 @@ export default function App() {
                     </div>
                   </div>
                 </div>
+
+                {weaponType === 'ranged' && (
+                  <div className="col-span-4 mt-2">
+                     <label className="flex items-center gap-2 text-[10px] text-[#ffd700] uppercase tracking-widest font-bold">
+                        <input type="checkbox" className="accent-[#8b0000]" checked={isCombiWeapon} onChange={e => setIsCombiWeapon(e.target.checked)} />
+                        Enable Secondary Profile (Combi-Weapon)
+                     </label>
+                  </div>
+                )}
+
+                {weaponType === 'ranged' && isCombiWeapon && (
+                  <div className="col-span-4 mt-2 p-3 bg-black/50 border border-[#444] rounded space-y-3">
+                    <div className="text-[10px] font-bold text-gray-400 border-b border-[#333] pb-1 uppercase tracking-widest">
+                       Secondary Profile (Combi)
+                    </div>
+                    
+                    <div className="grid grid-cols-4 gap-3">
+                      <div className="col-span-2 space-y-1">
+                        <label className="text-[9px] uppercase font-bold text-gray-500">Class</label>
+                        <div className="flex gap-1">
+                          {['Pistol', 'Basic', 'Heavy', 'Mounted'].map((cls) => (
+                            <button
+                              key={`combi-${cls}`}
+                              disabled={isWeaponSubmitting}
+                              onClick={() => setCombiWeaponProfile({...combiWeaponProfile, class: cls as any})}
+                              className={`flex-1 py-1 px-1 text-[8px] font-bold uppercase tracking-widest rounded transition-all border ${combiWeaponProfile.class === cls ? 'bg-[#333] text-white border-white' : 'bg-[#1a1a1a] text-gray-500 border-[#333] hover:border-gray-500'}`}
+                            >
+                              {cls}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="col-span-2 grid grid-cols-4 gap-3 bg-[#151515] p-2 rounded border border-[#222]">
+                        <div className="space-y-1">
+                          <label className="text-[8px] uppercase font-bold text-gray-500 block">Dice</label>
+                          <input 
+                            disabled={isWeaponSubmitting}
+                            type="number"
+                            min="1"
+                            max="10"
+                            value={combiWeaponDamageDice} 
+                            onChange={e => setCombiWeaponDamageDice(parseInt(e.target.value) || 1)}
+                            className="w-full bg-[#1a1a1a] border border-[#333] p-1.5 rounded text-xs text-white focus:border-[#8b0000] outline-none disabled:opacity-50 text-center"
+                          />
+                        </div>
+                        <div className="space-y-1 col-span-2">
+                          <label className="text-[8px] uppercase font-bold text-gray-500 block">Bonus(+)</label>
+                          <input 
+                            disabled={isWeaponSubmitting}
+                            type="number"
+                            value={combiWeaponDamageBonus} 
+                            onChange={e => setCombiWeaponDamageBonus(parseInt(e.target.value) || 0)}
+                            className="w-full bg-[#1a1a1a] border border-[#333] p-1.5 rounded text-xs text-white focus:border-[#8b0000] outline-none disabled:opacity-50 text-center"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[8px] uppercase font-bold text-gray-500 block">Type</label>
+                          <select 
+                            disabled={isWeaponSubmitting}
+                            value={combiWeaponDamageType} 
+                            onChange={e => setCombiWeaponDamageType(e.target.value)}
+                            className="w-full bg-[#1a1a1a] border border-[#333] p-1.5 rounded text-xs text-white focus:border-[#8b0000] outline-none disabled:opacity-50 text-center"
+                          >
+                            <option value="I">I</option>
+                            <option value="R">R</option>
+                            <option value="X">X</option>
+                            <option value="E">E</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="col-span-1 space-y-1">
+                        <label className="text-[9px] uppercase font-bold text-gray-500">Pen</label>
+                        <input 
+                          disabled={isWeaponSubmitting}
+                          type="number"
+                          value={combiWeaponProfile.pen} 
+                          onChange={e => setCombiWeaponProfile({...combiWeaponProfile, pen: parseInt(e.target.value) || 0})}
+                          className="w-full bg-[#1a1a1a] border border-[#333] p-1.5 rounded text-xs text-white focus:border-[#8b0000] outline-none disabled:opacity-50"
+                        />
+                      </div>
+                      
+                      <div className="col-span-1 space-y-1">
+                        <label className="text-[9px] uppercase font-bold text-gray-500">Range</label>
+                        <input 
+                          disabled={isWeaponSubmitting}
+                          value={combiWeaponProfile.range} 
+                          onChange={e => setCombiWeaponProfile({...combiWeaponProfile, range: e.target.value})}
+                          placeholder="e.g. 100m"
+                          className="w-full bg-[#1a1a1a] border border-[#333] p-1.5 rounded text-xs text-white focus:border-[#8b0000] outline-none disabled:opacity-50"
+                        />
+                      </div>
+
+                      <div className="col-span-1 space-y-1">
+                        <label className="text-[9px] uppercase font-bold text-gray-500">ROF</label>
+                        <input 
+                          disabled={isWeaponSubmitting}
+                          value={combiWeaponProfile.rof} 
+                          onChange={e => setCombiWeaponProfile({...combiWeaponProfile, rof: e.target.value})}
+                          placeholder="S/-/-"
+                          className="w-full bg-[#1a1a1a] border border-[#333] p-1.5 rounded text-xs text-white focus:border-[#8b0000] outline-none disabled:opacity-50"
+                        />
+                      </div>
+
+                      <div className="col-span-1 space-y-1">
+                        <label className="text-[9px] uppercase font-bold text-gray-500">Clip</label>
+                        <input 
+                          disabled={isWeaponSubmitting}
+                          type="number"
+                          value={combiWeaponProfile.clip?.max} 
+                          onChange={e => {
+                            const val = parseInt(e.target.value) || 0;
+                            setCombiWeaponProfile({...combiWeaponProfile, clip: { current: val, max: val }});
+                          }}
+                          className="w-full bg-[#1a1a1a] border border-[#333] p-1.5 rounded text-xs text-white focus:border-[#8b0000] outline-none disabled:opacity-50"
+                        />
+                      </div>
+
+                      <div className="col-span-2 space-y-1">
+                        <label className="text-[9px] uppercase font-bold text-gray-500">Reload</label>
+                        <input 
+                          disabled={isWeaponSubmitting}
+                          value={combiWeaponProfile.reload} 
+                          onChange={e => setCombiWeaponProfile({...combiWeaponProfile, reload: e.target.value})}
+                          placeholder="e.g. Full"
+                          className="w-full bg-[#1a1a1a] border border-[#333] p-1.5 rounded text-xs text-white focus:border-[#8b0000] outline-none disabled:opacity-50"
+                        />
+                      </div>
+
+                      <div className="col-span-2 space-y-1">
+                        <label className="text-[9px] uppercase font-bold text-gray-500">Ammo Type</label>
+                        <select 
+                          disabled={isWeaponSubmitting}
+                          value={combiWeaponProfile.ammoType} 
+                          onChange={e => setCombiWeaponProfile({...combiWeaponProfile, ammoType: e.target.value})}
+                          className="w-full bg-[#1a1a1a] border border-[#333] p-1.5 rounded text-xs text-white focus:border-[#8b0000] outline-none disabled:opacity-50"
+                        >
+                          <option value="">Select Ammo...</option>
+                          {AMMO_DATABASE.filter(a => a.category === 'Ammo').map(ammo => (
+                            <option key={`combi-ammo-${ammo.name}`} value={ammo.name}>{ammo.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="col-span-4 space-y-1">
+                        <label className="text-[9px] uppercase font-bold text-gray-500">Special Rules</label>
+                        <textarea 
+                          disabled={isWeaponSubmitting}
+                          value={combiWeaponProfile.special} 
+                          onChange={e => setCombiWeaponProfile({...combiWeaponProfile, special: e.target.value})}
+                          placeholder="e.g. Tearing, Reliable..."
+                          className="w-full bg-[#1a1a1a] border border-[#333] p-2 rounded text-xs text-white focus:border-[#8b0000] outline-none h-10 disabled:opacity-50"
+                        />
+                        <div className="mt-1">
+                          <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto p-2 bg-[#151515] rounded border border-[#333] scrollbar-thin scrollbar-thumb-gray-700">
+                            {Object.keys(SPECIAL_RULES).sort().map(rule => {
+                              const isSelected = (combiWeaponProfile.special || '').split(',').map(r => r.trim().split('(')[0].trim()).includes(rule);
+                              return (
+                                <button
+                                  key={`combi-rule-${rule}`}
+                                  disabled={isWeaponSubmitting}
+                                  onClick={() => {
+                                    const currentRules = (combiWeaponProfile.special || '').split(',').map(r => r.trim()).filter(r => r);
+                                    const ruleIndex = currentRules.findIndex(r => r.split('(')[0].trim() === rule);
+                                    
+                                    if (ruleIndex >= 0) {
+                                      const newRules = [...currentRules];
+                                      newRules.splice(ruleIndex, 1);
+                                      setCombiWeaponProfile({...combiWeaponProfile, special: newRules.join(', ')});
+                                    } else {
+                                      setCombiWeaponProfile({...combiWeaponProfile, special: currentRules.concat(rule).join(', ')});
+                                    }
+                                  }}
+                                  className={`text-[9px] px-2 py-0.5 rounded border transition-colors ${
+                                    isSelected 
+                                      ? 'bg-[#8b0000] text-white border-[#8b0000]' 
+                                      : 'bg-[#222] text-gray-400 border-[#333] hover:border-gray-500 hover:text-gray-200'
+                                  }`}
+                                  title={SPECIAL_RULES[rule]}
+                                >
+                                  {rule}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             <div className="p-3 bg-[#1a1a1a] text-center border-t border-[#222]">
@@ -6372,11 +8713,48 @@ export default function App() {
                       className="w-full bg-[#1a1a1a] border border-[#333] p-3 rounded text-sm text-white focus:border-[#8b0000] outline-none h-32 transition-colors"
                     />
                   </div>
+                  
+                  <div className="flex items-center gap-4 border border-[#333] p-3 rounded bg-[#1a1a1a]">
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        id="isConsumable"
+                        checked={customWargear.isConsumable}
+                        onChange={e => setCustomWargear({...customWargear, isConsumable: e.target.checked})}
+                        className="w-4 h-4 bg-black border-[#444] rounded accent-[#8b0000]"
+                      />
+                      <label htmlFor="isConsumable" className="text-[10px] uppercase font-bold text-gray-300 tracking-widest cursor-pointer">
+                        Consumable / Track Quantity
+                      </label>
+                    </div>
+                    {customWargear.isConsumable && (
+                      <div className="flex items-center gap-2 border-l border-[#333] pl-4">
+                        <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Quantity</label>
+                        <input 
+                          type="number"
+                          min="1"
+                          value={customWargear.maxQuantity}
+                          onChange={e => setCustomWargear({...customWargear, maxQuantity: parseInt(e.target.value) || 1})}
+                          className="w-16 bg-black border border-[#444] p-1 rounded text-sm text-white text-center focus:border-[#8b0000] outline-none"
+                        />
+                      </div>
+                    )}
+                  </div>
+
                   <button 
                     onClick={() => {
                       if (customWargear.name && customWargear.description) {
-                        addWargear(customWargear);
-                        setCustomWargear({ name: '', description: '' });
+                        const newWargear: any = {
+                          name: customWargear.name,
+                          description: customWargear.description
+                        };
+                        
+                        if (customWargear.isConsumable) {
+                          newWargear.quantity = { current: customWargear.maxQuantity, max: customWargear.maxQuantity };
+                        }
+                        
+                        addWargear(newWargear);
+                        setCustomWargear({ name: '', description: '', isConsumable: false, maxQuantity: 1 });
                         setShowCustomWargearView(false);
                         setIsWargearAccessGranted(false);
                       }
@@ -6447,7 +8825,7 @@ export default function App() {
                             id: Math.random().toString(36).substr(2, 9),
                             name: relic.name,
                             description: relic.description,
-                            summary: relic.summary || "Relic of the Chapter",
+                            summary: relic.summary || (relic as any).rules || "Relic of the Chapter",
                             modifiers: relic.modifiers
                           }];
                         } else if (relic.type === 'wargear') {
@@ -6455,7 +8833,7 @@ export default function App() {
                             id: Math.random().toString(36).substr(2, 9),
                             name: relic.name,
                             description: relic.description,
-                            summary: relic.summary || "Relic of the Chapter",
+                            summary: relic.summary || (relic as any).rules || "Relic of the Chapter",
                             modifiers: relic.modifiers
                           }];
                         }
@@ -6835,7 +9213,7 @@ export default function App() {
 
             <div className="overflow-y-auto pr-2 flex-1 space-y-6">
               {Object.entries(
-                getAvailablePsychicPowers().reduce((acc, power) => {
+                getAvailablePsychicPowers().filter(p => !p.category?.includes("Epistolary") && (p.category === "Telepathy powers" || p.category === "Divination powers" || p.category === "Codex powers")).reduce((acc, power) => {
                   const cat = power.category || 'Other powers';
                   if (!acc[cat]) acc[cat] = [];
                   acc[cat].push(power);
@@ -7108,6 +9486,185 @@ export default function App() {
                 Confirm Selections
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Blood Ravens Choices Modal */}
+      {showBloodRavensModal && (
+        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 animate-fadeIn backdrop-blur-sm">
+          <div className="bg-[#0a0a0a] border-2 border-[#8b0000] w-full max-w-xl p-6 relative shadow-[0_0_50px_rgba(139,0,0,0.3)] max-h-[90vh] overflow-y-auto">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#8b0000] to-transparent opacity-50"></div>
+            <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#8b0000] to-transparent opacity-50"></div>
+            
+            <h2 className="text-lg gothic-font text-[#8b0000] text-center uppercase tracking-wide mb-6 animate-pulse whitespace-nowrap">
+              +++ Blood Ravens Librarium Texts +++
+            </h2>
+
+            <div className="space-y-6">
+              <div className="bg-[#111] border border-[#333] p-4 rounded">
+                <h3 className="text-sm font-bold text-[#8b0000] uppercase tracking-widest mb-3 border-b border-[#333] pb-2">Scholastic Lore</h3>
+                <p className="text-xs text-gray-400 mb-3">As a Blood Raven, select one Scholastic Lore to be granted from the Chapter's archives.</p>
+                <select 
+                  value={character.bloodRavensChoices?.scholasticLore || ""}
+                  onChange={e => {
+                      const newVal = e.target.value;
+                      const oldVal = character.bloodRavensChoices?.scholasticLore;
+                      
+                      let newSkills = (character.skills || []).map(s => {
+                        if (oldVal && s.name === oldVal && s.mastery === 1) {
+                          return { ...s, mastery: 0 };
+                        }
+                        if (newVal && s.name === newVal && s.mastery === 0) {
+                          return { ...s, mastery: 1 };
+                        }
+                        return s;
+                      });
+
+                      const ref = ALL_SKILLS.find(s => s.name === newVal);
+                      if (ref && !newSkills.some(s => s.name === newVal)) {
+                          newSkills.push({ name: newVal, characteristic: ref.characteristic as any, mastery: 1, description: 'description' in ref ? ref.description : "" });
+                      }
+                      
+                      newSkills.sort((a, b) => a.name.localeCompare(b.name));
+                      setCharacter({...character, bloodRavensChoices: {...(character.bloodRavensChoices || {scholasticLore: "", forbiddenLore: "", librariumTextsFocus: ""}), scholasticLore: newVal}, skills: newSkills});
+                  }}
+                  className="w-full bg-[#1a1a1a] border border-[#444] p-2 rounded text-white text-xs"
+                >
+                  <option value="">Select Scholastic Lore</option>
+                  {["Archaic", "Astromancy", "Beasts", "Bureaucracy", "Chymistry", "Codex Astartes", "Cryptology", "Heraldry", "Imperial Creed", "Judgement", "Legend", "Numerology", "Occult", "Philosophy", "Tactica Imperialis"].map(lore => (
+                    <option key={lore} value={`Scholastic Lore (${lore})`}>Scholastic Lore ({lore})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="bg-[#111] border border-[#333] p-4 rounded">
+                <h3 className="text-sm font-bold text-[#8b0000] uppercase tracking-widest mb-3 border-b border-[#333] pb-2">Forbidden Lore</h3>
+                <p className="text-xs text-gray-400 mb-3">Select one Forbidden Lore subject granted by your Chapter's secretive nature.</p>
+                <select 
+                  value={character.bloodRavensChoices?.forbiddenLore || ""}
+                  onChange={e => {
+                      const newVal = e.target.value;
+                      const oldVal = character.bloodRavensChoices?.forbiddenLore;
+                      
+                      let newSkills = (character.skills || []).map(s => {
+                        if (oldVal && s.name === oldVal && s.mastery === 1) {
+                          return { ...s, mastery: 0 };
+                        }
+                        if (newVal && s.name === newVal && s.mastery === 0) {
+                          return { ...s, mastery: 1 };
+                        }
+                        return s;
+                      });
+
+                      const ref = ALL_SKILLS.find(s => s.name === newVal);
+                      if (ref && !newSkills.some(s => s.name === newVal)) {
+                          newSkills.push({ name: newVal, characteristic: ref.characteristic as any, mastery: 1, description: 'description' in ref ? ref.description : "" });
+                      }
+                      
+                      newSkills.sort((a, b) => a.name.localeCompare(b.name));
+                      setCharacter({...character, bloodRavensChoices: {...(character.bloodRavensChoices || {scholasticLore: "", forbiddenLore: "", librariumTextsFocus: ""}), forbiddenLore: newVal}, skills: newSkills});
+                  }}
+                  className="w-full bg-[#1a1a1a] border border-[#444] p-2 rounded text-white text-xs"
+                >
+                  <option value="">Select Forbidden Lore</option>
+                  {["Adeptus Astartes", "Adeptus Mechanicus", "Archeotech", "the Black Library", "Daemonology", "Heresy", "the Inquisition", "Mutants", "Psykers", "the Traitor Legions", "the Warp", "Xenos"].map(lore => (
+                    <option key={lore} value={`Forbidden Lore (${lore})`}>Forbidden Lore ({lore})</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <button 
+              onClick={() => setShowBloodRavensModal(false)}
+              className="mt-8 w-full bg-[#8b0000] hover:bg-[#a00000] text-white font-bold uppercase tracking-widest text-xs py-3 rounded transition-colors shadow-[0_0_15px_rgba(139,0,0,0.4)] hover:shadow-[0_0_25px_rgba(139,0,0,0.6)]"
+            >
+              Confirm Selection
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Novamarines Choices Modal */}
+      {showNovamarinesModal && (
+        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 animate-fadeIn backdrop-blur-sm">
+          <div className="bg-[#0a0a0a] border-2 border-[#8b0000] w-full max-w-xl p-6 relative shadow-[0_0_50px_rgba(139,0,0,0.3)] max-h-[90vh] overflow-y-auto">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#8b0000] to-transparent opacity-50"></div>
+            <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#8b0000] to-transparent opacity-50"></div>
+            
+            <h2 className="text-2xl font-bold text-center uppercase tracking-[0.2em] mb-2 font-serif">
+              <span className="text-[#8b0000]">Novamarines</span> <span className="text-gray-400">Geneseed</span>
+            </h2>
+            <p className="text-center text-gray-400 text-xs mb-6">Select two Characteristics to receive a +5 bonus.</p>
+
+            <div className="space-y-6">
+              <div className="bg-[#111] p-4 border border-[#222]">
+                <p className="text-xs text-gray-400 mb-3">Characteristic Bonus 1</p>
+                <select 
+                  value={character.novamarinesChoices?.stat1 || ""}
+                  onChange={e => {
+                      const newVal = e.target.value;
+                      setCharacter({...character, novamarinesChoices: {...(character.novamarinesChoices || {stat1: "", stat2: ""}), stat1: newVal}});
+                  }}
+                  className="w-full bg-[#1a1a1a] border border-[#444] p-2 rounded text-white text-xs"
+                >
+                  <option value="">Select Characteristic...</option>
+                  <option value="WS">Weapon Skill</option>
+                  <option value="BS">Ballistic Skill</option>
+                  <option value="S">Strength</option>
+                  <option value="T">Toughness</option>
+                  <option value="Ag">Agility</option>
+                  <option value="Int">Intelligence</option>
+                  <option value="Per">Perception</option>
+                  <option value="WP">Willpower</option>
+                  <option value="Fel">Fellowship</option>
+                </select>
+              </div>
+              
+              <div className="bg-[#111] p-4 border border-[#222]">
+                <p className="text-xs text-gray-400 mb-3">Characteristic Bonus 2</p>
+                <select 
+                  value={character.novamarinesChoices?.stat2 || ""}
+                  onChange={e => {
+                      const newVal = e.target.value;
+                      setCharacter({...character, novamarinesChoices: {...(character.novamarinesChoices || {stat1: "", stat2: ""}), stat2: newVal}});
+                  }}
+                  className="w-full bg-[#1a1a1a] border border-[#444] p-2 rounded text-white text-xs"
+                >
+                  <option value="">Select Characteristic...</option>
+                  <option value="WS">Weapon Skill</option>
+                  <option value="BS">Ballistic Skill</option>
+                  <option value="S">Strength</option>
+                  <option value="T">Toughness</option>
+                  <option value="Ag">Agility</option>
+                  <option value="Int">Intelligence</option>
+                  <option value="Per">Perception</option>
+                  <option value="WP">Willpower</option>
+                  <option value="Fel">Fellowship</option>
+                </select>
+              </div>
+            </div>
+
+            <button 
+              onClick={() => {
+                if (!character.novamarinesChoices?.stat1 || !character.novamarinesChoices?.stat2) return;
+                
+                // Update characteristics with +5 bonus
+                const stat1 = character.novamarinesChoices.stat1 as keyof Characteristics;
+                const stat2 = character.novamarinesChoices.stat2 as keyof Characteristics;
+                
+                const newChars = { ...character.characteristics };
+                if (newChars[stat1]) newChars[stat1].bonus += 5;
+                if (newChars[stat2]) newChars[stat2].bonus += 5;
+                
+                setCharacter(prev => ({ ...prev, characteristics: newChars }));
+                setShowNovamarinesModal(false);
+              }}
+              disabled={!character.novamarinesChoices?.stat1 || !character.novamarinesChoices?.stat2}
+              className={`mt-8 w-full font-bold uppercase tracking-widest text-xs py-3 rounded transition-colors ${(!character.novamarinesChoices?.stat1 || !character.novamarinesChoices?.stat2) ? 'bg-gray-800 text-gray-500 cursor-not-allowed' : 'bg-[#8b0000] hover:bg-[#a00000] text-white shadow-[0_0_15px_rgba(139,0,0,0.4)] hover:shadow-[0_0_25px_rgba(139,0,0,0.6)]'}`}
+            >
+              Confirm Selection
+            </button>
           </div>
         </div>
       )}
@@ -7687,19 +10244,133 @@ export default function App() {
                  </p>
                  
                  <select 
-                    className="w-full bg-black border border-purple-900/50 p-2 rounded text-white text-sm"
+                    value={selectedOath}
+                    onChange={(e) => setSelectedOath(e.target.value)}
+                    className="w-full bg-black border border-purple-900/50 p-2 mb-4 rounded text-white text-sm"
                   >
                     <option value="">Select an Oath...</option>
-                    <option value="oath_of_duty">Oath of Duty</option>
-                    <option value="oath_of_glory">Oath of Glory</option>
-                    <option value="oath_of_knowledge">Oath of Knowledge</option>
-                    <option value="oath_of_loyalty">Oath of Loyalty</option>
+                    {MISSION_OATHS.filter(oath => {
+                      if (!oath.prerequisite) return true;
+                      
+                      const oathEffectiveChapter = (character.usePrimogenitorRules && character.customChapterPrimogenitor) ? character.customChapterPrimogenitor : character.chapter;
+
+                      if (oath.name === "Masters of the Craft") {
+                        return oathEffectiveChapter === "Imperial Fists" && 
+                               (character.specialization === "Tactical Marine" || 
+                                character.specialization === "Assault Marine" || 
+                                character.specialization === "Devastator Marine" || 
+                                character.specialization === "Librarian" || 
+                                character.advancedSpeciality === "Deathwatch Chaplain");
+                      }
+                      if (oath.name === "Oath of Hope") return oathEffectiveChapter === "Blood Angels";
+                      if (oath.name === "Oath of Vengeance") return oathEffectiveChapter === "Dark Angels";
+                      if (oath.name === "Oath of War") return character.advancedSpeciality === "Wolf Priest";
+                      if (oath.name === "Oath of the Wolf-King") return oathEffectiveChapter === "Space Wolves";
+                      if (oath.name === "Oath of Duty") return oathEffectiveChapter === "Ultramarines";
+                      if (oath.name === "Oath of the Endless Crusade") return oathEffectiveChapter === "Black Templars";
+                      if (oath.name === "Oath of the Final Duel") return oathEffectiveChapter === "Storm Wardens";
+                      if (oath.name === "Liturgies of Battle") return character.advancedSpeciality === "Deathwatch Chaplain";
+                      
+                      const reqs = oath.prerequisite.toLowerCase().split(/,(?:\s+or\s+)?|\s+or\s+/).map(r => r.trim()).filter(Boolean);
+                      return reqs.some(req => checkRequirement(character, req));
+                    }).map((oath) => (
+                      <option key={oath.name} value={oath.name}>{oath.name}</option>
+                    ))}
                   </select>
+                  
+                  {selectedOath && MISSION_OATHS.find(o => o.name === selectedOath) && (
+                    <div className="space-y-4 border-t border-[#333] pt-4 mt-2">
+                       {(() => {
+                         const details = MISSION_OATHS.find(o => o.name === selectedOath)!;
+                         return (
+                           <>
+                             <div>
+                               <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Info</span>
+                               <span className="text-gray-300 text-xs leading-relaxed">{details.info}</span>
+                             </div>
+                             <div>
+                               <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Prerequisite</span>
+                               <span className="text-purple-400 text-xs">{details.prerequisite}</span>
+                             </div>
+                             <div>
+                               <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Effect</span>
+                               <span className="text-gray-300 text-xs leading-relaxed">{details.effect}</span>
+                             </div>
+                             <div>
+                               <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Squad Mode Abilities</span>
+                               <span className="text-yellow-500 text-xs">{details.squadModeAbilities}</span>
+                             </div>
+                           </>
+                         )
+                       })()}
+                    </div>
+                  )}
               </div>
               
-              <div className="flex justify-end pt-4">
+              <div className="flex justify-end pt-4 gap-4">
+                {character.currentOath && (
+                  <button 
+                    onClick={() => {
+                      setCharacter(prev => {
+                        let maxCohesion = prev.cohesion?.max ?? 0;
+                        let currentCohesion = prev.cohesion?.current ?? 0;
+                        let traits = [...(prev.traits || [])];
+                        
+                        if (prev.currentOath === "Oath of the Astartes") {
+                          maxCohesion = Math.max(0, maxCohesion - 2);
+                          currentCohesion = Math.min(currentCohesion, maxCohesion);
+                        } else if (prev.currentOath === "Oath of the Endless Crusade") {
+                          traits = traits.filter(t => t !== "Brutal Charge");
+                        }
+                        
+                        return {
+                          ...prev,
+                          currentOath: undefined,
+                          cohesion: { current: currentCohesion, max: maxCohesion },
+                          traits
+                        };
+                      });
+                      setShowOathModal(false);
+                    }}
+                    className="bg-transparent border border-red-900/50 text-red-500 hover:bg-red-900/20 font-bold uppercase tracking-widest text-xs px-6 py-2 rounded transition-colors"
+                  >
+                    Purge Oath
+                  </button>
+                )}
                 <button 
-                  onClick={() => setShowOathModal(false)}
+                  onClick={() => {
+                    const newOath = selectedOath || undefined;
+                    setCharacter(prev => {
+                        let maxCohesion = prev.cohesion?.max ?? 0;
+                        let currentCohesion = prev.cohesion?.current ?? 0;
+                        let traits = [...(prev.traits || [])];
+                        
+                        // Revert old oath
+                        if (prev.currentOath === "Oath of the Astartes") {
+                          maxCohesion = Math.max(0, maxCohesion - 2);
+                          currentCohesion = Math.min(currentCohesion, maxCohesion);
+                        } else if (prev.currentOath === "Oath of the Endless Crusade") {
+                          traits = traits.filter(t => t !== "Brutal Charge");
+                        }
+                        
+                        // Apply new oath
+                        if (newOath === "Oath of the Astartes") {
+                          maxCohesion += 2;
+                          // If they just swore it, presumably they get the +2 cohesion filled up as well for the mission
+                          currentCohesion += 2; 
+                        } else if (newOath === "Oath of the Endless Crusade") {
+                          if (!traits.includes("Brutal Charge")) traits.push("Brutal Charge");
+                        }
+                        
+                        return {
+                          ...prev,
+                          currentOath: newOath,
+                          cohesion: { current: currentCohesion, max: maxCohesion },
+                          traits
+                        };
+                    });
+                    setShowOathModal(false);
+                  }}
                   className="bg-purple-900 hover:bg-purple-800 text-white font-bold uppercase tracking-widest text-xs px-6 py-2 rounded transition-colors shadow-[0_0_15px_rgba(128,0,128,0.5)]"
                 >
                   Swear Oath
@@ -7707,6 +10378,97 @@ export default function App() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* GM Connection Modal */}
+      {showGMModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-[#111] border border-[#333] w-full max-w-md shadow-2xl rounded-lg overflow-hidden">
+            <div className="p-4 bg-[#1a1a1a] border-b border-[#333] flex justify-between items-center">
+              <h3 className="text-white gothic-font uppercase tracking-widest font-bold">Connect to GM Session</h3>
+              <button onClick={() => setShowGMModal(false)} className="text-gray-500 hover:text-white transition-colors">
+                <Icons.Close className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="text-gray-400 text-sm">
+                Enter the GM Session ID to connect your character to the active session. This will allow the GM to monitor your stats and update them in real-time.
+              </p>
+              <div>
+                <label className="block text-[10px] text-gray-500 uppercase tracking-widest mb-2">GM Session ID</label>
+                <input
+                  type="text"
+                  value={gmSessionId}
+                  onChange={(e) => setGmSessionId(e.target.value)}
+                  className="w-full bg-black border border-[#333] text-white p-2 rounded focus:border-[#555] focus:outline-none focus:ring-1 focus:ring-[#555] transition-all"
+                  placeholder="Enter GM Session ID"
+                />
+              </div>
+              <div className="flex gap-2 justify-end mt-4">
+                <button
+                  onClick={() => setShowGMModal(false)}
+                  className="px-4 py-2 border border-[#444] text-gray-400 hover:bg-[#222] hover:text-white transition-colors text-sm uppercase tracking-widest font-bold rounded"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={connectToGM}
+                  disabled={gmConnectionStatus === 'connecting' || !gmSessionId}
+                  className="px-4 py-2 border border-yellow-800 text-yellow-500 bg-yellow-950/30 hover:bg-yellow-900/50 hover:text-yellow-400 transition-colors text-sm uppercase tracking-widest font-bold rounded disabled:opacity-50 flex items-center gap-2"
+                >
+                  {gmConnectionStatus === 'connecting' ? 'Connecting...' : 'Connect'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Purge Character Confirmation Modal */}
+      {showPurgeConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-[#111] border-2 border-red-900 w-full max-w-md shadow-[0_0_50px_rgba(255,0,0,0.3)] rounded-lg overflow-hidden">
+            <div className="p-4 bg-[#8b0000] border-b border-[#333] flex justify-between items-center">
+              <h3 className="text-white gothic-font uppercase tracking-widest font-bold">Purge Inquisitorial Dossier</h3>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="text-gray-300 text-sm">
+                WARNING: This action will completely purge the current character data. The character will be permanently erased and all progress will be lost.
+              </p>
+              <p className="text-red-500 font-bold text-sm uppercase tracking-widest text-center">
+                Are you certain you wish to proceed?
+              </p>
+              <div className="flex gap-4 pt-4">
+                <button
+                  onClick={() => setShowPurgeConfirm(false)}
+                  className="flex-1 px-4 py-2 bg-[#333] hover:bg-[#444] text-white uppercase font-bold text-xs tracking-widest transition-colors rounded"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setCharacter(INITIAL_CHARACTER);
+                    const defaultImg = 'https://i.redd.it/7w14tvb9rahb1.jpg';
+                    setPortrait(defaultImg);
+                    localStorage.removeItem('astartes_character');
+                    localStorage.removeItem('astartes_portrait');
+                    setShowPurgeConfirm(false);
+                    setToastMessage("Inquisitorial dossier purged.");
+                  }}
+                  className="flex-1 px-4 py-2 bg-red-900 hover:bg-red-800 text-white uppercase font-bold text-xs tracking-widest transition-colors shadow-[0_0_15px_rgba(255,0,0,0.3)] rounded border border-red-500"
+                >
+                  Confirm Purge
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {toastMessage && (
+        <div className="fixed bottom-12 left-1/2 transform -translate-x-1/2 z-50 bg-[#8b0000] border border-[#ff0000] text-white px-6 py-3 rounded shadow-[0_0_15px_rgba(255,0,0,0.5)] font-bold uppercase tracking-widest text-[10px] animate-fadeIn">
+          {toastMessage}
         </div>
       )}
 

@@ -2,6 +2,11 @@ import React from 'react';
 import { CharacterData, Characteristics, BattleTrauma, ArmorAbility, Cybernetic } from './types';
 
 export const Icons = {
+  Close: ({ className = "w-full h-full" }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+    </svg>
+  ),
   ChevronDown: ({ className = "w-full h-full" }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
       <path d="m6 9 6 6 6-6"/>
@@ -71,8 +76,180 @@ export const Icons = {
   )
 };
 
+
+export const CUSTOM_CHAPTER_DEMEANORS: Record<string, { demeanorDescription: string }> = {
+  "Brothers in Battle": {
+    demeanorDescription: "All Space Marines within a given Chapter are bonded to one another by a common genetic inheritance and years of combat at each others’ side. While some Battle-Brothers serving in the Deathwatch have difficulty widening their sense of comradeship to include those outside of their Chapter, others have none at all, regarding all Space Marines, regardless of Chapter or Progenitor, as their Brothers. As such, there is nothing that the Battle-Brother would not do for a fellow Space Marine, up to and including dying so that his Brothers may live. The only downside of such a trait is that the Battle-Brother may come to look down upon those outside of the Adeptus Astartes, believing (often quite rightly) that none can match their own standards."
+  },
+  "Cleanse and Purify": {
+    demeanorDescription: "Those Chapters who display this trait believe that no trace of an enemy should be left behind to stain the ground on which he was slain. Simply slaying the foe is rarely sufficient—the Battle-Brothers are driven to burn his corpse, destroy his works, burn down his cities and scour his worlds of life so that no trace of his existence remains. While some servants of the Ordo Xenos believe it wise to recover and study the weapons of their foes, these Battle-Brothers believe such a notion is foolhardy at best, and heretical at worse. They often favour weapons that immolate, incinerate, atomise or blast apart their foe, being particularly fond of flamers, meltaguns and plasma guns, all of which are ideal for eradicating the stain of the alien, the fiend and the heretic."
+  },
+  "No Mercy, No Respite": {
+    demeanorDescription: "While all Space Marines are relentless in their prosecution of their objectives, some are wont to become so embroiled in their mission that all other concerns are secondary. These Battle-Brothers have no concept of the notion of defeat and would rather die than accept that once a battle is joined it will not be won. They are stubborn in the face of adversity and capable of the most awe-inspiring feats of courage. Yet on occasion such Battle-Brothers have been known to ignore what they regard as secondary concerns, sometimes to the detriment of the larger strategic situation. Some have even been known to ignore orders from higher up the chain of command when serving as part of composite force made of squads of several Chapters, or when serving individually as members of the Deathwatch."
+  },
+  "Purity Above All": {
+    demeanorDescription: "The Battle-Brothers of this Chapter have no patience whatsoever for any hint of genetic deviation, in humanity at large or in other Space Marine Chapters. While all Space Marines abhor the mutant, these Battle-Brothers see corruption wherever they look, and are ever on the guard against genetic instability in their own gene-stock and in those of other Chapters. They regard even allied Abhumans as monsters and refuse to serve alongside them, and sometimes even extend this notion to those brother Chapters with unusual genetic traits, in particular the Space Wolves and Salamanders. When fighting against those they perceive as impure, these Battle-Brothers are utterly unstoppable, but it is often difficult to integrate them into Deathwatch Kill-teams that include brethren they regard as impure in some way."
+  },
+  "Scions of Mars": {
+    demeanorDescription: "While all Space Marines utilise wargear that the vast bulk of Humanity regard as a work of technological marvel, some have access to the most arcane and revered of weapons, armour and other devices. Such Chapters invariably maintain close links with the Adeptus Mechanicus, perhaps having served side by side with the servants of the Omnissiah in a past campaign, establishing common connections that both groups value. Through their training and their access to such marvels, the Battle-Brothers have developed a certain expertise in the use of advanced wargear and know how to get the best from such items. These brethren eschew simple weapons in favour of more complex ones, and when serving in the Deathwatch are ideal when the Kill-team is issued with specialised equipment or unusual items, especially those rendered up from the mysterious depths of the Omega Vault at the heart of Watch Station Erioch."
+  },
+  "See, But Don’t Be Seen": {
+    demeanorDescription: "The Battle-Brother understands well the value of maintaining a silent, unseen vigil on the foe, striking only when his target is at its weakest and most vulnerable. The Chapter stalks the night and the shadows, approaching the foe from unanticipated quarters before disappearing once more. Such Chapters foster patience and wily cunning in their Battle-Brothers, and regard as rash and unsubtle those who charge headlong into combat."
+  },
+  "Swift As The Wind": {
+    demeanorDescription: "The Battle-Brothers of the Chapter may excel at rapid strikes and lightning raids, but the trait extends to every facet of their character. They are as quick to anger as they are to jest. They can be impatient, yet display great personal initiative. While not rash or foolhardy, such a Battle-Brother believes in the value of immediate action over protracted planning, and chafes at the bit to engage the foe."
+  },
+  "Suffer Not The Alien To Live": {
+    demeanorDescription: "The Chapter has participated in countless xenos-wars, purging species after species that the enemies of the Emperor may be cast from the galaxy once and for all. Some such Chapters may have suffered at the hands (or claws or tentacles) of ravening alien beings, and harbour a special hatred for a particular xenos strain, or indeed all aliens. They often believe in the sanctity of the human form, regarding it as being cast in the image of the Emperor himself, and may therefore eschew the use of augmetics unless absolutely needed. While some Space Marine Chapters may tolerate the existence of species such as the Eldar and the Tau, these do not. They would sooner put a bolter round through the head of an alien emissary than trust a single word its speaks, even if doing so would bring about total war."
+  },
+  "Suffer Not The Works of Heretics": {
+    demeanorDescription: "The teachings of the Chapter’s cult focus on the many crimes that have been committed against humanity by heretics and schismatics. This is probably because the Chapter fought a crusade against such an enemy, and developed a special hatred for those amongst humanity who would turn from the light of the Emperor and embrace other, less worthy gods. Battle-Brothers of this mindset are often intolerant of the more unusual expressions of the Imperial Cult, sometimes even going so far as to denounce such expressions as heretical. They may even see the subtle taint of heresy in the traditions of other Chapters, a trait that has brought them into conflict with their brother Adeptus Astartes more than once."
+  },
+  "Uphold The Honour of The Emperor": {
+    demeanorDescription: "Nearly all Chapters revere the Emperor not as a god, as preached by the Ecclesiarchy, but as the honoured ancestor and father figure, the individual in whose image the Primarchs were made and whose blood therefore flows in their own veins. They trust above all things that the Emperor will guide their hands and protect them, and his praises are ever on their lips. Battle-Brothers drawn from such Chapters ever seek to prove themselves worthy in the eyes of the Emperor, performing great deeds to bring about his glory. Furthermore, these Battle-Brothers may prove bombastic and prideful, preferring to make bold, frontal assaults over stealthy approaches, so that the enemy may know that their doom is come, and tremble before the might of the favoured sons of the Emperor of Mankind."
+  }
+};
+
 export const CHAPTERS = [
-  "Ultramarines", "Blood Angels", "Dark Angels", "Space Wolves", "Imperial Fists", "Storm Wardens", "Iron Hands", "White Scars", "Salamanders", "Raven Guard", "Black Templars"
+  "Ultramarines", "Blood Angels", "Dark Angels", "Space Wolves", "Imperial Fists", "Storm Wardens", "Iron Hands", "White Scars", "Salamanders", "Raven Guard", "Black Templars", "Flesh Tearers", "Blood Ravens", "Red Scorpions", "Marines Errant", "Crimson Fists", "Howling Griffons", "Novamarines", "Raptors", "Carcharodons"
+];
+
+export const CHAPTER_NAMES: Record<string, { first: string[], last: string[] }> = {
+  "Carcharodons": {
+    first: ["Tyberos", "Bail", "Akia", "Maha", "Koma", "Tama", "Kahu", "Rangi", "Hekoto", "Mako", "Tangaroa"],
+    last: ["Sharr", "Kaha", "Tane", "Rua", "Atea", "Whio", "Vaku"]
+  },
+  "Raptors": {
+    first: ["Lias", "Kypher", "Arjun", "Kael", "Syras", "Taer", "Vardus", "Raan", "Valerius"],
+    last: ["Issodon", "Vane", "Stahl", "Corvo", "Galeo", "Castigon", "Varrus", "Kastor"]
+  },
+  "Novamarines": {
+    first: ["Titus", "Cato", "Aeneas", "Severus", "Octavius", "Gaius", "Lucius", "Marius", "Galenus", "Maximus"],
+    last: ["Agemman", "Ventris", "Sicarius", "Tigurius", "Cassius", "Invictus", "Helican", "Drudo", "Valerius"]
+  },
+  "Howling Griffons": {
+    first: ["Orlando", "Armand", "Darius", "Pellas", "Garadon", "Lucian", "Titus", "Balthasar"],
+    last: ["Furioso", "Kantor", "Vane", "Stahl", "Draco", "Marius", "Galeo", "Castigon"]
+  },
+  "Crimson Fists": {
+    first: ["Pedro", "Alessio", "Cortez", "Kantor", "Jarl", "Demetrius", "Rafael", "Manoel", "Juan"],
+    last: ["Dorn", "Kantor", "Cortez", "Alvez", "Gomez", "Perez", "Ruiz", "Galan"]
+  },
+  "Marines Errant": {
+    first: ["Titus", "Severian", "Justiar", "Cador", "Aetius", "Decius", "Leontis", "Gaius", "Marcus", "Kail"],
+    last: ["Vane", "Kael", "Thor", "Agemman", "Varrus", "Kastor", "Galeo", "Furio", "Castigon"]
+  },
+  "Blood Ravens": {
+    first: ["Gabriel", "Davian", "Aramus", "Tarkus", "Cyrus", "Avitus", "Thaddeus", "Jonah", "Apollo", "Indrick", "Isador", "Akios", "Titus", "Seraphis", "Vidya"],
+    last: ["Angelos", "Thule", "Orion", "Diomedes", "Boreale", "Arrius", "Merathis", "Severian", "Silon", "Scaevola", "Gallan"]
+  },
+  "Ultramarines": {
+    first: ["Gaius", "Marcus", "Titus", "Severus", "Cassius", "Octavius", "Tiberius", "Lucius", "Quintus", "Decimus", "Julius", "Cael", "Agemman", "Maximinus", "Praxas", "Scyld", "Gallus", "Justian"],
+    last: ["Agrian", "Celsus", "Drusus", "Fabian", "Galba", "Lucullus", "Nerva", "Otho", "Varrus", "Valerius", "Tarentus", "Invictus", "Scipio", "Aemilian", "Helian", "Flavian"]
+  },
+  "Blood Angels": {
+    first: ["Raphiel", "Zael", "Donato", "Albinus", "Cleantes", "Coriolanus", "Erasmus", "Faust", "Gallio", "Iago", "Lorenzo", "Machiavi", "Morleo", "Nidon", "Rafen", "Sendini", "Zargo", "Leon", "Amare", "Lucien"],
+    last: ["of Baal", "the Angelic", "Morpheo", "Sangreal", "Vane", "Rephael", "Galeo", "Furio", "Raphael", "Castigon", "Metatron", "Seraph", "of the Host", "Sanguin", "of the Blood"]
+  },
+  "Dark Angels": {
+    first: ["Balthasar", "Zakeel", "Naman", "Zariah", "Bethor", "Rhamah", "Annael", "Sariel", "Zariel", "Bellerophon", "Nemiel", "Zahariel", "Astelan", "Sammael", "Ephrael", "Seraphicus", "Zephon"],
+    last: ["of Caliban", "the Redeemed", "of the Rock", "Al-Hasan", "Zadkiel", "the Unforgiven", "Malkiel", "of the First", "Watcher", "Absolon", "the Penitent", "Raphael", "Zamael"]
+  },
+  "Red Scorpions": {
+    first: ["Severin", "Casan", "Haas", "Tarn", "Zell", "Ortis", "Bane", "Cull", "Gere", "Rurik", "Arcturus", "Kull", "Rauth", "Gilead"],
+    last: ["Loth", "Sabius", "Culln", "Magister", "Aath", "Kurgis", "Sora", "Thar", "Varr", "Dragan", "Krell", "Bale"]
+  },
+  "Space Wolves": {
+    first: ["Torvald", "Hrothgar", "Sven", "Olaf", "Leif", "Kvasir", "Erik", "Halldor", "Gunnar", "Ulf", "Ivar", "Sigurd", "Rurik", "Haldor", "Valgard", "Berek", "Egil", "Krom", "Skallagrim"],
+    last: ["Bloodhowl", "Ironpelt", "Frostbane", "Winterfang", "Iceblade", "Stormseeker", "Thunderbear", "Bearclaw", "Redmane", "Trollbane", "Wolfheart", "Blackmane", "Stormwolf", "Grimblood", "Wyrmslayer"]
+  },
+  "Imperial Fists": {
+    first: ["Lexandro", "Vorn", "Hesperox", "Korphendo", "Franz", "Heinrich", "Leon", "Maximilian", "Demetrius", "Orion", "Taelos", "Alaric", "Bohemond", "Gideon", "Titus", "Vladimir", "Dietrich", "Jago"],
+    last: ["D'Arquebus", "Hagen", "Vogel", "Eichel", "Stahler", "Eisen", "Valdemar", "Vane", "Koorland", "Stone", "Defiant", "of the Phalanx", "the Stalwart", "Gant", "Trask"]
+  },
+  "Storm Wardens": {
+    first: ["Caelen", "Vane", "Rhyn", "Owin", "Bran", "Iain", "Alaric", "Culln", "Cador", "Myrdin", "Owain", "Gareth", "Baird", "Conall", "Ewan", "Taran", "Llywelyn", "Madoc", "Govan"],
+    last: ["MacIntyre", "ap-Llyre", "of Sacris", "Craig", "Stormcaller", "MacLeod", "Wallace", "Bruce", "ap-Rhys", "MacNiven", "Farquhar", "the Highlander", "Stormborn", "of High Clell", "Gaelen"]
+  },
+  "Iron Hands": {
+    first: ["Kardan", "Kaargul", "Vurgaan", "Gdolkin", "Bannus", "Paullian", "Sarlock", "Autek", "Morvox", "Lydri", "Xeriis", "Ares", "Bion", "Erasmus", "Galba", "Vaal", "Karaashi", "Lydron"],
+    last: ["of Clan Raukaan", "of Clan Avernus", "of Clan Garrsak", "of Clan Vurgaan", "Iron-heart", "the Augmented", "Steel-forged", "of Clan Dorrvok", "of Clan Morragul", "of Medusa", "the Machine-touched"]
+  },
+  "White Scars": {
+    first: ["Jubal", "Subotai", "Targutai", "Shiban", "Qin", "Khajutai", "Ogadai", "Temujin", "Ganzorig", "Batu", "Hasik", "Tsolmon", "Erden", "Naran", "Bataa", "Chagatai", "Dormu"],
+    last: ["Noyan", "of the Steppe", "the Swift", "Mergen", "Arslan", "Chuluun", "Baatar", "Khan", "of Chogoris", "the Windrider", "Storm-born", "Falcon", "Hawk-eye"]
+  },
+  "Salamanders": {
+    first: ["Tsu'gan", "Dak'ir", "Ba'ken", "N'keln", "Iagon", "Xaphan", "Ne'miel", "Pyriel", "Shen'kor", "Zartos", "Agatone", "Heka'tan", "Kadai", "Fugis", "N'bel", "K'gosi", "Ekra"],
+    last: ["of Nocturne", "the Smith", "Drake-tamer", "Fire-walker", "Xereus", "Gargo", "the Forged", "Anvil-born", "Flame-bearer", "of Prometheus", "Earth-shaker", "the Resilient"]
+  },
+  "Raven Guard": {
+    first: ["Nykona", "Aloni", "Kaedes", "Vaanes", "Solaro", "Branne", "Agapito", "Soukhounou", "Aethon", "Kyrin", "Stryder", "Arys", "Bale", "Kholka", "Nesta", "Shadowson"],
+    last: ["Mor Deythan", "Sevastus", "Alvarex", "Qeld", "Nex", "Vykus", "Valerius", "Shae", "of Deliverance", "the Unseen", "Night-walker", "of Kiavahr", "Shadow-strike", "the Silent", "Grave-walker"]
+  },
+  "Black Templars": {
+    first: ["Adalhelm", "Aleja", "Ansgar", "Beregond", "Burchard", "Cadoc", "Cai", "Caw", "Dagar", "Doderic", "Drust", "Eberhard", "Edern", "Gareth", "Geraint", "Goronwy", "Idris", "Isolda", "Jowan", "Lorin", "Mael", "Medraut", "Niall", "Peredur", "Tristan", "Vortigern", "Wulfstan", "Yvain", "Zenon"],
+    last: ["Agilard", "Balin", "Bors", "Culhwch", "Cynan", "Edmyg", "Erec", "Galahad", "Geraint", "Gwalchmei", "Howel", "Kaye", "Lamorak", "Lancelot", "Mabon", "Morholt", "Palamedes", "Pelleas", "Percival", "Sagramore", "Tristan", "Uwain"]
+  },
+  "Flesh Tearers": {
+    first: ["Abantes", "Acastus", "Aemilius", "Agamemnon", "Ajax", "Alkaios", "Amias", "Apolon", "Ares", "Attis", "Balthasar", "Cael", "Cassius", "Castor", "Corbulo", "Erasmus", "Faustian", "Gabriel", "Gaius", "Hektor", "Iago", "Jael", "Julio", "Kael", "Leonid", "Lucius", "Magan", "Nassir", "Otho", "Phaeto", "Pollux", "Raf", "Sanguon", "Scipio", "Sev", "Simeon", "Tycho", "Varon", "Zael"],
+    last: ["Abantes", "Acastus", "Aemilius", "Agamemnon", "Ajax", "Alkaios", "Amias", "Apolon", "Ares", "Attis", "Balthasar", "Cael", "Cassius", "Castor", "Corbulo", "Erasmus", "Faustian", "Gabriel", "Gaius", "Hektor", "Iago", "Jael", "Julio", "Kael", "Leonid", "Lucius", "Magan", "Nassir", "Otho", "Phaeto", "Pollux", "Raf", "Sanguon", "Scipio", "Sev", "Simeon", "Tycho", "Varon", "Zael"]
+  }
+};
+
+export const CUSTOM_CHAPTER_MODIFIERS = [
+  {
+    name: "Bolter Drills & Prayers",
+    description: "The Chapter steadfastly practices daily Bolter drills combined with prayers to the God-Emperor. Space Marines of this Chapter gain +5 Ballistic Skill and +5 Willpower.",
+    modifiers: { BS: 5, WP: 5 }
+  },
+  {
+    name: "Stringent Hypno-conditioning",
+    description: "Warriors of this Chapter undergo a more stringent hypno-conditioning than those of other Chapters. Space Marines of this Chapter gain +5 Willpower and +5 Intelligence.",
+    modifiers: { WP: 5, Int: 5 }
+  },
+  {
+    name: "Blade and Gun",
+    description: "Equally famed for their skill with both blade and gun, Space Marines from this Chapter are highly sought after by the Deathwatch. Space Marines of this Chapter gain +5 Ballistic Skill and +5 Weapon Skill.",
+    modifiers: { BS: 5, WS: 5 }
+  },
+  {
+    name: "Strength and Cunning",
+    description: "This Chapter’s gene-seed favours strength and cunning. Space Marines of this Chapter gain +5 Perception and +5 Strength.",
+    modifiers: { Per: 5, S: 5 }
+  },
+  {
+    name: "Rugged and Flexible",
+    description: "Adeptus Astartes from this Chapter possess a rugged and flexible combat doctrine. Space Marines of this Chapter gain +2 Wounds and +5 to any one characteristic of the player’s choice.",
+    modifiers: { woundsBonus: 2 },
+    needsChoice: 1
+  },
+  {
+    name: "Duty unto Death",
+    description: "Duty unto death is a fitting motto for Space Marines from this Chapter. Often they will go on when others have perished. Space Marines of this Chapter gain +5 Toughness and +5 Willpower.",
+    modifiers: { T: 5, WP: 5 }
+  },
+  {
+    name: "Lightning Raids",
+    description: "Lightning raids that inspire their fellows to greater deeds are the trademark of this Chapter. Space Marines of this Chapter gain +5 Agility and +5 Fellowship.",
+    modifiers: { Ag: 5, Fel: 5 }
+  },
+  {
+    name: "Warrior-Scholars",
+    description: "The warrior-scholars from this Chapter have often noticed clues that their more zealous comrades have missed. Space Marines of this Chapter gain +5 Perception and +5 Intelligence.",
+    modifiers: { Per: 5, Int: 5 }
+  },
+  {
+    name: "Blade and Leadership",
+    description: "Members of this Chapter are famed far and wide for both their skill with the blade as well as their leadership under fire. Space Marines of this Chapter gain +5 Weapon Skill and +5 Fellowship.",
+    modifiers: { WS: 5, Fel: 5 }
+  },
+  {
+    name: "Fluid Tactics / Pure Gene-Seed",
+    description: "This Chapter favours fluid tactics or possesses a particularly pure gene-seed. Space Marines of this Chapter gain +5 to two characteristics of the player’s choice.",
+    modifiers: {},
+    needsChoice: 2
+  }
 ];
 
 export interface CurseLevel {
@@ -85,6 +262,7 @@ export interface ChapterDetails {
   modifiers: { [key in keyof Characteristics]?: number };
   woundsBonus?: number;
   talents: string[];
+  skills?: string[];
   soloAbility: string;
   restrictions: string[];
   implantsNote?: string;
@@ -102,6 +280,140 @@ export interface ChapterDetails {
 }
 
 export const CHAPTER_DATA: { [key: string]: ChapterDetails } = {
+  "Carcharodons": {
+    modifiers: { WS: 5, WP: 5 },
+    talents: [],
+    skills: ["Speak Language (High Gothic)"],
+    soloAbility: "Carnage",
+    restrictions: [],
+    demeanorName: "Watchful for Weakness",
+    demeanorSummary: "Transitions between watchful stillness and frenetic action, waiting for the perfect time to strike with unbridled fury.",
+    demeanorDescription: "The Carcharodons exemplify patience of the grimmest and most foreboding sort. Perhaps because of the long periods of time spent adrift in the deep void, far from the lights of stars or planets, a Battle-Brother from this Chapter is well accustomed to waiting patiently. This patience can seem almost inhuman at times, with a Battle-Brother standing stock-still for hours, even days. They do not move or speak, sometimes they do not even appear to breathe. They simply wait, whether for orders, for tasks to perform, or for their foes to show some weakness.\n\nOne would be wise not to mistake this for sloth. A Carcharodon does not shirk from work that needs doing, and is often willing to shoulder more than his share of a task to ensure it is done and done well. However, the Carcharodons are unafraid to spend as long as it takes to analyse an enemy, to wait until he makes a critical error they can exploit. When that flaw emerges, they explode into furious action, tearing at their opponent with a savagery that seems completely at odds with their earlier seeming inactivity. This mix of taciturn cautiousness and extreme bloodlust is a hallmark of many Carcharodons.",
+    summary: "+5 Weapon Skill, +5 Willpower, the Carnage Solo Mode Ability, Speak Language (High Gothic), and Scrimshaw Talismans.",
+    curseName: "Chill of the Void",
+    curseLevels: {
+      1: { name: "Chill of the Void (Lvl 1) - Coldly Formal", summary: "-10 penalty to all Charm and Command Tests. Speaks almost entirely in High Gothic when addressing non-Carcharodons.", full: "The Battle-Brother withdraws even more from the company of his colleagues, taking refuge in a chill and formal demeanour. All Charm and Command Tests the Battle-Brother makes suffer a -10 penalty. In addition, the Battle-Brother tends to speak almost entirely in High Gothic when addressing a non-Carcharodon, although they can—grudgingly—speak in Low Gothic if need be." },
+      2: { name: "Chill of the Void (Lvl 2) - Merciless", summary: "Grimly executes any opponent encountered. Must make a Difficult (-10) Willpower Test to resist, or be restrained.", full: "The Battle-Brother does not tolerate any enemy, whether xenos, heretic, or even fellow humans who may have been misled into rebellion against the Imperium's rightful rule. The Battle-Brother grimly executes any opponent he encounters, even if they have surrendered, possess valuable intelligence, or are not front-line combatants. To resist this, the Battle-Brother must make a Difficult (-10) Willpower Test, or another Battle-Brother can restrain him with an Opposed Challenging (+0) Charm, Intimidate, or Command Test versus a Difficult (-10) Willpower Test." },
+      3: { name: "Chill of the Void (Lvl 3) - Silent as the Depths", summary: "Withdraws almost entirely from interacting with others. Cannot lead a Squad, always counts as being in Solo Mode. May not contribute Cohesion.", full: "The Battle-Brother withdraws almost entirely from interacting with others. He cannot lead a Squad, and always counts as being in Solo Mode. He also may not contribute Cohesion to his Squad by any means." }
+    }
+  },
+  "Raptors": {
+    modifiers: { Ag: 5, Per: 5 },
+    talents: [],
+    skills: [],
+    soloAbility: "Marksman's Honour",
+    restrictions: [],
+    demeanorName: "A History of Pragmatism",
+    demeanorSummary: "Fill them with stoic pragmatism to face everything that the universe can throw at them, to fulfil their duty until they eventually die.",
+    demeanorDescription: "At various times during its history, the Raptors have almost faced extinction but has neither the less continued to function, rebuild and once more face their enemies. It is part of the Raptor mentality that the Chapter will endure no matter the cost and that the eventual destruction and rebuilding of all Chapters in the Adeptus Astartes is inevitable. As one Battle-Brother dies, another takes his place to continue the endless struggle where the gene-seed lives on but the warrior does not. Death is the only constant in the universe and regardless of victory or defeat the only reward a Battle-Brother can look forward to.\n\nQuite apart from casting a dark cloud over the Battle-Brothers of the Raptors Chapter, it fills them with stoic pragmatism to face everything that the universe can throw at them, to fulfil their duty until they eventually die and another takes their place. The galaxy and its many horrors hold no surprises for them and they know that somewhere out there among the inky black is the piece of ground where they will fall, having served their Emperor and held back the night at least for a brief time.\n\nOther Chapters can find these attitudes at odds with a strong devotion to the Emperor and the righteous plight of mankind, though the Raptors see the two as intertwined, and their Chapter has always done its duty and remains unquestionably loyal to the Imperium. For a Raptors Battle-Brother facing death is only a matter of time, and they carry the knowledge with them every day, alongside their duty to their brothers and their oath to the God-Emperor.",
+    summary: "+5 to Agility, +5 to Perception, and the Marksman’s Honour Solo Mode ability.",
+    curseName: "Grim Determination",
+    curseLevels: {
+      1: { name: "Grim Determination (Lvl 1) - The Shadow of Death", summary: "The Battle-Brother starts to see death in everything. He becomes distant and dismissive, suffering a –10 to his Fellowship when dealing with other soldiers or Adeptus Astartes.", full: "The Battle-Brother starts to see death in everything. He becomes distant and makes little effort to forge new alliances with new squad members, knowing they will soon be in the grave. He becomes more dismissive of death and the praising of the dead, seeing little glory in their sacrifice, only the inevitable end to their duty and another corpse to feed the gods of war. This attitude can grate on those around the Battle-Brother and he suffers a –10 to his Fellowship when dealing with other soldiers or members of the Adeptus Astartes." },
+      2: { name: "Grim Determination (Lvl 2) - The Bad Beneath the Good", summary: "Reflects on the worst side of developments. Must choose an objective to cast doubt on; completing it requires 3d10 more Kill-markers.", full: "The Battle-Brother cannot help but reflect on the worst side of a new development and will endeavour to find the worst aspect of even the most favourable of circumstances. Quite apart from causing friction within his squad, the drawing of focus onto potential problems and unforeseen dangers (regardless of the actual likelihood they will impact on the squad’s mission) can cause compromises in command and less than direct tactical judgements. When the Battle-Brother’s squad embarks on a mission, he must choose one of the Secondary or Primary objectives to cast doubt on. This objective then requires 3d10 more Kill-markers than normal to complete." },
+      3: { name: "Grim Determination (Lvl 3) - Game Over", summary: "Recklessly accepts inevitable death. Provides no Cohesion, and only gains half the normal armour points from cover.", full: "Death is inevitable and the Battle-Brother is already a walking corpse just waiting for the moment when an enemy’s blade or bullet ends him. Filled with visions of his own demise, the Battle-Brother begins to act recklessly, accepting that it is his time and there is nothing he can do to prevent it coming. This will not only place him in danger but can endanger his entire squad. The Battle-Brother does not contribute to the squad Cohesion as he fails to adequately aid them in battle. In addition, he only gains half the normal armour points from cover, as even when behind barricades and walls he exposes himself to fire with little mind to remaining concealed." }
+    }
+  },
+  "Novamarines": {
+    modifiers: {}, // Adjusted dynamically via user choice
+    talents: [],
+    skills: ["Forbidden Lore (Xenos)"],
+    soloAbility: "Tales of the Void",
+    restrictions: [],
+    demeanorName: "Void Wanderers",
+    demeanorSummary: "Adapts to new foes with knowledge gathered from their chapter's thousands of light years of void-crusading history.",
+    demeanorDescription: "The scattered nature of the Chapter gives it a perspective different to those Chapters which have a homeworld or are tied to a specific region or segmentum by their history. While it is true of all Space Marine Chapters that they fight wherever the Emperor sends them, taking them to far flung worlds and against a variety of foes, for the Novamarines there is no planet or world to which they will return, or grand Chapter fortress monastery where their Chapter Masters reside. It is a small but significant fact that weights on the minds of every Novamarine.\n\nNovamarines are also often fonts of much knowledge about the galaxy, and especially the wilds of the Ultima Segmentum. While this may not be strict knowledge in the way an adept or scholar would see it, the odds are that the Novamarine Battle-Brother or one of the members of his Chapter have seen or visited a world or faced an alien foe that relates to the Kill-team’s current situation. While not a complete understanding or clinical view of the subject or planet the Novamarine will likely know something about it, usually in the form as a tale passed on to him by one of his brothers.",
+    summary: "+5 to two Characteristics of the player’s choice, the Forbidden Lore (Xenos) Skill and the Tales of the Void Solo Mode ability.",
+    curseName: "Revile the Xenos",
+    curseLevels: {
+      1: { name: "Revile the Xenos (Lvl 1) - Favoured Targets", summary: "Will always favour taking on alien enemies or making strikes against objectives which will harm xenos, even over more glorious targets, unless making a WP (+0) Test.", full: "The Novamarine goes out of his way to target the xenos, ensuring he never misses a chance to strike a blow against the dark cloud of alien aggression closing in on the Imperium. Given a choice, he will always favour taking on alien enemies or making strikes against objectives which will do the most harm to the xenos, even if there is more glory in an alternative cause of action. If there is a choice, the Battle-Brother must favour the xenos target, though if this would directly place his Kill-team in danger or threaten to cause his mission to fail he may make a Challenging (+0) Willpower Test to ignore the hated alien and take a different course." },
+      2: { name: "Revile the Xenos (Lvl 2) - Almost Human", summary: "Extends hatred to anything showing xenos taint (mutants, benign aliens, collaborators) and deals with them as true xenos.", full: "There are countless kinds of xenos in the galaxy and not all are as obvious as the great hordes of Orks, the enigmatic Eldar, ravening Tyranids, or the insidious Tau. Some come in forms which are not too distant from humanity, or from cultures which are benign and of little or no threat. The Battle-Brother is not fooled by such pale representations of the xenos form, and sees the alien everywhere, even influencing human worlds where mutation can easily disguise alien corruption. The Battle-Brother extends his hatred of xenos to anyone or anything which shows even the slightest hint of xenos taint, whether from contact with aliens or alien blood. In his eyes, these tainted humans and benign aliens are no better than true xenos and should be dealt with as such." },
+      3: { name: "Revile the Xenos (Lvl 3) - Foes Eternal", summary: "Will not ally with, truce with, or exchange with Xenos under any circumstance. Must pass a Very Hard (-30) WP test to even restrain violence in enforced diplomatic encounters.", full: "No alien can ever be an ally of the Battle-Brother, and under no circumstances will the xenos ever stop being the most hated of his foes. Even in situations where a temporary alliance with alien forces (such as to fight a greater foe) would be prudent, the Battle-Brother will not stomach it, considering his own kind as traitors should they follow it through. In situations where there is diplomacy between xenos and the Imperium, such as a ceasefire or exchange of prisoners, the Battle-Brother will refuse to take part, discontent with any kind of truce against a foe which only deserves death. In situations where the Battle-Brother is forced to deal peacefully with xenos (such as orders from his commanders or the will of his Kill-team), he must make a Very Hard (-30) Willpower Test to do so for a single encounter, even then remaining hostile, though restraining his violence." }
+    }
+  },
+  "Howling Griffons": {
+    modifiers: { WS: 5 },
+    talents: ["Hatred (Word Bearers)"],
+    skills: ["Forbidden Lore (the Traitor Legions)"],
+    soloAbility: "Tactical Assessment",
+    restrictions: [],
+    demeanorName: "Glorious Tradition",
+    demeanorSummary: "Strict adherents to the Codex Astartes who hone their skills and pride themselves on a spotless history, save their bitter hatred for the Word Bearers.",
+    demeanorDescription: "That the Battle-Brothers of the Howling Griffons strive to live up to the reputation of their Chapter as exemplars of the Adeptus Astartes has earned them many honours among their brethren. The number of victories won by the Howling Griffons would be deemed great were they even a Chapter of the Second Founding; for a Chapter of the 33rd millenium, their record is vast indeed. Few among the Adeptus Astartes can claim to have embodied the ideals of the Codex Astartes more fully than the Battle-Brothers of the Proud Eyrie. Resting heavily on the shoulders of each Battle-Brother is his personal honour, as well as that of his predecessors. It is the duty of each individual to stand as an example to all, that they might inspire their comrades to even greater feats of heroism in the name of the Emperor of Man and his glorious Imperium. The honour of the Chapter, the Primarch, the Emperor, and the Imperium all demand that the Battle-Brothers of the Adeptus Astartes make war across the stars, and no treatise has better captured the Space Marines’ capacity in battle than the Codex Astartes. To embrace that weighty tome is to know victory.",
+    summary: "Strict adherents to the Codex Astartes carrying a bitter hatred for the Word Bearers.",
+    curseName: "Cursing the Word",
+    curseLevels: {
+      1: { name: "The Price of Treachery", summary: "Routine (+20) Willpower Test when meeting a suspected traitor to restrain violent response.", full: "The Battle-Brother has become increasing obsessed with the Word Bearers treachery and relives their fateful ambush in his mind over and over again. While this spurs him on to seek out the hated Word Bearers, it also leads him to see treachery in other places, comparing the great crime perpetrated against his Chapter with other events as they unfold. The merest hint of treachery is enough to prompt a strong and violent response from the Battle-Brother, one which he may not be able to control. If the Battle-Brother comes into contact with a suspected traitor (to the Imperium, the Deathwatch, or his Chapter) he must make a Routine (+20) Willpower Test. If he passes, he can restrain himself but will be very unpleasant to the known or suspected traitor, while if he fails he will see it as his place to punish them, perhaps even with summary execution if their crime is great enough." },
+      2: { name: "Trail of the Traitors", summary: "Routine (+20) Willpower Test to not jeopardize squad or subvert missions to seek out traitors or forbidden texts.", full: "As the Battle-Brothers hatred of traitors grows and his obsession with finding and exterminating the Word Bearers heightens, he will be loath to give up any mission or lead which could lead to them. On a mission, this could mean going out of his way to seek out known or suspected traitors or even changing the mission objectives to include their capture or destruction. In other settings, it can mean an obsessive thirst for knowledge and seeing out dangerous or forbidden texts if it means gaining a clue to the location and crimes of a traitor. In both instances, if the subverting of a mission or the seeking of knowledge would place the Battle-Brother or his squad in extreme danger, the GM may allow a Routine (+20) Willpower Test to resist, unless the action pertains directly to the Word Bearers and then no Test should be allowed." },
+      3: { name: "In the Eye of Terror and Beyond", summary: "Always seeks to fight and destroy Chaos Space Marines, ignoring other threats or logic.", full: "The Battle-Brothers hunger to eradicate the Word Bearers and repay them for their crimes against the Chapter culminates in doing whatever it takes to see them destroyed. The Battle-Brother will always seek out Chaos Space Marines in any combat situation or mission, and if it falls within their power they will see their squad face off against Chaos Space Marines as often as possible, trying to ensure their deployment to warzones and campaigns where they might come face to face with them. When these hated foes are encountered, the Battle-Brother will do everything in his power to destroy them and see they do not escape, even if it means leaving others behind to chase them down wherever they might run." }
+    }
+  },
+  "Crimson Fists": {
+    modifiers: { WP: 10 },
+    talents: ["Hunter of Aliens"],
+    soloAbility: "Ork Slayer",
+    restrictions: [],
+    implantsNote: "Betcher’s gland and sus-an membrane are non-functional (no benefit).",
+    demeanorName: "Favoured of the Deathwatch",
+    demeanorSummary: "A great pride for their place in the Deathwatch and a great responsibility to live up to.",
+    demeanorDescription: "For centuries the Crimson Fists have waged the Emperor’s wars against the alien, fighting in all corners of the galaxy against a vast myriad of xenos. However, none have suffered as much under the blades and bolts of the Chapter as the Orks... The result is that Crimson Fists have both a great pride for their place in the Deathwatch and a great responsibility to live up to. This can sometimes grate with their Kill-team as others consider them aloof and entitled, as if the right to wear the silvered should pad of the Deathwatch was always their due and not something to be earned only through glory and death.",
+    summary: "Stubborn and valourous Ork slayers with a glorious history.",
+    curseName: "Only Honour in Death",
+    curseLevels: {
+      1: { name: "No Retreat", summary: "Refuses to retreat (Challenging WP test to disengage).", full: "As the odds mount so does the Battle-Brother’s stubborn refusal to retreat... When the Battle-Brother wishes to retreat from a combat he must pass a Challenging (+0) Willpower Test to do so. If he fails he may not Test again until either he or one of his brothers is wounded." },
+      2: { name: "Suffer not Defeat", summary: "Must attack most dangerous foe if takes >10 Dmg or ally falls.", full: "If the Battle-Brother suffers more than 10 points of Damage (after reduction for armour or Toughness) or if one of the members of his Kill-team is incapacitated or killed, he will renew the vigour of his attacks... In this circumstance he must attack, seeking out the most able or dangerous of his foes. In his following turn, he is allowed to make a Challenging (+0) Willpower Test to retreat or change his tactics." },
+      3: { name: "Unto Death", summary: "Gladly accepts suicidal tasks and fights regardless of wounds.", full: "Once the Battle-Brother suffers Critical Damage, he gains a fatalistic desire to sell his life for the cause... He will fight on regardless of his wounds and continue to attack or place himself in the path of attacks... He will also gladly accept suicidal or near suicidal tasks without complaint." }
+    }
+  },
+  "Marines Errant": {
+    modifiers: { Ag: 5, S: 5 },
+    talents: [],
+    skills: ["Common Lore (Imperial Navy)"],
+    soloAbility: "Zero Tolerance",
+    restrictions: [],
+    demeanorName: "Shepherd of Assets",
+    demeanorSummary: "Adept at marshalling resources and preserving/restoring wargear.",
+    demeanorDescription: "The Marines Errant are keenly aware of their scattered companies, that they cannot draw upon the same amount of resources or manpower at any one moment as other stronger Chapters can. In part, this is the result of the crusading nature of the Marines Errant and the toll that centuries of fighting far flung wars has wrought upon the military materiel available to each of its dispersed battle groups. As such, the Marines Errant have become highly adept at marshalling their own resources, preserving and restoring even the most heavily damaged wargear.",
+    summary: "A scattered crusading chapter adept at resource management.",
+    curseName: "Crusader's Call",
+    curseLevels: {
+      1: { name: "Unending Valour", summary: "Must pass a Challenging (+0) Willpower Test when facing a foe with a Fear Rating for the first time, or gain Frenzy and cannot use Squad Mode.", full: "The Battle-Brother has become filled with pride in the history of his Chapter’s bravery and devotion and sees his own existence as a vital part of continuing its traditions. When his Kill-team is required to do their duty he will make sure that it is carried out, squashing any doubt his fellow Battle-Brothers might have or any weakness they might show in the face of honour. When facing a foe with a Fear Rating for the first time (see page 277 of the DEATHWATCH Core Rulebook) the Battle-Brother must make a Challenging (+0) Willpower Test. If they fail, they gain the Frenzy Talent for the encounter and must strive to destroy the Fear causing foe. During this time they cannot initiate or benefit from any Squad Mode abilities." },
+      2: { name: "Duty through Sacrifice", summary: "Must use Squad Mode abilities to take Damage/hits for companions or give them his Reaction if at all possible.", full: "True duty can only be proven in death or an equally potent sacrifice, a fact which is known to all true servants of the God-Emperor. The Battle-Brother knows that to prove himself he must be the one to stand in the way of the blade or shield his comrades from the blast, so that there can be no doubt about his devotion or his loyalty to the Emperor. When using Squad Mode abilities (see page 219 of the DEATHWATCH Core Rulebook) where the Battle-Brother has the option to take Damage or hits for his companions or give them his Reaction (such as the Soak Fire or Tactical Spacing abilities) he must do so if at all possible." },
+      3: { name: "Lead the Charge", summary: "Must volunteer for dangerous duties, lead charges, and engage the most dangerous foes in combat.", full: "In boarding actions, the greatest honour goes to those first through the breech and first to face the foe. The Battle-Brother accepts that he must take this role as his honour demands it, and it is just another way to prove his courage and loyalty in the eyes of his peers. If there is a choice or a chance to lead a charge or be the first to face the enemy, the Battle-Brother must take it. Furthermore he will seek out such opportunities, volunteering for dangerous duties if they mean he will get to lead others into the fray. In combat, the Battle-Brother will also seek out the most dangerous or powerful looking foes, even at the cost of ignoring closer or more pressing enemies." }
+    }
+  },
+  "Blood Ravens": {
+    modifiers: { Int: 5 },
+    talents: [],
+    soloAbility: "Foreknowledge",
+    restrictions: [],
+    demeanorName: "Secrets of the Dark",
+    demeanorSummary: "A thirst for uncovering the lost past and forbidden knowledge.",
+    demeanorDescription: "The origins of the Blood Ravens are shrouded in mystery and the true nature and name of their Primarch is unknown to them. A Battle-Brother comes into the ranks of the Blood Ravens with a sense of curiosity to understand their ancestry, further fuelled by the principles of the Chapter and the value it places on knowledge and secrets. To a Blood Ravens Battle-Brother, the drive to gain knowledge can be too much, and where a more reluctant or cautious Imperial servant might leave a book unopened or a vault sealed, the Battle-Brother must learn of its contents.",
+    summary: "Scholars of forbidden lore and seekers of truth.",
+    curseName: "Deepening Mysteries",
+    curseLevels: {
+      1: { name: "Unhealthy Curiosity", summary: "Must pass a Challenging (+0) Willpower Test to not pursue a secret.", full: "The more answers about their past the Blood Ravens discover, the more questions arise to be answered, leading to an ever expanding circle of secrets and lies that can consume those without the restraint to know when to stop looking. The Battle-Brother’s quest for lore and knowledge has led him into dangerous places, and his continued survival given him a false sense of security and the drive to press on. Whenever the Battle-Brother is presented with the chance to learn a secret or uncover some knowledge either of importance to the Blood Ravens or pertaining to the Adeptus Astartes, he must make a Challenging (+0) Willpower Test to not pursue it. If there is excessive danger involved, the GM can grant the Player Character a +10 to +30 bonus to this Test depending on the level of the danger. If the Test is failed, the GM may also allow the Player Character to Test again to resist after at least one attempt has been made to get the secret or a certain amount of time has passed." },
+      2: { name: "Knowledgeable Obsessions", summary: "Must pass a Challenging (+0) Willpower Test to not learn more about an obsessive knowledge, even in danger.", full: "As a Blood Raven learns more forbidden lore, they can become obsessed with a particular subject, an aspect of the whole which they come to believe is linked directly to the secrets of their Chapter or some other great and important part of the Imperium’s struggle against its enemies. When the Battle-Brother gains this level, the GM chooses one of his Lore Skills, favouring those with the highest level of mastery first (i.e. if the Battle-Brother had Scholastic Lore: Ministorum +10 and Forbidden Lore: Xenos, then Scholastic Lore: Ministorum would be the first choice). Whenever the Battle-Brother is presented with a chance to learn more about this obsessive knowledge he must do so. Only if it would put his own life or the lives of his squad in danger can he resist and even then only with a Challenging (+0) Willpower Test." },
+      3: { name: "Unholy Enlightenment", summary: "Failing a Lore Skill Test twice costs one Round of action and 1 Insanity or Corruption Point.", full: "After a time a Blood Raven will learn many secrets from his Chapter and may even spend time in its Librariums coming into contact with great volumes of forbidden lore. All of these secrets can taint a man, burdening his mind and granting him both a great understanding of the universe but also a touch of madness as he tries to contain and understand it in his mind. Whenever the Battle-Brother fails a Lore Skill Test of any kind, he must immediately Test again against the same Skill, with all the same modifiers as the first roll. If he fails again, then nothing has happened and he has simply failed the Test. If he passes it counts as if he had passed the Test (with whatever benefits would have been gained should he have passed the test the first time), however, he is overwhelmed for a moment, costing him one Round of action and earning him either 1 Insanity Point or 1 Corruption point as chosen by the player. If the Blood Ravens Player Character is the squad leader and he suffers the effects of Unholy Enlightenment then every member of his squad also gains 1 Insanity Point or Corruption Point if they would benefit in any way from the knowledge as their leader shares what he has learned with them." }
+    }
+  },
+  "Red Scorpions": {
+    modifiers: { WP: 5 },
+    talents: ["Resistance (Mutation)"],
+    soloAbility: "Taint Sense",
+    restrictions: [],
+    demeanorName: "Path of the Pure",
+    demeanorSummary: "Fanatical obsession with genetic purity and detecting corruption.",
+    demeanorDescription: "The Red Scorpions Chapter prides itself on the purity of its Battle-Brothers and the sanctity of its gene-seed. In the eyes of the Chapter masters, few other members of the Adpetus Astartes can lay claim to such a lineage and a genetic link to the Emperor, while those outside the Adeptus Astartes are almost always tainted by corruption despite any protests of loyalty or claims about the strength of their humanity. Protecting and preserving their purity, and eliminating all signs of taint are therefore very important to the Red Scorpions and part of every Battle-Brother’s training and daily observances. While all Space Marines abhor mutants and aliens, the Red Scorpions reserve a special vehemence for them. The line Red Scorpions draw between those the Imperium considers human and those it does not is far higher than almost any other Chapter, usually making the distinction that unless a man can claim direct descent from the Emperor himself (like the Red Scorpions) he is a flawed being despite his intentions. This fanaticism for extreme genetic purity is most pronounced when in the presence of those tainted by the Ruinous Powers, or those suspected of such taint. All it takes is suspicion for the Red Scorpions to shift their stance with their allies, and once the hint of taint has attached itself to such allies they must work hard to lift it by proving their devotion to the Emperor beyond any shadow of a doubt.",
+    summary: "Zealous purists obsessed with the sanctity of the human form.",
+    curseName: "Divine Purity",
+    curseLevels: {
+      1: { name: "Only the Pure", summary: "-10 Fellowship with psykers/mutants.", full: "The Battle-Brother has come to question the purity of all the servants of the God-Emperor and cannot believe that they are somehow without fault or flaw. This is especially true of obviously tainted allies, despite any kind of sanctioning, such as psykers, abhumans, and navigators. When the Battle-Brother must deal with anyone with a psychic gift (not including Librarians of his own Chapter), or a mutation (no matter how benign or beneficial) he suffers a –10 to Fellowship Tests. Such a cold reception is almost always reciprocated and such individuals often feel intensely uncomfortable in the presence of the Battle-Brother, aware of the hulking warrior’s scorn, and worsen their Disposition by one step when in the Battle-Brothers presence." },
+      2: { name: "True Sons of the Emperor", summary: "Disdain extends to other Chapters. -2 Squad Cohesion contribution (-1 if Red Scorpion is present).", full: "While it has always been held that the Adeptus Astartes stand above all other warriors of the God-Emperor, many of the Chapters consider themselves equals and there is usually a degree of respect afforded between Battle-Brothers no matter their origins. Red Scorpions can come to believe that this is a falsehood, and that no other Chapter can hope to match their loyalty, seeing other Space Marines are lesser copies of themselves and ultimately not as worthy of their position in the armies of the Emperor. The effects of Only the Pure (see above) now apply to Space Marines as well (with the exception of other Red Scorpions). In addition, if the Battle-Brother is squad leader he must reduce the amount of Cohesion he contributes to the Kill-team by 2, or 1 if there is at least one other Red Scorpion as part of the Kill-team." },
+      3: { name: "None but Us", summary: "All Squad Mode abilities cost 1 additional Cohesion. Cannot benefit from Squad Mode abilities of other Chapters.", full: "In time, a Red Scorpions Battle-Brother can come to believe that only his Chapter alone can be trusted and those around him, despite their outward claims and displays of loyalty, are in fact unreliable; traitors waiting to turn their cloaks. Though the Battle-Brother would not move against such men without just cause, as such rash actions would shame his Chapter and go against the Codex Astartes which he holds in such high regard, he will be careful not to give them too much power over him or expose his back unless he has to. The Battle-Brother will not work well in a Kill-team with members of other Chapters. All Squad Mode abilities cost 1 additional Cohesion point if they include the Battle-Brother and the Battle-Brother cannot benefit at all from the Squad Mode abilities of other Chapters (though they may still be active and used by the other members of the Kill-team as normal)." }
+    }
+  },
   "Space Wolves": {
     modifiers: { Per: 5, Fel: 5 },
     talents: ["Heightened Senses (Smell)", "Counter Attack"],
@@ -238,7 +550,6 @@ export const CHAPTER_DATA: { [key: string]: ChapterDetails } = {
     talents: [],
     soloAbility: "Thunder’s Call",
     restrictions: [],
-    startingGear: ["Sacris claymore (replaces combat knife)"],
     demeanorName: "Aspire to Glory",
     demeanorSummary: "Clannish and aloof knights who value personal honor and seek out enemy champions for duels.",
     demeanorDescription: "Storm Wardens are committed to the tenets of personal honour and obligation. Clannish and aloof, they prefer to remain distant from the Imperium at large. A Storm Warden is slow to make friends, but protects companions fiercely. Honor is paramount; word is bond. They enjoy debate and crafting points to support arguments. In battle, they fight with fervor, seeking out enemy champions to test skills against.",
@@ -281,6 +592,22 @@ export const CHAPTER_DATA: { [key: string]: ChapterDetails } = {
       1: { name: "Burn the Witch (Lvl 1)", summary: "–20 penalty to Fellowship tests used on characters with psychic abilities.", full: "The Battle-Brother is uncomfortable around psykers and feels their dark powers crawling on his flesh and burrowing into his brain. All Fellowship based tests used on characters with psychic abilities suffer a –20 penalty, as the Battle-Brother’s disquiet shows through." },
       2: { name: "Burn the Witch (Lvl 2)", summary: "Kill-team Cohesion reduced by 1 if a psyker ally is present.", full: "The Battle-Brother can scarcely stand the presence of psykers and abhors their sight. If there is a psyker in the Battle-Brother’s Kill-team (such as a Librarian Player Character) or he must work with a psyker ally, his Kill-team’s Cohesion is reduced by 1 (until such time as the psyker leaves or is killed)." },
       3: { name: "Burn the Witch (Lvl 3)", summary: "Must prioritize killing enemy psykers over all other foes.", full: "The Battle-Brother cannot stand any psykers to live and flies into a rage when he sees them. When fighting enemy psykers, the Battle-Brother must seek them out (choosing the most obviously powerful first) and kill them to the exclusion of all other foes. This can be especially problematic for the Kill-team, should they need to take a psyker alive." }
+    }
+  },
+  "Flesh Tearers": {
+    modifiers: { WS: 5, Ag: 5, Fel: -15 },
+    talents: ["Flesh Render"],
+    soloAbility: "A Taste for Blood",
+    restrictions: [],
+    demeanorName: "Unquenchable Thirst",
+    demeanorSummary: "The Flesh Tearers are barely able to contain the outward signs of their Primarch’s curse, the Black Rage clouding their judgement.",
+    demeanorDescription: "The Flesh Tearers are barely able to contain the outward signs of their Primarch’s curse, the Black Rage clouding their judgement and the Red Thirst filling them with a lust for blood. Such is the extreme nature of their thirst for blood that it consumes them constantly and once blood is drawn, no matter the cause, the Battle-Brothers of the Chapter find it extremely difficult to resist the urge to spill more. In battle, this can make them into frenzied madmen hacking and tearing at their foes in a whirlwind of blades and teeth seeking to rip their enemies apart, while at other times they radiate a barely contained aura of rage and hunger which can make all those around them feel acutely uncomfortable. Some Flesh Tearers embrace this madness and live in a constant state of rage, simply directing their fury at one target or another, be it a foe in battle or an object which has had the misfortune to get in their way. These Battle-Brothers find it almost impossible to stay still for long or hold down lengthy dialog with others and must retire from social situations before long lest they destroy something. Others try and repress their rage and instead speak through gritted teeth and blazing eyes, making those who converse with them fear for their lives, or expect sudden and brutal violence at any moment. In both cases, the Battle-Brother carries with him a heavy cloud of repressed anger and fury wherever he goes which cannot be lifted or easily ignored by those around him.",
+    summary: "Rage-filled berserkers struggling with the twin urges of the Red Thirst and Black Rage.",
+    curseName: "Dark Rage",
+    curseLevels: {
+      1: { name: "Extreme Frenzy", summary: "Difficult (-10) Willpower Test when taking damage or stressed to avoid Frenzy.", full: "The Battle-Brother completely loses control when he frenzies and finds it almost impossible to claw his way back to reason as long as there are foes to fight and blades drawn. Even when foes are not near, the madness of Frenzy grips him and he rages endlessly for battle and blood, howling out his anger and striking the ground with his blade. If the Battle-Brother has the Frenzy Talent, then he could lose control at any moment. Any time the Battle-Brother takes damage, is confronted with a clear threat, or is put in a position of great stress (as determined by the GM), the Battle-Brother must make a Difficult (–10) Willpower Test as a Free Action to avoid becoming Frenzied. If he passes, he is able to contain his fury for the duration of the encounter or until he is forced to make another test. If the he fails the Test, he immediately becomes Frenzied." },
+      2: { name: "Blood Madness", summary: "Must engage in close combat. Hard (-20) Willpower Test to avoid hacking downs foes' corpses.", full: "The Flesh Tearers thirst for the blood of their foes when in the grips of the Red Thirst and long to see it spilled across the ground in great arcs and gouts. They also crave the feeling of hot blood on their skin and splattering across their armour staining the dark red a darker shade still. The Battle-Brother must engage foes in close combat if possible, either making melee attacks against them or shooting point black with pistols so that their blood spills at his feet. When he downs a foe, he must make a Hard (–20) Willpower Test to resist the urge to spend his next turn hacking or blasting the foe’s corpse apart. If the Battle-Brother is hit by an attack (though not if he is attacked and missed) while hacking at a foe, he will turn his attention to his new attacker instead." },
+      3: { name: "Animal Within", summary: "-30 all non-combat tests. Hard (-20) WP to choose random target, otherwise attacks nearest.", full: "Near the end, a Flesh Tearer is little more than an animal filled with fury and madness striking out at all those around him. While he may still have lucid moments where he remembers the warrior he once was, these are fleeting and quickly gone to be replaced with only the thought of killing and the thirst for blood. The Battle-Brother suffers a –30 to any Characteristic or Skill Test when not in combat. The Battle-Brother may not use any Skill which is based on Intelligence, Willpower or Fellowship. In combat, he must make a Hard (–20) Willpower Test to choose his target, otherwise he will attack the nearest target (friend or foe) determined randomly if there is more than one to choose from." }
     }
   }
 };
@@ -342,6 +669,26 @@ export const ARMOR_ABILITIES: { [key: string]: ArmorAbility } = {
     name: "Osmotic Gill Life Sustainer",
     description: "Environmentally sealed with adequate oxygen supply as long as power is maintained."
   },
+  "Frag Assault Launchers": {
+    name: "Frag Assault Launchers",
+    description: "Ironclad Dreadnoughts are armed with Frag Assault Launchers, single-shot scatter grenades employed to cover the Dreadnought’s final assault (Facing Front, Range 10m, 2d10 X, Pen 0, Clip 1). Frag Launchers may be fired as a Free Action, and fire in a 45 degree cone from the Dreadnought, hitting everything within range. When they fire, they force automatic Pinning Tests from all eligible targets within range."
+  },
+  "Walker": {
+    name: "Walker",
+    description: "Walkers are able to ignore penalties for moving through difficult terrain, and negotiate obstacles such as rock slides, tank traps, fallen trees, and shattered buildings without penalty."
+  },
+  "Reinforced Hull": {
+    name: "Reinforced Hull",
+    description: "When a vehicle with a Reinforced Hull receives a Critical Hit, halve the results, rounding up. This does not affect rolls on the Critical Hit chart generated by Righteous Fury."
+  },
+  "Combat Walker": {
+    name: "Combat Walker",
+    description: "Dreadnoughts always have a Basic Melee Attack (representing their ability to charge, batter, and smash targets): (Melee, 1d10+14 I, Pen 0, Unwieldy)"
+  },
+  "Living Relic": {
+    name: "Living Relic",
+    description: "A Furioso Dreadnought is an ancient and venerated engine of destruction, a reminder of the millennia of ignominious defeats and glorious victories. A Furioso Dreadnought grants all loyal Space Marines within 50m a +10 bonus on all Tests to resist Fear, Pinning and Cohesion Damage."
+  },
   "Vox Link": {
     name: "Vox Link",
     description: "Standard vox and data transmission. View squadmate vitals."
@@ -353,6 +700,14 @@ export const ARMOR_ABILITIES: { [key: string]: ArmorAbility } = {
   "Magnetized Boot Soles": {
     name: "Magnetized Boot Soles",
     description: "Activated to provide Magboots."
+  },
+  "Force Field (PR 30, Overload 01-05)": {
+    name: "Force Field (PR 30, Overload 01-05)",
+    description: "The Armour of Faith includes a Force Field with a Protection Rating of 30 and an Overload Roll of 1-5."
+  },
+  "The price of eternal service": {
+    name: "The price of eternal service",
+    description: "The concentration necessary to wield the powers of the warp that the Dreadnought suffers a –20 penalty on all Focus Power Tests, due to the difficulty Dreadnoughts have attempting to focus upon the world. But such is the Dreadnought’s disconnect between the world of the living and his current state of being that all advances purchased from that advance scheme cost twice the normal amount of xp."
   },
   "Noisier": {
     name: "Noisier",
@@ -447,21 +802,13 @@ export interface ArmorPattern {
   abilities: string[];
   historySlots: number;
   strengthBonus?: number;
+  agilityBonus?: number;
   autoSensesBonus?: number;
   manualDexterityPenalty?: number;
   imageUrl?: string;
 }
 
 export const ARMOR_PATTERNS: { [key: string]: ArmorPattern } = {
-  "Astartes Scout Armour": {
-    name: "Astartes Scout Armour",
-    head: 5, torso: 5, rightArm: 5, leftArm: 5, rightLeg: 5, leftLeg: 5,
-    abilities: ["Vox Link", "Magnetized Boot Soles"],
-    historySlots: 0,
-    strengthBonus: 0,
-    autoSensesBonus: 0,
-    manualDexterityPenalty: 0
-  },
   "MK I Thunder": {
     name: "MK I Thunder",
     head: 6, torso: 8, rightArm: 6, leftArm: 6, rightLeg: 4, leftLeg: 4,
@@ -561,8 +908,18 @@ export const ARMOR_PATTERNS: { [key: string]: ArmorPattern } = {
     manualDexterityPenalty: -10,
     imageUrl: "https://i.ibb.co/Z6k49QdF/Artificer.png"
   },
-  "Scout": {
-    name: "Scout",
+  "Armour of Faith": {
+    name: "Armour of Faith",
+    head: 12, torso: 12, rightArm: 12, leftArm: 12, rightLeg: 12, leftLeg: 12,
+    abilities: ["Giant Among Men", "Enhanced Strength", "Auto-Senses", "Bio-monitor and Injectors", "Recoil Suppression", "Osmotic Gill Life Sustainer", "Vox Link", "Nutrient Recycling", "Magnetized Boot Soles", "Poor Manual Dexterity", "Force Field (PR 30, Overload 01-05)"],
+    historySlots: 2,
+    strengthBonus: 20,
+    autoSensesBonus: 10,
+    manualDexterityPenalty: -10,
+    imageUrl: "https://i.ibb.co/8gWchLMY/Emperor-s-Champion.webp"
+  },
+  "Astartes Scout Armour": {
+    name: "Astartes Scout Armour",
     head: 0, torso: 7, rightArm: 7, leftArm: 7, rightLeg: 5, leftLeg: 5,
     abilities: ["Vox Link", "Body Glove", "Anointment of Obfuscation", "Scout Vox", "Interlocutor Beacon", "Auto-injector Cuff"],
     historySlots: 1,
@@ -570,6 +927,42 @@ export const ARMOR_PATTERNS: { [key: string]: ArmorPattern } = {
     autoSensesBonus: 0,
     manualDexterityPenalty: 0,
     imageUrl: "https://i.ibb.co/yc17K2dT/Scout.png"
+  },
+  "Astartes Dreadnought": {
+    name: "Astartes Dreadnought",
+    head: 0, torso: 30, rightArm: 0, leftArm: 0, rightLeg: 0, leftLeg: 0,
+    abilities: ["Walker", "Giant Among Men", "Auto-Senses (+20)", "Reinforced Hull", "Combat Walker"],
+    historySlots: 0,
+    strengthBonus: 0,
+    agilityBonus: +20,
+    imageUrl: "https://i.ibb.co/ymCMvqZr/Deathwatch-Venerable-Dreadnought00.webp"
+  },
+  "Ironclad Dreadnought": {
+    name: "Ironclad Dreadnought",
+    head: 0, torso: 30, rightArm: 0, leftArm: 0, rightLeg: 0, leftLeg: 0,
+    abilities: ["Walker", "Giant Among Men", "Auto-Senses (+20)", "Extra Armor", "Reinforced Hull", "Combat Walker", "Frag Assault Launchers"],
+    historySlots: 0,
+    strengthBonus: 0,
+    agilityBonus: +10,
+    imageUrl: "https://i.ibb.co/ymrvCRWS/Ironclad-Dreadnought001.webp"
+  },
+  "Furioso Dreadnought": {
+    name: "Furioso Dreadnought",
+    head: 0, torso: 43, rightArm: 0, leftArm: 0, rightLeg: 0, leftLeg: 0,
+    abilities: ["Walker", "Giant Among Men", "Auto-Senses (+20)", "Reinforced Hull", "Combat Walker", "Living Relic"],
+    historySlots: 0,
+    strengthBonus: 0,
+    agilityBonus: 0,
+    imageUrl: "https://i.ibb.co/rG8kRGx7/Furioso-Dreadnought02.webp"
+  },
+  "Librarian Dreadnought": {
+    name: "Librarian Dreadnought",
+    head: 0, torso: 43, rightArm: 0, leftArm: 0, rightLeg: 0, leftLeg: 0,
+    abilities: ["Walker", "Giant Among Men", "Auto-Senses (+20)", "Reinforced Hull", "Combat Walker", "Living Relic"],
+    historySlots: 0,
+    strengthBonus: 0,
+    agilityBonus: 0,
+    imageUrl: "https://i.ibb.co/BVMnLDvg/image.png"
   }
 };
 
@@ -649,6 +1042,164 @@ export const BATTLE_TRAUMAS: BattleTrauma[] = [
 ];
 
 export const RELIC_WARGEAR = [
+  {
+    name: "Diomedes' Grace",
+    chapter: "Raptors",
+    type: "wargear",
+    summary: "Max -20 penalty to Pilot (Personal) from terrain/space constraints. +10 Pilot (Personal) in jungle/forest.",
+    description: "Captain Diomedes of the Raptors had the finest artificers of his Chapter adapt the jump pack he favoured with an advanced suspensor rig and dispersion jets to assist his manoeuvrability in the jungle warfare he had mastered. The jump pack eventually made its way to the Deathwatch, where it has served without equal in all manner of areas normally inaccessible by such means. Rules: Diomedes’ Grace follows all the normal rules for Astartes jump packs, but the user can never suffer a total penalty of greater than –20 to his Pilot (Personal) Tests from terrain or space constraints in any area large enough to admit him. Its workmanship shows most thoroughly in jungle or forest settings, granting a +10 to Pilot (Personal) Tests in the environments for which it was made."
+  },
+  {
+    name: "Libris Anomalus",
+    chapter: "Novamarines",
+    type: "wargear",
+    summary: "+1d5 DoS to successful Forbidden Lore (Xenos) Tests, min -10 penalty for obscure species.",
+    description: "The warriors of the Novamarines have accumulated a great deal of alien-hunting lore and combat technique in their vigil over the Halo Stars, which has led to strong ties between the Chapter and the like-minded Deathwatch. One of the Codiciers of the Novamarines brought a valuable datalibram to Watch-Fortress Erioch, containing millennia of the Chapter’s collected knowledge. Partial copies have been disseminated to other Watch-Fortresses, but the value of the libram is such that it spends more time in use than available to scribes—notwithstanding the centuries it would take to fully reproduce such a vast archive. Rules: The Libris Anomalus is not easy to search, but can greatly reward a knowledgeable reader, adding 1d5 Degrees of Success to any successful Forbidden Lore (Xenos) Test. In addition, no test concerning a species previously encountered by the Imperium can ever suffer more than a –10 penalty due to its obscurity."
+  },
+  {
+    name: "The Lost Halo",
+    chapter: "Howling Griffons",
+    type: "wargear",
+    summary: "Force Field (Rating 55, Overload 01), weapons not stopped have Pen halved.",
+    description: "This advanced Iron Halo had a long and glorious history in the Angevin Crusade, defending the mightiest heroes of the Howling Griffons from the foul xenos that claimed the Calyx Expanse. It disappeared from Chapter records after the crusade’s conclusion, and was not heard of again for centuries. Shortly before the Jericho Warp Gate was discovered, the Omega Vault yielded up the Lost Halo for unknown reasons—and without any clue as to how it had arrived there. Rule: The Lost Halo is a Force Field with a Protection Rating of 55 and an Overload Roll of 01. Weapons that are not stopped by the Field have their Penetration reduced by half."
+  },
+  {
+    name: "The Hand of Retribution",
+    chapter: "Crimson Fists",
+    type: "wargear",
+    summary: "Power Fist (2d10+2 E, Pen 9, Power Field), lacks Unwieldy.",
+    description: "This finely crafted power fist had a storied history within the Crimson Fists before being lost in a desperate boarding action aboard the space hulk Malignant Eternity. It was recovered with the aid of information revealed by the Omega Vault about the nature and location of the hulk. The grateful Chapter left the artefact in the care of those who had aided in recovering it. Rules: The Hand of Retribution is finely crafted, containing the full heft and power of the mightiest Astartes power fist in what appears to be merely an oversized gauntlet. It lacks the Unwieldy quality typical of power fists, and suffers only the normal penalty for power armour to tests involving fine manipulation.",
+    stats: {
+      weapon: {
+        name: "The Hand of Retribution (Power Fist)",
+        damage: "2d10+2 E",
+        pen: 9,
+        special: "Power Field"
+      }
+    },
+    modifiers: {
+      traits: ["The Hand of Retribution (Lacks Unwieldy)"]
+    }
+  },
+  {
+    name: "Linebreaker",
+    chapter: "Marines Errant",
+    type: "weapon",
+    description: "The Astartes shotgun is commonly thought of as a weapon for the Scout Companies, but the death toll wrought on enemy forces by the veterans who have wielded Linebreaker speak to its effectiveness in other hands. The weapon’s specially crafted, short barrel is reinforced to withstand a unique shot made of super-dense alloys. Even a grain of this ammunition impacts with it the force of a slug from a lesser weapon, allowing for a devastating spread of fire.",
+    rules: "Linebreaker is an Astartes shotgun with the Felling (1) Quality. Its unique ammo allows it to count ranges out to 10 metres as if they were point-blank for the purposes of extra hits from Scatter. The requisition cost for Linebreaker includes 3 spare clips, and any further clips must be acquired at a cost of 10 Requisition each.\nProfile: Basic 30m S/2/– 1d10+12 I Pen 6 Clip 18 Rld 2 Full Special: Felling (1), Scatter",
+    stats: {
+      weapon: {
+        name: "Linebreaker",
+        class: "Basic",
+        range: "30m",
+        rof: "S/2/–",
+        damage: "1d10+12 I",
+        pen: 6,
+        clip: { current: 18, max: 18 },
+        reload: "2 Full",
+        special: "Felling (1), Scatter",
+        ammoType: "Linebreaker Rounds",
+        ammoClass: "Shotgun",
+        ammoCategory: "Shells"
+      }
+    }
+  },
+  {
+    name: "Naval Boltgun",
+    chapter: "Marines Errant",
+    type: "weapon",
+    description: "Marines Errant are used to fighting in the close confines of ships and in brutal toe-to-toe boarding actions. Some Battle-Brothers use cut down naval boltguns for such engagements where a full sized weapon would be too large or unwieldy.",
+    rules: "A Marines Errant Battle-Brother may exchange his starting Astartes boltgun for a Naval boltgun. If he does so, he reduces its Clip by 8, but halves its weight and can use it both onehanded and in close combat without penalty.\nProfile: the same as the standard bolter but with an 8 round smaller magazine and can be fired in close combat and one handed as a special rule",
+    stats: {
+      weapon: {
+        name: "Naval Boltgun",
+        class: "Basic",
+        range: "100m",
+        rof: "S/2/4",
+        damage: "1d10+9 X",
+        pen: 4,
+        clip: { current: 20, max: 20 },
+        reload: "Full",
+        special: "Tearing (can be fired in close combat, one handed)"
+      }
+    }
+  },
+  {
+    name: "Correction of Flesh",
+    chapter: "Red Scorpions",
+    type: "wargear",
+    description: "The Apothecaries of the Red Scorpions are zealous adherents to the sanctity of the human form and the need to keep it pure, and to this end, the most learned of their number created a set of advanced medical tools to treat the superhuman flesh of Space Marines. These tools, collectively known as the Correction of Flesh, surpass the efficacy of a standard narthecium, and can treat unenhanced humans or warriors of the Adeptus Astartes with but minor alterations to the dosage.",
+    rules: "The Correction of Flesh replaces a standard narthecium when requisitioned, and grants +30 to Medicae Tests to treat Space Marines and humans alike. The user can re-roll failed Medicae Tests, and heals one additional Wound with each use of First Aid."
+  },
+  {
+    name: "Tears of the Scorpion",
+    chapter: "Red Scorpions",
+    type: "weapon",
+    description: "The Red Scorpions have vast armouries, compared to many Chapters, with copious examples of mastercrafted melee and ranged weapons carefully maintained and protected by the Chapter. Among all of these fine weapons none are as revered by the Red Scorpions as the relic blades known as the Tears of the Scorpion. Ancient weapons of immense spiritual value to the Chapter and of long lost eldritch design they are only ever gifted to the greatest of Red Scorpion Battle-Brothers, often reserved for its company commanders and Chapter Masters. In rare instances if a hero of the Chapter proves himself worthy he may be allowed to wield one of the blades in battle, but such is a rare and great honour.",
+    rules: "The Tears of the Scorpion generate a power field of ancient and powerful design. Other weapons with the power field quality offer no protection from this vicious blade. When the wielder uses Tears of the Scorpion to Parry an attack, he has a 75% chance to destroy the attacker’s weapon, regardless of whether the attacker’s weapon has the Power Field Quality or not.",
+    stats: {
+      weapons: [
+        {
+          name: "Tears of the Scorpion",
+          class: "Melee",
+          damage: "1d10+7 E",
+          pen: 8,
+          special: "Balanced, Power Field"
+        }
+      ]
+    }
+  },
+  {
+    name: "Lucian's Rod",
+    chapter: "Blood Ravens",
+    type: "weapon",
+    summary: "+20 Focus Power with Force Quality, needs PR 5+.",
+    description: "Lucian was a legendary hero of the Blood Ravens, who some claim could not channel his prodigious psychic powers through any normal force weapon. He had a special force staff crafted for his use, a weapon which amplified his talents tenfold. Rules: Lucian’s Rod is an Astartes force staff that grants a +20 to the Focus Power Test to channel power through the weapon with its Force Quality. However, it requires great power behind the blow to function, and the Force Quality cannot be used with an effective Psy Rating of less than 5 (after being modified by Power Level).",
+    stats: {
+      weapon: {
+        name: "Lucian's Rod",
+        class: "Melee",
+        damage: "1d10+3 I",
+        pen: 0,
+        special: "Balanced, Force",
+        weight: "5 kg",
+        req: 0
+      }
+    }
+  },
+  {
+    name: "Memor Nihilis",
+    chapter: "Flesh Tearers",
+    type: "weapon",
+    summary: "+10 WP Tests (or +20 if failure causes IP).",
+    description: "This massive eviscerator chainsword is intricately worked, with each tooth of the roaring blade inscribed to a level of detail few artisans could manage. This ornate work was done by the hand of a Sanguinary Priest, to commemorate the loss of the Chapter’s warriors claimed by the Black Rage. Barely visible script details the history and heraldry of dozens of warriors along the length of the blade, ever reminding its wielder of the peril of losing control. Rules: Memor Nihilis is a two-handed variant of the Astartes chainsword, more commonly known as an eviscerator. Its grim reminders grant a +10 to Willpower Tests made by the wielder, increasing to +20 if failure of the Tests would result in gaining Insanity Points.",
+    stats: {
+      weapon: {
+        name: "Memor Nihilis",
+        damage: "2d10+5 R",
+        pen: 5,
+        range: "-",
+        rof: "-",
+        clip: "-",
+        reload: "-",
+        special: "Tearing, Unwieldy"
+      }
+    }
+  },
+  {
+    name: "Fury Unrelenting",
+    chapter: "Storm Wardens",
+    type: "wargear",
+    summary: "12 AP to both arms. +3 Pen to gauntlet melee weapons. Unarmed attacks gain 5 Pen.",
+    description: "These vambraces were salvaged from the ruined armour of a Battle-Brother of the Storm Wardens during an engagement by the Chapter against a Tau battlegroup. He survived the barrage brought to bear against his squad by Broadside battlesuits and charged the position held by the heavy guns alone. In vengeful rage, his Sacris Claymore shattered by the barrage, he assaulted his foes with just his armoured fists, but his furious blows were enough to bring down the two suits in the fire team before he was slain in a hail of plasma. The instruments of his fury were miraculously undamaged after his assault, and they were repaired and gifted to the Deathwatch so that their fury against the alien might serve a wider theatre. Rules: Fury Unrelenting can be fitted onto a suit of Astartes power armour or artificer armour. It grants 12 AP to both arms (replacing the normal value) and increases the Penetration of any melee weapon wielded in their gauntlets by 3. The wearer’s unarmed attacks gain a Penetration of 5, instead."
+  },
+  {
+    name: "Levin Shield",
+    chapter: "Storm Wardens",
+    type: "wargear",
+    summary: "Force Field (PR 55, Overload 1). 1d10+4 E dmg to melee foes. Stun on parry.",
+    description: "The Storm Wardens Chapter Master, Lorgath Maclir, once wielded the Levin Shield. It is said he passed it to the Deathwatch in payment of an honour debt to Watch Captain Mordigael. This storm shield adjusts to the bearer’s bio-electric signature and uses his body as part of the circuit to generate its powerful energy field. The crackling nimbus protects the wielder while electrifying his foes. The Shield’s kinetic repercussion plating also unleashes thunderous fury when struck. Rules: This Force Field has a Protection Rating of 55 and an Overload number of 1, and causes 1d10+4 Energy Damage each Round to all creatures in melee with the wielder, ignoring armour. If the Storm Warden successfully Parries with the Levin Shield, the attacker must immediately make a Toughness Test at –10 per degree of success by which the Parry succeeded, or be Stunned for 1 Round. As a storm shield, it also provides +4 AP to the Body and the Arm carrying it and reduces the time necessary for a Guarded Attack to a Half Action."
+  },
   {
     name: "Augury Malifica",
     chapter: "Deathwatch",
@@ -1019,7 +1570,9 @@ export const RELIC_WARGEAR = [
         clip: { current: 18, max: 18 },
         reload: "Full",
         special: "Reliable, Scatter, -30 to Awareness tests to hear shots.",
-        ammoType: "Shotgun Shells"
+        ammoType: "Standard Shells",
+        ammoClass: "Shotgun",
+        ammoCategory: "Shells"
       }
     }
   },
@@ -1308,6 +1861,16 @@ export const RELIC_WARGEAR = [
     }
   },
   {
+    name: "Fury Unrelenting",
+    chapter: "Storm Wardens",
+    type: "wargear",
+    summary: "Replaces arm AP with 12. Increases Penetration of Unarmed/Melee.",
+    description: "These vambraces were salvaged from the ruined armour of a Battle-Brother of the Storm Wardens during an engagement by the Chapter against a Tau battlegroup. He survived the barrage brought to bear against his squad by Broadside battlesuits and charged the position held by the heavy guns alone. In vengeful rage, his Sacris Claymore shattered by the barrage, he assaulted his foes with just his armoured fists... The instruments of his fury were miraculously undamaged after his assault, and they were repaired and gifted to the Deathwatch.\nRules: Fury Unrelenting can be fitted onto a suit of Astartes power armour or artificer armour. It grants 12 AP to both arms (replacing the normal value) and increases the Penetration of any unarmed attacks or melee weapons wielded by the character by +2.",
+    modifiers: {
+      traits: ["Fury Unrelenting (12 AP Arms, +2 Pen for Melee/Unarmed)"]
+    }
+  },
+  {
     name: "Blood of Heroes",
     chapter: "Blood Angels",
     type: "wargear",
@@ -1584,7 +2147,7 @@ export const RELIC_WARGEAR = [
         name: "Duty's End (Storm Shield)",
         damage: "1d10 I",
         pen: 0,
-        special: "Defensive, Shocking"
+        special: "Defensive, Shocking, Protection Rating 60, Overload 01-05"
       }
     },
     modifiers: {
@@ -1676,7 +2239,7 @@ export const RELIC_WARGEAR = [
     name: "Armour of Faith",
     chapter: "Black Templars",
     type: "wargear",
-    summary: "Artificer Armour (AP 12 Body/10 All). Force Field (PR 30, Overload 01-05).",
+    summary: "Artificer Armour (AP 12 All). Force Field (PR 30, Overload 01-05).",
     description: "Armour of Faith is the traditional name given to the armour gifted to the Emperor’s Champion. Chosen from the finest artificer armour available to the Chapter and then inscribed with sacred wards and catechisms of hatred, the armour offers greater protection than any ordinary suit of power armour could, allowing the Emperor’s Champion to complete his holy duty. Rules: Armour of Faith counts as a suit of artificer power armour (see the DEATHWATCH Core Rulebook page 163). In addition, such is the protections of its wards that some blows and rounds are simply turned aside or flash to nothing in a blaze of divine power. The Armour of Faith includes a Force Field with a Protection Rating of 30 and an Overload Roll of 1-5.",
     modifiers: {
       traits: ["Armour of Faith (Artificer Armour, Force Field PR 30)"]
@@ -1703,6 +2266,63 @@ export const RELIC_WARGEAR = [
 ];
 
 export const CHAPTER_TRAPPINGS = [
+  {
+    name: "Scrimshaw Talismans",
+    chapter: "Carcharodons",
+    description: "These bone talismans are covered with intricately detailed line-work carvings, to the point where the original shape of the bone is lost and the entire surface is a maze of ink-work. These talismans come in a variety of shapes, though they often are worked into stylized death's heads, sea-going predators similar to the Carcharodons' Chapter heraldry, teeth, gaping maws, and other disturbing iconography. It is likely these are worked into the Chapter's primitivist traditions. At least some of the Battle-Brothers are known to carve their own to celebrate accomplishments, frighten foes, and ward off the malefic.",
+    rule: "The Battle-Brother may choose to have his Talisman grant him +5 to all Intimidate Tests or a +5 to all Tests to resist Psychic Powers. (Once selected, this bonus cannot be changed later).",
+    options: [
+      { name: "Frighten Foes (+5 Intimidate)", rule: "Grants +5 to all Intimidate Tests." },
+      { name: "Ward Malefic (+5 Resist Psychic)", rule: "Grants +5 to all Tests to resist Psychic Powers." }
+    ]
+  },
+  {
+    name: "Combat Sight",
+    chapter: "Raptors",
+    description: "When a Battle-Brother selects a Combat Sight, he chooses two effects. These effects cannot be changed later, and even if the sight is replaced by the Chapter will remain the same. Combat sights can only be attached to pistol and basic weapons, and a weapon may only ever have one sight at any one time.",
+    rule: "Provides an upgrade for basic and pistol weapons. Choose two effects from: Laser Tracer (+10 to hit single shots), Long Range Imaging (+10m pistol/+20m basic range), Focal Targeter (Penetration + Perception Bonus), Shadow Light (ignores lighting/cloaking penalties), and Audible Trigger (fire at concealed targets at Difficulty -10)."
+  },
+  {
+    name: "Laurels of Ultramar",
+    chapter: "Novamarines",
+    description: "Part of the close ties between the Novamarines and the Ultramarines includes a desire by the Chapter’s Battle-Brothers to pay homage to the tomb of their Primarch on Ultramar. Many Battle-Brothers make this pilgrimage at least once during their lives and use it to strengthen their resolve as well as their connections with the Ultramarines Chapter.",
+    rule: "If a Novamarine Battle-Brother with the Laurels of Ultramar is squad leader, then he counts any Ultramarines in his squad as if they were Novamarines (and vice-versa) for the purposes of Skill, Talents, and Squad Mode abilities."
+  },
+  {
+    name: "Night World Battle Livery",
+    chapter: "Howling Griffons",
+    description: "In certain circumstances, a Chapter may be permitted to make use of variant livery on their armour, painting it with different designs specific to an individual campaign or engagement. During several of its engagements, the Howling Griffons have been sanctioned to use such livery, giving up the bold quarters red and yellow they normally employ. Among these official Codex patterns and colours is the Night World Battle Livery. A Howling Griffons Battle-Brother may choose to paint his armour in Night World Camouflage before a mission if it will involve stealth or reconnaissance elements. While his armour is painted in this way, he gains a +10 to silent move Skill Tests.",
+    rule: "If painted before a mission involving stealth/recon elements, grants a +10 to silent move Skill Tests." // Added a short summary rule to match the structure
+  },
+
+  {
+    name: "Ork Bone Talismans",
+    chapter: "Crimson Fists",
+    description: "Ork teeth and skulls are a common sight among the trophy rooms for the Crimson Fists Chapter and some Battle-Brothers carry these talismans into battle as a reminder of their prowess over the alien.",
+    rule: "A Crimson Fists Space Marine may choose to carry an Ork Bone Talisman if he has the Hatred (Orks) Talent. The talisman allows the Battle-Brother to use the +10 bonus to attacks from his Hatred (Orks) Talent to be used for both Weapon Skill and Ballistic Skill. Orks fighting the Battle-Brother are incensed by such tokens and gain the Hatred Talent against him."
+  },
+  {
+    name: "Crusader Medallions",
+    chapter: "Marines Errant",
+    description: "A Marines Errant Battle-Brother can choose to have Crusader Medallions as part of his starting gear, reflecting his time before he joined the Deathwatch. If he does he can choose to use them to improve the Disposition of those he meets that might have participated in the crusade or heard of its deeds. If he does so, then the GM should roll a d10: on a 1-3 the NPC has not heard of the crusade, on a 4-8 the NPC was part of the same crusade or has high regard for those that were and improves his Disposition to the Battle-Brother by one step, on a 9-10 the crusade has a dark meaning for the NPC (he lost too many brothers during it or it reminds him of a shameful incident) and his Disposition is reduced by one step toward the Battle-Brother."
+  },
+  {
+    name: "Icon of the Scorpion",
+    chapter: "Red Scorpions",
+    description: "The Red Scorpions often adorn their wargear with an engraved image of their Chapter namesake. These small talisman-like icons remind the bearer of their Chapter’s heritage and their constant drive to purge corruption without as well as within. Bolstered by his conviction, a Red Scorpion Battle-Brother who possesses an Icon of the Scorpion gains a significant resistance to the taint of Chaos. Any time the Battle-Brother would gain a number of Corruption Points, he may make a Challenging (+0) Willpower Test. If this Test is successful, the number of Corruption Points gained is reduced by 1."
+  },
+  {
+    name: "Librarium Texts",
+    chapter: "Blood Ravens",
+    description: "Blood Ravens Battle-Brothers have access to vast amounts of knowledge from the vaults of their Chapter. A Battle-Brother carrying Librarium texts must choose a single Lore Skill (which can be either Common, Scholastic, or Forbidden) as his area of focus. When using the Lore Skill on a subject his texts cover, he gains a +3 bonus to the Test.",
+    rule: "When using the chosen Lore Skill on a subject the texts cover, gain a +3 bonus."
+  },
+  {
+    name: "Grisly Trophies",
+    chapter: "Flesh Tearers",
+    description: "Such trophies inevitably decay over time and the GM may require the PC to collect new ones for his Battle-Brother from time to time.",
+    rule: "While wearing or carrying grisly trophies, the Flesh Tearer gains a +10 to any Willpower Tests to resist the effects of either the Black Rage or the Red Thirst. However, their presence makes those around him more aware of the savage nature of his Chapter, and the Disposition of any NPC Space Marines he must interact with are automatically reduced by two steps. Other kinds of warriors (such as Imperial commanders or civilian populations) will always react with fear or revulsion toward the Battle-Brothers unless they are equally barbaric."
+  },
   {
     name: "Devotion Chain",
     chapter: "Black Templars",
@@ -1890,6 +2510,29 @@ export const CHAPTER_TRAPPINGS = [
       pen: 0,
       special: "Balanced, Primitive"
     }
+  },
+  {
+    name: "Sacris Claymore",
+    chapter: "Storm Wardens",
+    description: "A heavy, two-handed broadsword traditionally wielded by the Storm Wardens.",
+    rule: "This trapping grants the Battle-Brother a Sacris Claymore.",
+    associatedWeapon: {
+      name: "Sacris Claymore",
+      damage: "2d10+2 R",
+      pen: 2,
+      special: "Unbalanced"
+    }
+  },
+  {
+    name: "Tempest Amulet",
+    chapter: "Storm Wardens",
+    description: "A ceremonial item denoting a Battle-Brother's deeds and oaths.",
+    rule: "Select a rule from the options below.",
+    options: [
+      { name: "Amulet of Might", rule: "Add +2 to Strength (after all other modifiers)." },
+      { name: "Victory Scripture", rule: "Gain +2 WS when fighting an enemy in single melee combat." },
+      { name: "Guardian Amulet", rule: "The enveloped scripts venerate the Storm Warden’s lost 1st Company, so that they will send aid to the bearer in times of greatest peril. The amulet counts as a Charm." }
+    ]
   }
 ];
 
@@ -2175,7 +2818,7 @@ export const PROTECTIVE_WARGEAR = [
     weaponStats: {
       damage: "1d5+1 I",
       pen: 0,
-      special: "Balanced"
+      special: "Balanced, Protection Rating 25, Overload 01-05"
     }
   },
   {
@@ -2186,7 +2829,18 @@ export const PROTECTIVE_WARGEAR = [
     weaponStats: {
       damage: "1d10 I",
       pen: 0,
-      special: "Defensive, -20 to Hit"
+      special: "Defensive, -20 to Hit, Protection Rating 55, Overload 01-10, +4 AP Arm and Body, Half Action Guarded Attack"
+    }
+  },
+  {
+    name: "Boarding Shield",
+    summary: "Protection Rating 20. Overload 01-05. +8 AP to Arm. Lock basic weapon to shield.",
+    description: "Boarding shields are heavy breaching bulwarks used by the adeptus astartes void assaults—turning corridors into killing zones as warriors advance through fire, unyielding and unstoppable. The warrior can with the shield lay down fire with their main armament as they advance. Rules: The astartes equipped with this shield have 8 extra AP on the arm that wields the shield. The astartes can lock a basic type weapon to the shield to fire while using the shield as a cover, he can then only be hit in the head while the shield is locked. he can then make a half move and fire single or semi-auto fire. He can also use the shield for a bash attack doing 1d10 impact damage. The shield has a force field with a protection rating of 20 and overload between 01-05.",
+    type: "Shield",
+    weaponStats: {
+      damage: "1d10 I",
+      pen: 0,
+      special: "Defensive, Protection Rating 20, Overload 01-05, +8 AP Arm, Lock Basic Weapon to Shield"
     }
   },
   {
@@ -2208,6 +2862,280 @@ export const SPECIALIZATIONS = [
 ];
 
 export const LIBRARIAN_PSYCHIC_POWERS = [
+  {
+    name: "From the Depths",
+    category: "Carcharodons powers",
+    xpCost: 750,
+    action: "Half Action",
+    opposed: "Yes",
+    range: "5m x Psy Rating Radius",
+    sustained: "No",
+    description: "Prerequisites: Concealment +10, Silent Move +10.\n\nThe Carcharodon Librarian clouds the minds of his adversaries with a choking mental darkness, amplifying their fear and surprise so that it paralyses them. Their minds writhe with images of watery depths of numbing cold and writhing pelagic shapes, leaving them vulnerable to assault. The Librarian makes a Focus Power Test, opposed by all Surprised enemies within range (enemies not suffering from Surprise are unaffected). If they fail, they are Surprised for one additional Round. Once an enemy has been affected by this power, he is immune to it for 24 hours."
+  },
+  {
+    name: "Rending Maw",
+    category: "Carcharodons powers",
+    xpCost: 1000,
+    action: "Full Action",
+    opposed: "No",
+    range: "10m x Psy Rating",
+    sustained: "No",
+    description: "Prerequisite: WP 50+.\n\nThe Librarian calls forth the avatar of a great oceanic predator whose maw erupts from the very ground beneath the enemy. The very stones and earth reform into the shape of jaws and teeth that snap shut, consuming all within in a shower of gore. The Librarian makes a Focus Power Test. If he is successful, he centres a blast with a radius equal to his Psy Rating anywhere within the power’s range. All within the area of effect must make a Challenging (+0) Agility Test to scramble clear. Anyone who does not clear the area of effect takes PRd10 Rending Damage with no Penetration. In the following Round, any survivors may make an Ordinary (+10) Agility Test on their turn to again scramble clear of the area of effect. If they fail, they take the same Damage result in Impact Damage as they are dragged below with the retreating maw (if they survive, they can spend a Full Action clawing their way back to the surface in subsequent turns)."
+  },
+  {
+    name: "Librarian's Farsight",
+    category: "Raptors powers",
+    xpCost: 1000,
+    action: "Half Action",
+    opposed: "No",
+    range: "Self",
+    sustained: "Yes",
+    description: "The Librarian calls upon his psychic gifts to enhance his vision and grant himself a hunter’s gaze which can use to sweep across the battlefield to find targets. This keen sight not only allows the Librarian to pick out targets at extreme ranges but also thwart their attempts to hide, differentiating shapes from within shadow to see those that are trying to hide from him.\n\nWhile this power is active, the Librarian gains a bonus to all Perception Tests and Perception-based Skill Tests equal to three times his Psy Rating. He can also re-roll any failed attempts when making Opposed Tests against foes using Concealment to hide from him. In addition, his sight allows him to see things much closer than they would normally appear and reduces the range to a target when using a ranged weapon by 10m times his Psy Rating for determining any penalties or bonuses to hit. This ability can also be used to see fine detail from the same distance which normal sight might not be able to see. This power only works when the Librarian is using his own vision and does not function in conjunction with scopes or lenses which would enhance ranged vision."
+  },
+  {
+    name: "Raptor's Wings",
+    category: "Raptors powers",
+    xpCost: 2000,
+    action: "Full Action",
+    opposed: "No",
+    range: "Self",
+    sustained: "Yes",
+    description: "Prerequisite: WP 40+.\n\nRaptors have an affinity for striking from the sky, making extensive use of jump packs and land speeders to descend on their foes from unexpected angles. The Librarian can manifest great wings of psychic power with which to bear him aloft. The Librarian can use this power to grant himself the Flyer (X) trait where X represents twice his Psy Rating. He does not need to make a Skill or Characteristic Test to use the psychic wings and can use this flying movement just as if he would use his own movement.\n\nWhile active, the others will be able to see the Librarian’s wings as crackling green nimbuses of energy arch up over his shoulders and can make it very difficult for him to hide. Also, when he moves if the wings brush against any surface they will crackle and burn with contained Warp energy (though the surfaces or objects they touch suffer no harm). As a result of these factors, the Librarian suffers a –20 to both his Concealment and Silent Move Skill Tests while this power remains active."
+  },
+  {
+    name: "Screaming Eagles",
+    category: "Raptors powers",
+    xpCost: 1500,
+    action: "Half Action",
+    opposed: "Yes",
+    range: "1m x Psy Rating Radius",
+    sustained: "No",
+    description: "Prerequisite: WP 35+.\n\nThe Raptors Librarian can summon forth a swarm of shadowy birds of prey from the Warp which rise up from the ground screaming for the blood of his enemies. When the Librarian manifests this power, all enemies within its radius must make an Opposed Challenging (+0) Willpower Test against the Librarian. Those that pass will be partially deafened for their following Turn and suffer a penalty of any Perception or Fellowship tests equal to the Librarian’s Psy Rating. Those that fail will become Stunned for a number of Rounds equal to the Librarian’s Psy Rating, though may make a Challenging (+0) Willpower Test to recover at the start of each of their turns until they either pass the test or the effects wear off.\n\nThe effects of this power also have the effect of creating a brief cloud of darkness when the ethereal birds spring from the ground, and, though not complete darkness, this does foul vision and cast a shadow over the area of effect as thousands of black beating wings arch skyward. Anyone within the radius of the power when it is activated, including the Librarian and any of his allies, suffers a –10 penalty to vision and vision based Tests (including ranged attacks) unless they can see normally in the dark or have a light source. This effect lasts from the end of the Librarian’s turn until the start of his following turn when the birds are sufficiently dispersed."
+  },
+  {
+    name: "Blood Oath",
+    category: "Howling Griffons powers",
+    xpCost: 500,
+    action: "Full Action",
+    opposed: "No",
+    range: "Self",
+    sustained: "No",
+    description: "Librarians of the Howling Griffons Chapter take their oaths as seriously as any of their brothers and can bind them psychically with blood to make them more potent and enduring. The Librarian calls upon his eldritch powers when taking an oath at the start of a mission, committing not just his word but his spirit to the binding and seeding it with a few drops of his own blood. This power can be used only at the start of a mission during the Mission Preparation phase. Any other members of the Kill-team may choose to participate in the Oath-taking with the Librarian. Blood Oath can only be used Fettered and thus has no chance of incurring Perils of the Warp. If the Librarian fails to activate it, then there are no further effects and he may not use the power again until the start of his next mission.\n\nIf the Librarian successfully uses this power, he and the other members of the Kill-team gain access to a pool of temporary Fate Points equal to the Librarian’s Psy Rating. This pool lasts until the end of the Mission. Spent temporary Fate Points in this pool do not replenish at the beginning of successive gaming sessions. These Fate Points may not be burnt but can otherwise be used as normal by any Battle-Brother who took part in the Oath-taking. This benefit comes with a risk, however. Should the Kill-team fail to accomplish over half—rounded up—of their Mission’s Primary Objectives, then the Battle-Brothers who took part in Oath-taking burns one Fate Point from their personal pool, permanently reducing his Fate Points by one."
+  },
+  {
+    name: "Griffon's Howl",
+    category: "Howling Griffons powers",
+    xpCost: 1500,
+    action: "Half Action",
+    opposed: "No",
+    range: "10m x Psy Rating Radius",
+    sustained: "No",
+    description: "The Librarian calls to the Warp and draws forth a mighty cry like a diving bird of prey to cow his foes with fear and shatter their resolve. This cry is also a potent weapon against Warp spawn and can shake the ties which bind them to the material plane sending them back from whence they came. When this power is manifested, a number of targets up to the Librarian’s Psy Rating within its range count the Librarian as having the Fear (2) Trait for this turn and must make a Fear Test if they can draw line of sight to him or hear his cry (unless they would otherwise be immune to the effects of Fear). In addition, any creatures with the Warp Instability Trait must make an Instability Test with a penalty to their Willpower equal to 2 x Psy Rating. If there is a choice of targets within range and some have the Daemonic Trait, the Librarian must choose these targets first before those without the trait."
+  },
+  {
+    name: "Periclitor's Bane",
+    category: "Howling Griffons powers",
+    xpCost: 1500,
+    action: "Half Action",
+    opposed: "Yes",
+    range: "20m x Psy Rating",
+    sustained: "Yes",
+    requirement: "WP 40+",
+    description: "The Howling Griffon’s intense hatred of the Word Bearers and their lord Periclitor has been translated by the Chapter’s Librarian’s into a number of abilities targeted at the traitor legionnaires. When the Librarian summons up this power, he is creating an agonising resonation targeted at one of the traitor legions. The Librarian picks a single target within range and makes a Challenging (+0) Opposed Willpower Test with them. For every degree which they fail they suffer a –10 to all their Tests and can only take a Half Action on their following turn. If the Librarian beats them by more than four degrees of success, then they also take 2 x Psy Rating Impact Damage which is not reduced by armour."
+  },
+  {
+    name: "Ancestral Strength",
+    category: "Novamarines powers",
+    xpCost: 1500,
+    action: "Full Action",
+    opposed: "No",
+    range: "Self",
+    sustained: "Yes",
+    requirement: "WP 40+",
+    description: "Drawing on his pure heritage of the Ultramarines, the Novamarines Librarian boosts his abilities for a time, making him more formidable in battle. Such a boost is not without its dangers, and even increasing the raw potential of the Librarian for a short time can have negative effects, draining what was strengthened after the power wears off. When this power is manifested, the Librarian gains a pool of points equal to four times his Psy Rating. He can then use these points to increase any of his Characteristics (with the exception of Weapon Skill and Ballistic Skill) on a one for one basis (i.e. if four times his Psy Rating was 24 points, he could distribute up to 24 points among his Characteristics). While this power is being sustained, the Librarian counts as having the increased Characteristic for all intents and purposes, including increasing his Characteristic Bonuses if applicable.\n\nWhen the power ends, there is a draining effect on the Librarian and any Characteristic which was increased suffers a penalty equal to the amount it was increased by for one hour (i.e. if the Librarian increased his Strength by 10 his Strength is reduced by 10 for an hour after the power ends). During this time, the Librarian may not use this power."
+  },
+  {
+    name: "Sky-Sight",
+    category: "Novamarines powers",
+    xpCost: 1000,
+    action: "Half Action",
+    opposed: "No",
+    range: "200m x Psy Rating Radius",
+    sustained: "Yes",
+    description: "The Novamarine Librarian lifts in consciousness and gazes down upon a battlefield from on high picking out details on the ground that even the most sophisticated of sensors might miss. However, while he is gazing at the battlefield, his mind is elsewhere and he is vulnerable to attack and unable to adequately defend himself. While this power is active, the Librarian may use a Full Action to shift his perspective to a vantage point up to 100m times his Psy Rating above or below his current position anywhere within range. For the purpose of all his senses (sight, sounds, smell, etc.) he is considered to be standing in the new location though his body does not move. His senses are also enhanced by this power and while using Sky-Sight to transfer his consciousness to a new location hegains a +30 on all Perception and Perception based Skill Tests.\n\nWhile using Sky-Sight, the Librarian enters a trance-like state he is unaware of what is transpiring around his body and cannot defend himself or react to danger until the start of his next turn. At the start of each of his turns while the power is active, the Librarian can choose to use Sky-Sight or not, or change the location of his senses from one place within range to another."
+  },
+  {
+    name: "Vulnerability",
+    category: "Novamarines powers",
+    xpCost: 1500,
+    action: "Half Action",
+    opposed: "Yes",
+    range: "10m x Psy Rating",
+    sustained: "Yes",
+    requirement: "WP 40+",
+    description: "The Novamarines Librarian can exploit a vulnerability in his foe, making it more susceptible to a certain attack or form of Damage. This can be especially useful against powerful foes which would normally be very resistant to injury giving the Librarian’s squad a chance to deal Damage and defeat it. When the Librarian activates this power, he picks a target within range and makes an Challenging (+0) Opposed Willpower Test with it. If he is successful, then the target becomes subject to vulnerability. The Librarian chooses one type of Damage for the foe to become vulnerable to: either Impact, Energy, Rending, or Explosive. While the power is sustained, any Damage of this type gains a bonus against the creature equal to the Librarian’s Psy Rating (i.e. if a Librarian with a Psy Rating of 6 makes a foe vulnerable to Explosive Damage, and it is struck by a boltgun which inflicts 2d10+5 Damage, it would now suffer 2d10+11 Damage)."
+  },
+  {
+    name: "Bloody Fist",
+    category: "Crimson Fists powers",
+    xpCost: 1500,
+    action: "Half Action",
+    opposed: "No",
+    range: "Self",
+    sustained: "Yes",
+    description: "Crimson Fists Librarians have mastered powers which aid them in the destruction of xenos, especially those with tough hides and thick skins that might thwart a normal attack or rob it of its power. With the Bloody Fist power, the Librarian infuses his melee attack with extra force allowing him to inflict some Damage even if his blow does not breech the creatures armour or hide. While this power is active, any melee attack from the Librarian has a chance of causing a critical effect even if it does not penetrate his foe’s armour or Toughness. On a successful hit with a melee attack, in addition to any other effects, the target must make a Routine (+20) Toughness Test. This test is modified by a penalty of Psy Rating x –5. If it fails, it suffers a critical effect as if it has suffered 1d5 points of Critical Damage from the weapon. No actual Damage is inflicted, and the effects of criticals last only as long as the power is maintained.",
+    requirements: "WP 45+"
+  },
+  {
+    name: "Enduring Duty",
+    category: "Crimson Fists powers",
+    xpCost: 1000,
+    action: "Free Action",
+    opposed: "No",
+    range: "5m x Psy Rating",
+    sustained: "Yes",
+    description: "Duty is paramount to a Crimson Fists Space Marine and even when the shadow of death falls upon him or his companions he will continue to fight on to the end. The Librarian steels his own spirit or that of one of his companions to fight on to the end, even when the body should have given up and all hope is gone. Either the Librarian or a single ally within range can be the target of enduring duty. While the power is maintained, the target can fight on for a number of turns equal to Psy Rating after he suffers a critical result which will kill him and ignores any levels of Fatigue gained as a result of Critical Damage. At the end of this time he dies as normal (though he may still burn a Fate Point to survive as normal). He still retains the effects of any Damage accrued from Critical Damage (such as missing limbs or lost eyes) and should he suffer further Critical Damage rolls a 1d10 on the appropriate critical effects table to see if he suffers further crippling injuries ignoring any result of death or levels of Fatigue. Even with the psychic will of the Librarian sustaining him, the Battle-Brother can still be destroyed (and killed) if he suffers twice his total starting number of wounds (after reduction for armour and Toughness Bonus) in a single hit. A Battle-Brother who is under the effects of this Power cannot regain lost Wounds or repair effects accrued as a result of Critical Damage. Any abilities or actions that would do so simply do not work on the Battle-Brother.",
+    requirements: ""
+  },
+  {
+    name: "Hammer of Man",
+    category: "Crimson Fists powers",
+    xpCost: 1500,
+    action: "Full Action",
+    opposed: "Yes",
+    range: "10m x Psy Rating Radius",
+    sustained: "Yes",
+    description: "The Crimson Fists Librarian focuses his hatred of xenos into a tangible force which he projects out around him causing pain and anguish to any who are not human. While this power is active, all xenos in the radius must make an Opposed Willpower Test against the Librarian at the start of each of their turns. If they fail, they suffer Energy Damage equal to twice the Librarian’s Psy Rating (with no reduction for armour) and suffer a penalty of 3 x Psy Rating on all Tests. Any xenos affected by this power will be instantly aware of its source and may seek out the Librarian as a target to end their pain. This power only effects xenos and has no effect on creatures which are not truly alive (such as daemons or machines) or have even a small degree of human ancestry (such as most mutants, abhumans, and of course Space Marines).",
+    requirements: "WP 35+"
+  },
+  {
+    name: "Darkness Gate",
+    category: "Marines Errant powers",
+    xpCost: 1500,
+    action: "3 Full Actions",
+    opposed: "No",
+    range: "Psy Rating x 500km",
+    sustained: "No",
+    description: "Summoning up the potent energies of the Warp, the Librarian folds space between points within the void and brings them closer together for an instant allowing Space Marines to pass between them. Darkness Gate has effects similar to a teleportarium, allowing objects from one point to be transferred to another in a rapid instance via the conduit of the Warp. It only works for a small group of individuals and only across an airless space like the void, but it can be effective for staging hit and run attacks. The Librarian and a number of individuals equal to his Psy Rating can be affected by this power. The Librarian picks a point in space which he can observe, such as a distant ship. Provided there are no obstacles or atmosphere between the point he can see and the point he is standing, a momentary gate will open allowing him and his companions to step through. The range between the points can be up to Psy Rating x 500km.\nPerils of the Warp can be particularly dangerous when using this power. If the Librarian triggers Perils of the Warp, roll 1d10 x 500km to determine distance rather than using his Psy Rating. If he was Pushing then distance is 3d10 x 500km.",
+    requirements: "Per 40+"
+  },
+  {
+    name: "Shadows in the Stars",
+    category: "Marines Errant powers",
+    xpCost: 1000,
+    action: "Half Action",
+    opposed: "No",
+    range: "1000kms x Psy Rating",
+    sustained: "Yes",
+    description: "The Librarian can look out into the inky black of the void and see things mere sensors cannot, reading the ebb and flow of the darkness and the Warp which lies beneath it. The Librarian can make a Challenging (+0) Awareness Test to perceive any objects in space within range of this power, including celestial phenomena and vessels or ordnance. Depending on the size and density of such objects, the GM may give the Librarian a +10 to +30 bonus on this Test. Even if the Test fails, the GM should give the Librarian a general idea of hazards though not their exact location. If this power is used in conjunction with a vessel’s bridge crew it will grant them a +30 bonus to all Tests involving their ships sensors and Pilot Tests to avoid hazards and ordinance."
+  },
+  {
+    name: "Void Hammer",
+    category: "Marines Errant powers",
+    xpCost: 2000,
+    action: "Half Action",
+    opposed: "No",
+    range: "10m x Psy Rating",
+    sustained: "No",
+    description: "Summoning up a brutal burst of energy, the Librarian smashes objects and batters structures with raw psychic power. Against individuals, this power can knock them down and break their bones, but against inanimate objects it can rend apart walls and buckle bulkheads. The Librarian picks a point within range and line of sight as the impact point of the Void Hammer. Any individuals within 3m of this point will be hit by the concussive blast unless they can successfully make a Dodge Test to leap out of the way. Those hit suffer Impact Damage equal to the Librarian’s Psy Rating x 3 and must pass a Challenging (+0) Agility Test or be knocked prone. Objects such as walls, supports, and doors are far more badly affected suffering Impact Damage equal to 1d10 x Psy Rating ignoring Armour Points. This can be used to punch holes in objects (such as bulkheads) if it does enough Damage to destroy them (creating a breech 3m in diameter), or bring down buildings by destroying supports. This ability can also be used effectively against vehicles, damaging them just as it would a bulkhead or blast door.",
+    requirements: "WP 40+"
+  },
+  {
+    name: "Bone Breaker",
+    category: "Red Scorpions powers",
+    xpCost: 1000,
+    action: "Half Action",
+    opposed: "No",
+    range: "Self",
+    sustained: "Yes",
+    description: "The Red Scorpions Librarian focuses his might and will into the blows he rains down on his enemies, filling his arm with righteous vigour. Even blows which would otherwise cause no Damage send shockwaves through his enemy’s body, pulping flesh and breaking bones. While this power is active, the Librarian adds his Psy Rating to any Critical Damage he inflicts with melee weapons. If he fails to cause any Damage with a melee attack (i.e. his opponent’s armour and Toughness Bonus completely negate the Damage) he will still cause a single point of Impact Damage (not reduced by armour or Toughness) on his enemy as the concussive force of his blow is transferred through their armour.",
+    requirements: "Str 45+"
+  },
+  {
+    name: "Tormented Flesh",
+    category: "Red Scorpions powers",
+    xpCost: 1000,
+    action: "Half Action",
+    opposed: "Yes",
+    range: "20m x Psy Rating",
+    sustained: "No",
+    description: "The Librarian focuses on his foe’s flawed physiology and corrupted spirit turning it against them. The enemy’s flesh will literally rebel against its owner as it twists, oozes, and bursts, fleeing the taint which saturates it. This power is only effective on foes which either have 1 or more Corruption Points, a mutation, or the Daemonic trait. If the Librarian’s target fails a Challenging (+0) Opposed Willpower Test, it will suffer Damage equal to 2 x the Librarian’s Psy Rating and an additional point of Damage per ten Corruption Points possessed by the target. In the case of those with mutations, the target suffers (2 x Psy Rating) +5 points of Damage per mutation. Targets with the Daemonic Trait suffer Damage equal to (2 x Psy Rating) +10. For targets with a combination of Corruption Points, mutations, and/or the Daemonic Trait use the one which would result in the most Damage being inflicted. Damage from this power ignores armour but is reduced by Toughness Bonus as normal.",
+    requirements: "WP 40+"
+  },
+  {
+    name: "Word of the Codex Astartes",
+    category: "Red Scorpions powers",
+    xpCost: 1500,
+    action: "Full Action",
+    opposed: "No",
+    range: "10m x Psy Rating Radius",
+    sustained: "No",
+    description: "The Librarian calls to the common bond between Battle-Brothers as laid down by the Codex Astartes and reminds Space Marines of their sacred duty and powerful heritage. This power infuses nearby Battle-Brothers with new purpose and devotion, boosting their moral and banishing any doubt. The Librarian and any Battle-Brothers within range immediately recover from Stunning and reduce their levels of Fatigue by one (if they had suffered one). In addition, Space Marines targeted by Opposed psychic powers gain a bonus equal to the Librarian’s Psy Rating x 5 until the start of the Librarian’s next turn provided they remain within range of the power.",
+    requirements: "Fel 40+"
+  },
+  {
+    name: "Battle Sight",
+    category: "Blood Ravens powers",
+    action: "Half Action",
+    opposed: "No",
+    range: "10m x Psy Rating Radius",
+    sustained: "No",
+    description: "Blood Ravens Librarians can pierce the fog of war with a thought, casting their mind far and wide across practically any distance. A Librarian may use this psychic power in two different ways. The first use reveals the position of all enemies within range that have hostile intentions toward the Librarian (i.e. intend to do the Librarian harm), and allows the Librarian to ignore penalties for Concealment when making attacks against enemies revealed by Battle Sight until the start of his next Turn.\n\nThe second use is to gain a broad strategic overview. As part of preparation for a mission a Librarian who is acting as Squad Leader can choose to use Battle Sight rather than selecting an Oath. The Librarian can then choose one of the Mission Objectives and add 1d5 Kill Markers x Psy Rating toward its completion. Used in this way, Battle Sight does not require a Focus Power test and cannot incur Perils of the Warp.",
+    xpCost: 1500,
+    prerequisite: "Int 40+"
+  },
+  {
+    name: "Truth Seeker",
+    category: "Blood Ravens powers",
+    action: "Half Action",
+    opposed: "No",
+    range: "Self",
+    sustained: "Yes",
+    description: "Blood Ravens Librarians spend much of their lives seeking knowledge and looking into the origins of their Chapter. Truth Seeker allows a Librarian to find details and clues that he might have otherwise missed. While this power is active, the Librarian is more aware of minor details, and gains a +15 to all Intelligence Tests and Skill Tests based on Intelligence, as well as Scrutiny Tests. In addition, if he is unsure of which direction to proceed in an investigation he can make an unmodified Intelligence to gain a clue from the GM. The nature of the clue and its exact worth are up to the GM (usually once per game session).",
+    xpCost: 1000
+  },
+  {
+    name: "Warp Whispers",
+    category: "Blood Ravens powers",
+    action: "Half Action",
+    opposed: "No",
+    range: "Self",
+    sustained: "No",
+    description: "The Librarian can listen to the babblings of the Warp and perceive the secrets of its denizens. When the Librarian activates this power, he learns a number of “secrets” equal to his Psy Rating. He can then use these “secrets” to gain insight into his immediate future and may spend up to one ‘secret’ on each of his Turns. For every “secret” used, he gains either a +10 bonus to a single Test, ignores a single point of Damage, or increases the Damage he inflicts by 2. “Secrets” not used by the end of the game session are lost.\n\nWarp Whispers is not without its dangers. If the power is used Fettered, any roll of doubles on the Focus Power Test forces an automatic roll on Perils of the Warp. If used Unfettered, the Librarian automatically suffers a Perils of the Warp. If the power is used at the Push level, the Librarian must automatically roll on Perils of the Warp, with a +20 modifier.",
+    xpCost: 1000,
+    prerequisite: "WP 40+"
+  },
+  {
+    name: "Depths of Rage",
+    category: "Flesh Tearers powers",
+    action: "Half Action",
+    opposed: "No",
+    range: "5m x Psy Rating Radius",
+    sustained: "Yes",
+    description: "Librarians of the Flesh Tearers Chapter are well versed in the use of psychic powers while struggling with the Black Rage and Red Thirst. Many have even developed powers which tap into the rage deep within them and use it to fuel their powers or enhance their abilities. The Librarian can use this power to grant the Frenzy Talent to himself and a number of allies equal to his Psy Rating. While under the effects of Depths of Rage, the Flesh Tearer Librarian counts as possessing the Mental Rage Talent. In addition, while using the Depths of Rage, the Librarian adds 1 to his Psy Rating and can choose make an attack using a psychic power rather than make melee attacks as required by the Frenzy Talent.",
+    xpCost: 500
+  },
+  {
+    name: "Flensing",
+    category: "Flesh Tearers powers",
+    action: "Half Action",
+    opposed: "Yes",
+    range: "10m x Psy Rating",
+    sustained: "No",
+    description: "Flesh Tearers often live up to their name when engaged in combat, skinning their foes with well-practised blows from their blades and chain weapons. Librarians of the Chapter are no exception and the Flensing power has been developed with such hideous injuries in mind. When the Librarian uses this power, he chooses a number of targets up to half his Psy Rating—rounded up—within range. He then makes a single Challenging (+0) Opposed Willpower Test versus the Toughness of each of the targets. Those that fail suffer 1d10+Psy Rating rending Damage with no reduction for Toughness Bonus (though reduced by armour points as normal) as their skin and muscle are stripped away. Such is the agony this power inflicts that the target, should they survive, suffers a –10 on all Tests in their next turn. Targets slain by Flensing are reduced to a collection of bloody bones and meat and are completely unrecognisable, though their armour and equipment remains intact (if soaked in blood).",
+    xpCost: 1000
+  },
+  {
+    name: "Razor Blades",
+    category: "Flesh Tearers powers",
+    action: "Half Action",
+    opposed: "No",
+    range: "20m x Psy Rating Radius",
+    sustained: "Yes",
+    description: "A Flesh Tearers Librarian, like other Battle-Brothers of his Chapter, understands and appreciates the virtues of a good sharp blade. By focusing his psychic powers the Librarian can make edges keener and steel sharper so that it might more easily bite into flesh and bone. The Librarian and a number of allies up to his Psy Rating will have their bladed melee weapons affected by this power while they hold them in their hand. Melee weapons used by the Librarian and those affected increase their Penetration by his Psy Rating. If the melee weapon has a Penetration of 0 then it gains a Penetration value equal to the Librarian’s Psy Rating. This power only affects melee weapons which inflict Rending Damage.",
+    xpCost: 500,
+    prerequisite: "wp 35"
+  },
   {
     name: "Augury",
     category: "Divination powers",
@@ -2811,7 +3739,181 @@ export const TECHMARINE_ABILITIES = [
   }
 ];
 
+export const CUSTOM_CHAPTER_SOLO_MODES = [
+  {
+    name: "Parent Chapter Doctrine",
+    description: "The Chapter strictly follows the guidelines for combat set down by its parent Chapter. Choose one Solo Mode Ability from an existing Chapter.",
+    effects: "The Chapter strictly follows the guidelines for combat set down by its parent Chapter. Choose one Solo Mode Ability from an existing Chapter.",
+    improvement: "",
+    needsSoloChoice: true,
+  },
+  {
+    name: "Highly Skilled",
+    description: "This Chapter is highly skilled in certain areas of expertise. Choose any two skills. At Rank 1, your Chapter may re-roll failed Tests with these skills. At Rank 4, your Chapter gains a +10 to all Skill Tests using those Skills. At Rank 8, your Chapter gains a bonus degree of success on any Skill Test using those skills.",
+    effects: "This Chapter is highly skilled in certain areas of expertise. Choose any two skills. At Rank 1, your Chapter may re-roll failed Tests with these skills.",
+    improvement: "At Rank 4, your Chapter gains a +10 to all Skill Tests using those Skills. At Rank 8, your Chapter gains a bonus degree of success on any Skill Test using those skills.",
+    needsSkillChoices: 2,
+  },
+  {
+    name: "Standout Characteristic",
+    description: "One particular characteristic stands out prominently for this Chapter. Choose any one Characteristic. At Rank 1 your chapter may re-roll failed Tests using this Characteristic. (such as all Perception-based Tests). At Rank 4, your Chapter gains a +10 bonus to this test. At Rank 8, your Chapter gains a bonus degree of success on this test.",
+    effects: "One particular characteristic stands out prominently for this Chapter. Choose any one Characteristic. At Rank 1 your chapter may re-roll failed Tests using this Characteristic. (such as all Perception-based Tests).",
+    improvement: "At Rank 4, your Chapter gains a +10 bonus to this test. At Rank 8, your Chapter gains a bonus degree of success on this test.",
+    needsCharacteristicChoice: 1,
+  },
+  {
+    name: "Quick Reaction",
+    description: "Quick reaction is the hallmark of this Chapter. While in Solo Mode, the Battle-Brother is considered to have the Lightning Reflexes Talent. At Rank 3, the Battle-Brother receives a +10 to all Dodge tests. At Rank 5, the Battle-Brother is considered to have the Rapid Reaction Talent. At Rank 7, once per game session the Battle-Brother may automatically pass any one Agility-Based test (for Opposed Tests, the Battle-Brother is considered to have rolled a 01).",
+    effects: "Quick reaction is the hallmark of this Chapter. While in Solo Mode, the Battle-Brother is considered to have the Lightning Reflexes Talent.",
+    improvement: "At Rank 3, the Battle-Brother receives a +10 to all Dodge tests. At Rank 5, the Battle-Brother is considered to have the Rapid Reaction Talent. At Rank 7, once per game session the Battle-Brother may automatically pass any one Agility-Based test (for Opposed Tests, the Battle-Brother is considered to have rolled a 01)."
+  },
+  {
+    name: "Warp Attunement",
+    description: "This Chapter has been trained to spot minute disturbances of the warp pressing in on realspace. This attunement to the empyrean grants the character the Psyniscience Skill as a Trained Skill. The Battle-Brother may also re-roll any failed Willpower Tests to resist a psychic power.",
+    effects: "This Chapter has been trained to spot minute disturbances of the warp pressing in on realspace. This attunement to the empyrean grants the character the Psyniscience Skill as a Trained Skill. The Battle-Brother may also re-roll any failed Willpower Tests to resist a psychic power.",
+    improvement: ""
+  }
+];
+
+export const CUSTOM_CHAPTER_ATTACK_PATTERNS = [
+  {
+    name: "Followers of the doctrine",
+    description: "The Chapter strictly follows the guidelines for combat set down by its parent Chapter. Choose one Squad Mode Attack Pattern Ability from an existing Chapter.",
+    effects: "The Chapter strictly follows the guidelines for combat set down by its parent Chapter. Choose one Squad Mode Attack Pattern Ability from an existing Chapter.",
+    improvement: "",
+    needsSquadChoice: true
+  },
+  {
+    name: "Siege-Breaker",
+    description: "Action: Full Action, Cost: 3, Sustained: Yes. While this ability is in effect, the Battle-Brother and those within Support Range of him may re-roll Damage rolls against enemies in cover. The second Damage roll must be accepted.",
+    effects: "Action: Full Action, Cost: 3, Sustained: Yes. While this ability is in effect, the Battle-Brother and those within Support Range of him may re-roll Damage rolls against enemies in cover. The second Damage roll must be accepted.",
+    improvement: ""
+  },
+  {
+    name: "Tactical Finesse",
+    description: "Action: Full Action, Cost: 3, Sustained: Yes. While this ability is in effect, the Battle-Brother and those within Support Range of him may make one Melee or Ranged attack as a Half Action (the Ranged Attack may only be made using the single shot rate of fire) and may then make a Half Move. A character benefiting from this ability may disengage from an opponent in melee without penalty.",
+    effects: "Action: Full Action, Cost: 3, Sustained: Yes. While this ability is in effect, the Battle-Brother and those within Support Range of him may make one Melee or Ranged attack as a Half Action (the Ranged Attack may only be made using the single shot rate of fire) and may then make a Half Move. A character benefiting from this ability may disengage from an opponent in melee without penalty.",
+    improvement: ""
+  },
+  {
+    name: "Storm of Hell",
+    description: "Action: Full Action, Cost: 3, Sustained: Yes. While this ability is in effect, The Battle-Brother and those within Support Range of him gain the Furious Assault Talent and the Frenzy Talent. At Rank 4, activating this ability is a Half Action.",
+    effects: "Action: Full Action, Cost: 3, Sustained: Yes. While this ability is in effect, The Battle-Brother and those within Support Range of him gain the Furious Assault Talent and the Frenzy Talent.",
+    improvement: "At Rank 4, activating this ability is a Half Action."
+  },
+  {
+    name: "Oath of Vengeance",
+    description: "Action: Free Action, Cost: 1, Sustained: No. When any member of the Kill-Team suffers Damage, the character receives a +4 bonus to Damage rolls against the attacker. At Rank 5, this ability may be Sustained.",
+    effects: "Action: Free Action, Cost: 1, Sustained: No. When any member of the Kill-Team suffers Damage, the character receives a +4 bonus to Damage rolls against the attacker.",
+    improvement: "At Rank 5, this ability may be Sustained."
+  }
+];
+
+export const CUSTOM_CHAPTER_DEFENSIVE_STANCES = [
+  {
+    name: "Followers of the doctrine",
+    description: "The Chapter strictly follows the guidelines for combat set down by its parent Chapter. Choose one Squad Mode Defensive Stance Ability from an existing Chapter.",
+    effects: "The Chapter strictly follows the guidelines for combat set down by its parent Chapter. Choose one Squad Mode Defensive Stance Ability from an existing Chapter.",
+    improvement: "",
+    needsSquadChoice: true
+  },
+  {
+    name: "Courage Under Fire",
+    description: "Action: Free Action, Cost: 0, Sustained: No. The Battle-Brother inspires those under his command to press on in the face of danger. When this ability is used, the Battle-Brother and any within Support Range of him may immediately recover from being Pinned. At Rank 4, those under the effect of this ability may also make a Half-Move as a Free Action.",
+    effects: "Action: Free Action, Cost: 0, Sustained: No. The Battle-Brother inspires those under his command to press on in the face of danger. When this ability is used, the Battle-Brother and any within Support Range of him may immediately recover from being Pinned.",
+    improvement: "At Rank 4, those under the effect of this ability may also make a Half-Move as a Free Action."
+  },
+  {
+    name: "Only in Death...",
+    description: "Action: Free Action, Cost: 3, Sustained: Yes. Space Marines from this Chapter are venerated amongst the Imperium for their ability to fight on through even the most grievous wounds. While this ability is active, the Battle-Brother and any within Support Range of him ignore the effects of any critical damage that would not kill them until this ability is no longer active. Once this ability ends, they suffer the full effects of any critical damage they received. This ability cannot be improved.",
+    effects: "Action: Free Action, Cost: 3, Sustained: Yes. Space Marines from this Chapter are venerated amongst the Imperium for their ability to fight on through even the most grievous wounds. While this ability is active, the Battle-Brother and any within Support Range of him ignore the effects of any critical damage that would not kill them until this ability is no longer active. Once this ability ends, they suffer the full effects of any critical damage they received.",
+    improvement: "This ability cannot be improved."
+  },
+  {
+    name: "Swift Advance",
+    description: "Action: Reaction, Cost: 2, Sustained: Yes. Members of this Chapter have the skill and training necessary to move quickly through even the most punishing onslaughts of gunfire. While this ability is active, the Battle-Brother and any within Support Range who successfully dodge a Ranged attack may spend their Reaction to make a Full Move. At Rank 4, they may also reload one weapon provided it does not take longer than a Half or Full Action to do so.",
+    effects: "Action: Reaction, Cost: 2, Sustained: Yes. Members of this Chapter have the skill and training necessary to move quickly through even the most punishing onslaughts of gunfire. While this ability is active, the Battle-Brother and any within Support Range who successfully dodge a Ranged attack may spend their Reaction to make a Full Move.",
+    improvement: "At Rank 4, they may also reload one weapon provided it does not take longer than a Half or Full Action to do so."
+  },
+  {
+    name: "Knowledge is Power",
+    description: "Action: Half Action, Cost: 3, Sustained: Yes. With knowledge of secret and forbidden lore, the Space Marines of this Chapter are able to more easily avoid sorcery and witchcraft. While under the effect of this ability, the Battle-Brother and any within Support Range of him receive a +10 bonus to any Tests made to resist the effects of a psychic power (this can include attempts to Dodge). At Rank 4, this bonus increases to +20.",
+    effects: "Action: Half Action, Cost: 3, Sustained: Yes. With knowledge of secret and forbidden lore, the Space Marines of this Chapter are able to more easily avoid sorcery and witchcraft. While under the effect of this ability, the Battle-Brother and any within Support Range of him receive a +10 bonus to any Tests made to resist the effects of a psychic power (this can include attempts to Dodge).",
+    improvement: "At Rank 4, this bonus increases to +20."
+  }
+];
+
 export const CHAPTER_SOLO_MODE_ABILITIES: { [key: string]: { name: string, requiredRank: number, effects: string, improvement: string, chapter?: string } } = {
+  "Carnage": {
+    name: "Carnage",
+    requiredRank: 1,
+    chapter: "Carcharodons",
+    effects: "The Carcharodons excel in brutal close combat and value the ability to do as much Damage as possible in a brief amount of time. Once per combat, the Battle-Brother may activate this Solo Mode Ability. Until the end of his next Turn, all of the Battle-Brother's attacks made in melee and at Point Blank Range deal additional Damage equal to half of his unmodified Willpower Bonus, rounding up.",
+    improvement: "At Rank 3, the Battle-Brother's additional Damage becomes equal to his full unmodified Willpower Bonus. At Rank 5, he gains the choice; instead of the usual bonus for Carnage, he may choose to have one hit (not attack) in melee or Point Blank Range deal additional magnitude Damage to a Horde equal to his unmodified Willpower Bonus. At Rank 7, when the Battle-Brother is benefiting from Carnage, he may take the Multiple Attacks Action to make two melee attacks against every opponent in melee range with him. These attacks benefit from the Carnage Damage bonus."
+  },
+  "Marksman's Honour": {
+    name: "Marksman's Honour",
+    requiredRank: 1,
+    chapter: "Raptors",
+    effects: "When firing single shots from a ranged weapon at Long and Extreme ranges, the Battle-Brother reduces the range penalty by 10.",
+    improvement: "At Rank 4 the Battle-Brother has mastered sniping targets at range and gains a +20 to his Ballistic Skill Tests when making single shots at Long and Extreme range. At Rank 6 the Battle-Brother has become a veteran sniper and extends the range of any bolt weapon he uses by 20m; this increases the weapon’s short, long and extreme ranges accordingly."
+  },
+  "Tales of the Void": {
+    name: "Tales of the Void",
+    requiredRank: 1,
+    chapter: "Novamarines",
+    effects: "Novamarines are extensively travelled and the collective knowledge and experiences of the Chapter covers a huge portion of the galaxy. This knowledge is often passed down to new recruits though tales and advice from more veteran members of the Chapter which the Battle-Brother can then call upon as needed. The Battle-Brother can use this knowledge to make a Lore: Common, Scholastic, or Forbidden Skill Test as if he has a specific Skill and associated speciality. If he possesses the Skill and speciality he wants to test against, he gains a +10 bonus to his test instead. A Battle-Brother may use this ability a number of times equal to his Rank each game session.",
+    improvement: "At Rank 6 the Battle-Brother’s knowledge becomes even more extensive and he can gains an additional degree of success if he passes any Lore: Common, Scholastic, or Forbidden Skill Test."
+  },
+  "Tactical Assessment": {
+    name: "Tactical Assessment",
+    chapter: "Howling Griffons",
+    requiredRank: 1,
+    effects: "Keen of mind and shrewd tacticians all, the Howling Griffons are able to make the best of a poor tactical situation and take advantage of resources and positions few would recognise as beneficial. This ability can be activated at the end of the Battle-Brother’s Turn in the Initiative Order during combat. When this ability is activated, the Battle-Brother immediately swaps positions in the Initiative Order with an enemy who has already acted during the current Combat Round. The Battles-Brother’s Turn is then over and the Initiative Order proceeds onward from the end of his original position.",
+    improvement: "At Rank 5 when the Howling Griffons Battle-Brother uses this ability, in addition to all other effects, for the full following Combat Round, he gains a +10 bonus to all Tests against the opponent with which he traded places in the Initiative Order. At Rank 7, the target opponent takes a –10 penalty to all Tests for the full following Combat Round in addition to all other effects."
+  },
+  "Ork Slayer": {
+    name: "Ork Slayer",
+    requiredRank: 1,
+    chapter: "Crimson Fists",
+    effects: "When combating Orks, the Battle-Brother knows just where to target the creatures to cause the maximum amount of Damage. Damage inflicted by the Battle-Brother on an Ork from either a ranged or melee weapon is only reduced by half of the creature's Toughness Bonus—rounded up. Armour still reduces Damage as normal.",
+    improvement: "At Rank 5 the Battle-Brother also becomes adept at picking out weak points in an Ork’s armour. The Battle-Brother increases the Pen of any ranged or melee attack against an Ork by 4."
+  },
+  "Zero Tolerance": {
+    name: "Zero Tolerance",
+    chapter: "Marines Errant",
+    requiredRank: 1,
+    effects: "The Marines Errant view any failure as a grievous flaw. While in Solo Mode, the Battle-Brother may re-roll any failed test when fighting against Daemons, Xenos or Heretics. He must accept the results of the second roll.",
+    improvement: "At Rank 3, he gains a +10 to the re-roll. At Rank 5, he gains +20."
+  },
+  "Foreknowledge": {
+    name: "Foreknowledge",
+    requiredRank: 1,
+    chapter: "Blood Ravens",
+    effects: "Blood Ravens covet knowledge and use it as a weapon in battle to predict and counter the actions of their foes. Once per combat, the Battle-Brother may expend a Half Action to negate a single foe’s Reaction for that Round. Alternatively, as a Free Action, the Battle-Brother may make a Challenging (+0) Opposed Intelligence Test against a single foe (or a Horde) to determine its next action before he acts himself. If successful, the Battle-Brother may choose to either gain +10 to all Tests made against the foe this Turn or gain +10 to any Dodge or Parry Tests made against attacks from the foe until the start of his next Turn.",
+    improvement: "At Rank 3, the Battle-Brother increases the bonuses to +20 on all Tests for that Turn or +20 on any Dodge and Parry Tests made against attacks until the start of his next Turn. At Rank 7 he can negate the Reaction of a single foe as a Free Action rather than a Half Action."
+  },
+  "Taint Sense": {
+    name: "Taint Sense",
+    chapter: "Red Scorpions",
+    requiredRank: 1,
+    effects: "Red Scorpions are fanatical about the purity of their Chapter and their loyalty and devotion to the Emperor. This constant vigilance and unceasing suspicion of those less pure than themselves gives them the ability to gain a sense of corruption or disloyalty in their allies and enemies, hints that even the keenest eyed of Battle-Brothers might miss if they had not spent a lifetime seeking such signs. The Battle-Brother may make a Challenging (+0) Awareness Test when he meets an NPC for the first time to detect whether the NPC has more than 20 Corruption Points. The GM should secretly roll for the Battle-Brother so he does not know if the NPC does indeed hold taint or if he has simply failed to detect it. At the GM’s discretion he may grant the Battle-Brother a bonus of +10 to his Awareness Test if the NPC has more than 30 Corruption Points as the taint is easier to detect. In addition to detecting taint, the Battle-Brother is always vigilant for signs of betrayal and is rarely surprised when allies become enemies. If an ally (or NPC considered nonhostile) makes a surprise attack against the Battle-Brother, he can make a Challenging (+0) Awareness Test to not be surprised and act normally in the first round of combat.",
+    improvement: "At Rank 4 the Battle-Brother becomes even more adept at detecting flaws in others and can detect corruption in NPCs with 10 or more Corruption Points. At Rank 7 the Battle-Brother can pre-empt the betrayal of an ally turning the tables on them; if he passes his Awareness Test he not only is not surprised but gains a surprise round against the ally."
+  },
+  "A Taste for Blood": {
+    name: "A Taste for Blood",
+    chapter: "Flesh Tearers",
+    requiredRank: 1,
+    effects: "Even newly recruited Flesh Tearers must learn to turn their Chapter’s flaws to their advantage and can tap into the hunger of the Red Thirst to fuel their attacks against their enemies. This can give the Battle-Brother a burst of vigour once he has smelled the blood of his foe, allowing him to throw himself into combat with more strength and speed than normal. When the Battle-Brother makes a Charge Action against a foe which has been bloodied (i.e. has suffered at least a single wound) he adds 5m to his charge distance and gains an additional +10 to his Weapon Skill Test in addition to the normal benefits for charging.",
+    improvement: "At Rank 4 the Battle-Brother becomes more adept at channelling his rage and adds +2 to any Damage rolls made during the turn he charges. At Rank 7 the Battle-Brother is even swifter to attack once he senses the blood of his prey and adds 7m to his charge distance."
+  },
+  "Tank Commander": {
+    name: "Tank Commander",
+    requiredRank: 3,
+    chapter: "Storm Wardens",
+    effects: "The Battle-Brother is skilled in the operation of heavy combat vehicles, from Rhino APCs to mighty Land Raiders and earth-shattering Vindicators, and can allow his adamantium steed to elude and endure the fire of the enemy. If a vehicle the Battle-Brother is driving is attacked, he may attempt to Dodge without the usual penalty for the vehicle’s size; if successful, the attack counts as striking the vehicle’s front armour.",
+    improvement: "At Rank 5 and above, the Battle-Brother’s skill at firing on the move is such that all the vehicle’s weapons are considered to benefit from the Auto-Stabilised Trait. At Rank 7 and above, the Battle-Brother can deliver death from a tank’s weapons with remarkable precision, adding +10 to his Ballistic Skill when firing a vehicle-mounted weapon."
+  },
   "Righteous Zeal": {
     name: "Righteous Zeal",
     requiredRank: 1,
@@ -2985,6 +4087,78 @@ export const CODEX_DEFENSIVE_STANCES = [
 ];
 
 export const CHAPTER_DEFENSIVE_STANCES: Record<string, { name: string, chapter: string, action: string, cost: number, sustained: boolean, effects: string, improvement: string }> = {
+  "Bleed Them Dry": {
+    name: "Bleed Them Dry",
+    chapter: "Carcharodons",
+    action: "Free Action",
+    cost: 1,
+    sustained: true,
+    effects: "The other half of the Carcharodons' strategy is the ability to withdraw quickly and completely if the battle goes against them, only to strike again later. The Battle-Brother and all allies within Support Range do not suffer Attacks of Opportunity when leaving melee with an opponent while this Squad Mode is sustained.",
+    improvement: "If the Battle-Brother is Rank 4 or higher, the Battle-Brother and all allies within Support Range gain a +20 to Agility while this Squad Mode is sustained in addition to the aforementioned bonus. This improves their Movement Speed, as well as any Agility-based Tests."
+  },
+  "Swift Withdrawal": {
+    name: "Swift Withdrawal",
+    chapter: "Raptors",
+    action: "Reaction",
+    cost: 3,
+    sustained: false,
+    effects: "When the squad has been surprised by an enemy, this ability can be used to disengage before combat truly begins. The GM should make the Surprise attacks for the enemies then if the squad chooses to make a swift withdrawal, combat immediately ends and the squad makes a retreat. The GM should use his discretion to decide whether retreat would be possible and where the squad would be able to retreat to. Unless they would absolutely not be able to withdraw from their foes or there is nowhere to run, the squad can disengage from combat without further attacks made against them.",
+    improvement: "At Rank 5 the Battle-Brothers can each take a Half Action before making their retreat, which can be an attack against their foes."
+  },
+  "Tactical Reassessment": {
+    name: "Tactical Reassessment",
+    chapter: "Novamarines",
+    action: "Half Action",
+    cost: 2,
+    sustained: true,
+    effects: "Part of having an adaptable combat doctrine is the ability to change tactics at a moment’s notice in the face of the enemy. If an attack has failed, the Battle-Brother may quickly change his stance or make a swift retreat or advance to place himself in a better position. When used as part of a squad, this ability allows the Kill-team to test an enemy’s defences and own attack strength by repositioning themselves or withdrawing as needed. The Battle-Brother and squad members within Support Range of him may spend their Reaction immediately after their turn (before another PC or NPC has acted) to reverse a move action he has just taken. The Battle-Brother immediately returns to the position he was at the start of his turn before he took any actions, just as if he had moved there normally. This ability has no effect if the Battle-Brother did not move voluntarily during his turn (such as if he was moved by a foe or an environmental effect) or if he can no longer return to his former position (it is now occupied by a foe or no longer exists having collapsed or drifted off into space, etc.). In the latter case, he will move back as close to his original position as possible along the route he took during his turn.",
+    improvement: "At Rank 5 the Battle-Brother has more control over his movement and when using this ability may return to any point within 5m of his original position."
+  },
+  "Staggered Defence": {
+    name: "Staggered Defence",
+    chapter: "Howling Griffons",
+    action: "Free Action",
+    cost: 3,
+    sustained: true,
+    effects: "Just as a well-executed attack can be devastating when every Battle-Brother works in flawless cooperation, a well constructed defensive formation can allow every member of a squad to cover the other and move to their defence should they come under attack or be threatened. Battle-Brothers within Support Range of each other can provide each other with a defensive bonus provided they have line of sight to at least one other member of the squad. Against ranged attacks, this grants a Battle-Brother a +10 to Dodge attempts as his brothers cover his position and warn him of incoming attacks. Against melee attack, Battle-Brothers can use the Ganging Up bonus they would normally receive on Weapon Skill Tests against a foe as a bonus to their Parry attempts against that same foe.",
+    improvement: "At Rank 5 the bonus to Dodge attempts increases to +20."
+  },
+  "Last Stand": {
+    name: "Last Stand",
+    chapter: "Crimson Fists",
+    action: "Free Action",
+    cost: 1,
+    sustained: true,
+    effects: "While this ability is active, any Battle-Brother that falls in combat (either incapacitated or killed) will strengthen the group and provides those that remain with 3 Fate Points to share. These Fate Points cannot be burnt but can be spent to gain bonuses in all the normal ways. Any Battle-Brother may use these Fate Points instead of his own while he remains within Support Range of the fallen brother.",
+    improvement: "At Rank 4 a fallen Battle-Brother provides the group with 4 additional Fate Points. At Rank 7 a Fallen Battle-Brother provides his Kill-team with 5 additional Fate Points."
+  },
+  "Preservation of Force": {
+    name: "Preservation of Force",
+    chapter: "Marines Errant",
+    action: "Free Action",
+    cost: 1,
+    sustained: true,
+    effects: "The Marines Errant value their Battle-Brothers and wargear highly. The Battle-Brother and those in Support Range gain +2 to their Armour points on all locations.",
+    improvement: "At Rank 4, the bonus increases to +4 Armour points."
+  },
+  "Battle Knowledge": {
+    name: "Battle Knowledge",
+    chapter: "Blood Ravens",
+    action: "Free Action",
+    cost: 1,
+    sustained: true,
+    effects: "The Blood Ravens are masters of counter attack and counter defence, reacting with well-practised battle cunning to every action their opponents takes. When the Battle-Brother and those within Support Range of him use the Delay Action (see page 238 of the DEATHWATCH Core Rulebook) they can make a Full Action rather than a Half Action when they choose to act.",
+    improvement: "At Rank 4, if Battle-Brothers are forced to make a Challenging (+0) Opposed Agility Test to see if they go before an enemy also using the Delay Action, they gain a +30 bonus to their roll."
+  },
+  "Feast of Flesh": {
+    name: "Feast of Flesh",
+    chapter: "Flesh Tearers",
+    action: "Reaction",
+    cost: 2,
+    sustained: true,
+    effects: "When a Flesh Tearer is wounded it fuels his rage, the pain of the injury and the smell of blood igniting deeper feelings of rage and hatred and directing them at his foes. A Battle-Brother benefiting from Feast of Flesh who is struck a blow in battle will often respond in kind, using the pain to channel his strength into a potent retributive strike and turn the agony of being wounded upon his foes. When a Battle-Brother affected by Feast of Flesh is wounded by Damage from a melee attack, they may spend their reaction to channel this Damage into their next attack. The Battle-Brother adds the Damage he has just suffered (after reduction from armour and Toughness) to the Damage he inflicts with his next melee attack. If he misses with this subsequent attack then this Damage is lost. Using this power does not prevent the Damage suffered by the Battle-Brother.",
+    improvement: "At Rank 5 the Battle-Brother adds double the Damage he has just suffered to his next attack. At Rank 7 the bonus to Damage from Feast of Flesh applies to all attacks that the Battle-Brother makes in his turn and not just the first."
+  },
   "Armour of Faith": {
     name: "Armour of Faith",
     chapter: "Black Templars",
@@ -3201,6 +4375,78 @@ export const CODEX_ATTACK_PATTERNS = [
 ];
 
 export const CHAPTER_ATTACK_PATTERNS: Record<string, { name: string, chapter: string, action: string, cost: number, sustained: boolean, effects: string, improvement: string }> = {
+  "Savage Finish": {
+    name: "Savage Finish",
+    chapter: "Carcharodons",
+    action: "Full Action",
+    cost: 3,
+    sustained: true,
+    effects: "The Carcharodons are known for their bloody hit-and-fade attacks, only committing when they are sure to have the advantage against the foe. When they commit, however, they destroy everything in their path. Whenever a Battle-Brother would gain the To Hit bonus for outnumbering an opponent, he deals 5 additional Damage.",
+    improvement: "If the Battle-Brother is Rank 4 or higher, activating this Ability takes a Half Action, and the additional Damage bonus increases to 10."
+  },
+  "Clean Kill": {
+    name: "Clean Kill",
+    chapter: "Raptors",
+    action: "Half Action",
+    cost: 2,
+    sustained: true,
+    effects: "In pairs or as a squad, Raptors can become even more proficient marksmen than normal, hitting targets at long ranges again and again with unrivalled accuracy. The Battle-Brother and members of his squad within Support Range can re-roll Ballistic Skill Tests when firing single shots (i.e. not semi or full auto fire) with ranged weapons at Long and Extreme ranges. Additionally, any member of the squad may \"spot\" for another as a Full Action, negating any penalties to his Ballistic Skill Test against a single target provided he only takes a single shot.",
+    improvement: "At Rank 4 the Battle-Brother gains the benefits of re-rolls at Long and Extreme ranges with semi auto fire. At Rank 6 the Battle-Brother gains the benefits of re-rolls at Long and Extreme ranges with full auto fire. In both cases, the Battle-Brother may still only make single shots when benefiting from a spotter."
+  },
+  "Weak Spot": {
+    name: "Weak Spot",
+    chapter: "Novamarines",
+    action: "Half Action",
+    cost: 2,
+    sustained: true,
+    effects: "Novamarines can use their extensive knowledge of foes to predict weak spots in their armour or venerable places on their hides. This information comes in handy when facing foes for the first time with little or no actual experience in combat against them and only instinct and training to guide the way. The Battle-Brother and members of his squad within Support Range of him increase the bonus for Ganging Up by +10 and decrease the penalty for Called Shots by –10. In addition, Critical Damage inflicted by the Battle-Brother when making a Called Shot is increased by +2 after all other factors. If the Battle-Brother makes a Called Shot while Ganging Up on a foe he will receive both the bonus to his Weapon Skill and a reduction in the Called Shot penalty.",
+    improvement: "At Rank 4 the Battle-Brother suffers no penalty when making Called Shots. At Rank 7 the Battle-Brother increases the bonus Critical Damage from a called shot to +3."
+  },
+  "Synchronised Assault (Howling Griffons)": {
+    name: "Synchronised Assault",
+    chapter: "Howling Griffons",
+    action: "Half Action",
+    cost: 2,
+    sustained: true,
+    effects: "Calling upon years of training using the doctrines of the Codex Astartes and their own personal tactics, the Howling Griffons can execute swift and stunning attacks where every member of the squad works in perfect union with their brothers. The Battle-Brother and other members of his squad within Support Range can swap their Initiative order with other members of their Kill-team without penalty and without the need to use the Delay Action. Immediately upon starting his turn, a Battle-Brother can choose to either use it for himself or give it to another member of his squad, who then acts in his place. The Battle-Brother then takes the initiative place of the squad member who has taken his turn and will not act again until that time, unless of course another member of the squad chooses to grant him their own placing in the Initiative order. Regardless of the Battle-Brother’s new Initiative placing, he may still not act more than once a turn.",
+    improvement: "At Rank 4 a Battle-Brother using this ability which gives up his initiative placing to act later in the turn gains a +10 to his first test as he is able to better survey the situation. At Rank 7 this +10 bonus to tests applies to all tests he makes in his turn."
+  },
+  "Dedicated Kill-Team": {
+    name: "Dedicated Kill-Team",
+    chapter: "Crimson Fists",
+    action: "Half Action",
+    cost: 2,
+    sustained: true,
+    effects: "The Battle-Brother and those within support range can combine their Hunter of Alien bonuses if they choose to attack a single target. In a single turn each successive attack against a single foe by a squad member with the Hunter of Aliens Talent adds the bonus to hit and Damage of the one before. Squad members without the Hunter of Aliens Talent can also benefit from this ability and... gain the current bonus to hit and Damage... but add nothing themselves.",
+    improvement: "At Rank 6 the Kill-team can spread its attacks out among a number of foes and the cumulative bonuses to hit and Damage will work against any xenos of the chosen type in the combat provided all of the Kill-team remain in Support Range."
+  },
+  "Void Strike": {
+    name: "Void Strike",
+    chapter: "Marines Errant",
+    action: "Half Action",
+    cost: 2,
+    sustained: true,
+    effects: "Coordinating fire to precisely eliminate targets without wasting ammunition. The Battle-Brother and those in Support Range gain +10 to Ballistic Skill tests and add +2 to the Penetration of their ranged weapons.",
+    improvement: "At Rank 4, the bonus to Ballistic Skill increases to +20."
+  },
+  "Psychic Conclave": {
+    name: "Psychic Conclave",
+    chapter: "Blood Ravens",
+    action: "Half Action",
+    cost: 2,
+    sustained: true,
+    effects: "Blood Ravens Librarians are skilled in using their abilities to predict the actions of their enemies. The Librarians within the Battle-Brother’s squad may choose to confer psychic powers with a range of 'Self' to those within Support Range. The chosen Battle-Brother becomes the recipient for the psychic power and benefits from all of its effects. The Librarian must choose at the start of each Turn to continue conferring the power, shift it, or use it himself. The power is activated and sustained as normal. More than one Librarian can benefit from this, and multiple powers can be conferred onto the same Battle-Brother.",
+    improvement: "At Rank 4, activating the power becomes a Free Action. At Rank 7, psychic powers conferred on other Battle-Brothers do not count for that Round against the number of powers a Librarian is sustaining and thus do not reduce the Psy Rating of other powers."
+  },
+  "Reckless Assault": {
+    name: "Reckless Assault",
+    chapter: "Flesh Tearers",
+    action: "Free Action",
+    cost: 2,
+    sustained: true,
+    effects: "The Flesh Tearers are well known for their bloodthirsty assaults and the heedless brutality with which they throw themselves at their foes. Battle-Brothers of the Chapter are well schooled in such vicious attacks, which often disregard the more prudent and considered assaults as laid out by the Codex Astartes. When the Battle-Brother and other members of his Kill-team within Support Range make a Charge Action they may choose for it to be a Reckless Assault. A Reckless Assault follows all the normal rules for Charging (as described on page 238 of the DEATHWATCH Core Rulebook), however, if he managed to kill his foe with his Charge attack he may immediately make another Charge Action as a Free Action provided there is another foe within charge range. A Battle-Brother may only make one additional charge as part of a Reckless Assault even if he manages to also slay his second foe with his attack. The drawback of making a Reckless Assault is that the Battle-Brother completely ignores any kind of defence against his foes and as a result loses his Reaction for that turn.",
+    improvement: "At Rank 4 the Battle-Brother increases his chance to hit when Charging by +10, this is in addition to the normal bonus to Weapon Skill for charging. At Rank 7 the Battle-Brother adds an additional 1d10 to Damage for the first attack made during a charge."
+  },
   "Holy Vengeance": {
     name: "Holy Vengeance",
     chapter: "Black Templars",
@@ -3273,6 +4519,15 @@ export const CHAPTER_ATTACK_PATTERNS: Record<string, { name: string, chapter: st
     effects: "Since the Great Crusade, the Blood Angels have had a reputation as fearsome shock troops, using a combination of speed, controlled fury and intimidation to crush enemy after enemy. This reputation itself is part of their strategy, employing the fear of their prowess as just another weapon in their arsenal. A Blood Angels assault is a swift and terrible thing, driving enemies back in terror even as their comrades fall to the blades of Sanguinius’ Sons. While this ability remains in effect, the Battle-Brother and those in Support Range gain the Fear (1) Trait (or, if they already have the Fear Trait, increase it by 1, to a maximum of Fear (3)) whenever they perform a Charge action.",
     improvement: "If the Battle-Brother is Rank 4 or above, then the Charge Move of the Battle-Brother and those in Support Range increases to 4 x Agility Bonus, instead of the normal 3 x Agility Bonus."
   },
+  "Codex Manoeuvres": {
+    name: "Codex Manoeuvres",
+    chapter: "Red Scorpions",
+    action: "Full Action",
+    cost: 4,
+    sustained: true,
+    effects: "The Red Scorpions revere the Codex Astartes as a religious text, sacred orders laid down by true servants of the God-Emperor and integral to the strength and effectiveness of the Chapter. In battle they can use the Codex to execute flawless attacks and provide an answering tactic to anything the enemy throws at them. The Battle-Brother’s Kill-team gains a number of re-rolls equal to the number of its members each turn (measured from the start of the squad leader’s turn to the start of his following turn) reflecting the greater efficiency which the squad works together while adhering to the Codex. These re-rolls form a pool which can be used by any Battle-Brother in support range of the squad leader and are replenished at the start of the next turn. Remember though that a dice roll can only ever be re-rolled once and the player must abide by the re-rolled result. This pool can be used to re-roll Weapon Skill, Ballistic Skill, Dodge, and Parry Tests.",
+    improvement: "At Rank 4 activating this ability becomes a Half Action. At Rank 6 this ability costs 1 less point of Cohesion to activate."
+  },
   "Angel's Wrath": {
     name: "Angel's Wrath",
     chapter: "Dark Angels",
@@ -3309,7 +4564,7 @@ export const CHAPTER_ATTACK_PATTERNS: Record<string, { name: string, chapter: st
     effects: "All warriors can fight alone, but it is a point of particular pride amongst the Adeptus Astartes—and the Ultramarines in particular—that a squad is greater than the sum of the warriors who make it up. Their discipline and coordination allow them to slay their enemies with ruthless efficiency, each Battle-Brother cutting down the foes his brothers wound, or selflessly maiming foes for his brothers to slay. The Battle-Brother may call for a Coordinated Strike, which lasts until the beginning of his following turn. During this time, the Battle-Brother and all those within Support Range gain a +2 bonus to all damage rolls when attacking an enemy who has already been hit by a member of the Killteam during the Coordinated Strike.",
     improvement: "If the Battle-Brother is Rank 4 or above, the bonus to damage rolls increases to +5."
   },
-  "Synchronised Assault": {
+  "Synchronised Assault (Ultramarines)": {
     name: "Synchronised Assault",
     chapter: "Ultramarines",
     action: "Free Action",
@@ -3452,6 +4707,20 @@ export const DEVASTATOR_MARINE_ABILITIES = [
   }
 ];
 
+export const EMPERORS_CHAMPION_ABILITIES = [
+  {
+    name: "Slayer of Champions",
+    description: "The creature challenged can have an Intelligence of no less than 15—any lower and it is little more than a mindless beast rather than a warrior—but otherwise can be anything, so long as it leads others of its kind in battle, or fights as a champion for those that do. Whether or not the challenged foe accepts, the Champion’s full attentions are focussed upon slaying that enemy, and he will leave Squad Mode immediately. While that enemy lives, the Emperor’s Champion gains the Hatred Talent appropriate to that enemy, and may activate any one of his Black Templars Solo Mode Abilities and have it remain in effect until the enemy is slain rather than only lasting for the normal duration."
+  }
+];
+
+export const EMPERORS_CHAMPION_VOWS: { [key: string]: string } = {
+  "Abhor the Witch, Destroy the Witch": "The Champion counts his Agility Bonus as 1 higher for the purposes of movement, so long as he is moving to engage an enemy psyker, and he gains a +20 bonus on all Tests to resist the effects of Psychic Powers. If the Emperor’s Champion is the Kill-team’s leader, then all members of the team gain this Vow’s effects, but the team loses 2 points of Cohesion if there is a Librarian among them.",
+  "Accept Any Challenge, No Matter the Odds": "In melee combat, the Champion gains a +10 bonus to hit and a +2 bonus to Damage against all enemies. However, such is his zeal to strike them down that he does not as readily defend himself, and thus suffers a –10 penalty on all Tests to Dodge or Parry. If the Emperor’s Champion is the Kill-team’s leader, then all members of the team gain this Vow’s effects.",
+  "Suffer Not The Unclean To Live": "The Champion summons up greater reserves of strength with which to strike down his foes, granting him a +5 bonus to all Damage rolls made in melee combat. However, this holy might takes time to muster, granting enemies a +10 bonus to Dodge and Parry Tests as they move to counter the Champion’s slow-but-deadly strikes. If the Emperor’s Champion is the Kill-team’s leader, then all members of the team gain this Vow’s effects.",
+  "Uphold the Honour of the Emperor": "The Champion’s faith in the Emperor and his own might allows him to stride unflinching through enemy fire. He counts his Toughness Bonus as 2 higher than normal for the purposes of resisting Damage and becomes immune to Pinning. The Champion may not skulk or cower to elude the enemy’s gaze and thus may not make use of the Concealment, Silent Move, or Shadowing Skills, nor may he benefit from any Squad Mode Abilities which rely on him taking cover, such as Squad Advance or Go to Ground. If the Emperor’s Champion is the Kill-team’s leader, then all members of the team gain this Vow’s effects."
+};
+
 export const DEATHWATCH_CHAMPION_ABILITIES = [
   {
     name: "Xenos Bane",
@@ -3559,6 +4828,7 @@ export const PERSONAL_DEMEANORS = [
 
 export interface AdvancedSpecialityRule {
   name: string;
+  xpCost: number;
   requiredChapter?: string;
   forbiddenChapter?: string;
   check: (char: CharacterData, getScore: (key: keyof Characteristics) => number) => { ok: boolean; reason?: string };
@@ -3567,6 +4837,7 @@ export interface AdvancedSpecialityRule {
 export const ADVANCED_SPECIALITY_RULES: AdvancedSpecialityRule[] = [
   {
     name: "Wolf Guard",
+    xpCost: 4000,
     requiredChapter: "Space Wolves",
     check: (char, getScore) => {
       const reasons = [];
@@ -3583,10 +4854,12 @@ export const ADVANCED_SPECIALITY_RULES: AdvancedSpecialityRule[] = [
   },
   {
     name: "Deathwatch Black Shield",
+    xpCost: 0,
     check: (char) => ({ ok: char.rank >= 1 })
   },
   {
     name: "Deathwatch Champion",
+    xpCost: 4000,
     check: (char, getScore) => {
       const reasons = [];
       if (char.rank < 4) reasons.push("Rank 4+");
@@ -3597,6 +4870,7 @@ export const ADVANCED_SPECIALITY_RULES: AdvancedSpecialityRule[] = [
   },
   {
     name: "Deathwatch Chaplain",
+    xpCost: 3000,
     forbiddenChapter: "Space Wolves",
     check: (char, getScore) => {
       const reasons = [];
@@ -3610,6 +4884,7 @@ export const ADVANCED_SPECIALITY_RULES: AdvancedSpecialityRule[] = [
   },
   {
     name: "Deathwatch Dreadnought",
+    xpCost: 5000,
     check: (char) => {
       const reasons = [];
       if (char.fate.current > 0) reasons.push("0 Fate Points");
@@ -3620,6 +4895,7 @@ export const ADVANCED_SPECIALITY_RULES: AdvancedSpecialityRule[] = [
   },
   {
     name: "Deathwatch Epistolary",
+    xpCost: 2000,
     check: (char) => {
       const reasons = [];
       if (char.rank < 5) reasons.push("Rank 5+");
@@ -3629,6 +4905,7 @@ export const ADVANCED_SPECIALITY_RULES: AdvancedSpecialityRule[] = [
   },
   {
     name: "Deathwatch Forge Master",
+    xpCost: 2000,
     check: (char) => {
       const reasons = [];
       if (char.rank < 4) reasons.push("Rank 4+");
@@ -3638,6 +4915,7 @@ export const ADVANCED_SPECIALITY_RULES: AdvancedSpecialityRule[] = [
   },
   {
     name: "Deathwatch Keeper",
+    xpCost: 3000,
     check: (char, getScore) => {
       const reasons = [];
       if (char.rank < 5) reasons.push("Rank 5+");
@@ -3648,6 +4926,7 @@ export const ADVANCED_SPECIALITY_RULES: AdvancedSpecialityRule[] = [
   },
   {
     name: "Deathwatch Kill-Marine",
+    xpCost: 1000,
     check: (char, getScore) => {
       const reasons = [];
       if (char.rank < 1) reasons.push("Rank 1+");
@@ -3658,6 +4937,7 @@ export const ADVANCED_SPECIALITY_RULES: AdvancedSpecialityRule[] = [
   },
   {
     name: "Deathwatch Captain",
+    xpCost: 3000,
     check: (char) => {
       const reasons = [];
       if (char.rank < 5) reasons.push("Rank 5+");
@@ -3670,6 +4950,7 @@ export const ADVANCED_SPECIALITY_RULES: AdvancedSpecialityRule[] = [
   },
   {
     name: "First Company Veteran",
+    xpCost: 2000,
     check: (char) => {
       const reasons = [];
       if (char.rank < 4) reasons.push("Rank 4+");
@@ -3679,15 +4960,20 @@ export const ADVANCED_SPECIALITY_RULES: AdvancedSpecialityRule[] = [
   },
   {
     name: "Furioso Dreadnought",
+    xpCost: 6000,
     requiredChapter: "Blood Angels",
-    check: (char) => {
+    check: (char, getScore) => {
       const reasons = [];
       if (char.chapter !== "Blood Angels") reasons.push("Must be Blood Angels");
+      if (char.fate.current > 0) reasons.push("0 Fate Points");
+      if (getScore('WS') < 60) reasons.push("WS 60+");
+      if (char.renown < 80) reasons.push("Renown 80+");
       return { ok: reasons.length === 0, reason: reasons.join(", ") };
     }
   },
   {
     name: "Sanguinary Priest",
+    xpCost: 1000,
     requiredChapter: "Blood Angels",
     check: (char) => {
       const reasons = [];
@@ -3698,6 +4984,7 @@ export const ADVANCED_SPECIALITY_RULES: AdvancedSpecialityRule[] = [
   },
   {
     name: "Ravenwing Veteran",
+    xpCost: 1000,
     requiredChapter: "Dark Angels",
     check: (char, getScore) => {
       const reasons = [];
@@ -3711,6 +4998,7 @@ export const ADVANCED_SPECIALITY_RULES: AdvancedSpecialityRule[] = [
   },
   {
     name: "Deathwing Terminator",
+    xpCost: 3000,
     requiredChapter: "Dark Angels",
     check: (char) => {
       const reasons = [];
@@ -3722,6 +5010,7 @@ export const ADVANCED_SPECIALITY_RULES: AdvancedSpecialityRule[] = [
   },
   {
     name: "Wolf Scout",
+    xpCost: 200,
     requiredChapter: "Space Wolves",
     check: (char) => {
       const reasons = [];
@@ -3733,6 +5022,7 @@ export const ADVANCED_SPECIALITY_RULES: AdvancedSpecialityRule[] = [
   },
   {
     name: "Wolf Priest",
+    xpCost: 4000,
     requiredChapter: "Space Wolves",
     check: (char, getScore) => {
       const reasons = [];
@@ -3747,6 +5037,7 @@ export const ADVANCED_SPECIALITY_RULES: AdvancedSpecialityRule[] = [
   },
   {
     name: "Tyrannic War Veteran",
+    xpCost: 1000,
     requiredChapter: "Ultramarines",
     check: (char) => {
       const reasons = [];
@@ -3757,13 +5048,14 @@ export const ADVANCED_SPECIALITY_RULES: AdvancedSpecialityRule[] = [
   },
   {
     name: "Ultramarines Honour Guard",
+    xpCost: 5000,
     requiredChapter: "Ultramarines",
-    check: (char) => {
+    check: (char, getScore) => {
       const reasons = [];
       if (char.chapter !== "Ultramarines") reasons.push("Must be Ultramarines");
       if (char.rank < 6) reasons.push("Rank 6+");
       if (char.renown < 80) reasons.push("Renown 80+");
-      if ((char.characteristics.WS.base + char.characteristics.WS.adv * 5 + char.characteristics.WS.bonus) < 50) reasons.push("WS 50+");
+      if (getScore('WS') < 50) reasons.push("WS 50+");
       if (!char.talents.some(t => t === "Duty Unto Death" || t.startsWith("Duty Unto Death "))) reasons.push("Must have Duty Unto Death Talent");
       if (!char.talents.some(t => t === "Exemplar of Honour" || t.startsWith("Exemplar of Honour "))) reasons.push("Must have Exemplar of Honour Talent");
       if (["Librarian", "Apothecary", "Techmarine"].includes(char.specialization)) reasons.push("Cannot be Librarian, Apothecary, or Techmarine");
@@ -3772,18 +5064,20 @@ export const ADVANCED_SPECIALITY_RULES: AdvancedSpecialityRule[] = [
   },
   {
     name: "Sword Brother",
+    xpCost: 1000,
     requiredChapter: "Black Templars",
-    check: (char) => {
+    check: (char, getScore) => {
       const reasons = [];
       if (char.chapter !== "Black Templars") reasons.push("Must be Black Templars");
       if (char.specialization === "Techmarine") reasons.push("Cannot be Techmarine");
       if (char.rank < 4) reasons.push("Rank 4+");
-      if ((char.characteristics.WS.base + char.characteristics.WS.adv * 5 + char.characteristics.WS.bonus) < 50) reasons.push("WS 50+");
+      if (getScore('WS') < 50) reasons.push("WS 50+");
       return { ok: reasons.length === 0, reason: reasons.join(", ") };
     }
   },
   {
     name: "Librarian Dreadnought",
+    xpCost: 8000,
     requiredChapter: "Blood Angels",
     check: (char, getScore) => {
       const reasons = [];
@@ -3798,17 +5092,23 @@ export const ADVANCED_SPECIALITY_RULES: AdvancedSpecialityRule[] = [
   },
   {
     name: "Tempest Blade",
+    xpCost: 2000,
     requiredChapter: "Storm Wardens",
-    check: (char) => {
+    check: (char, getScore) => {
       const reasons = [];
       if (char.chapter !== "Storm Wardens") reasons.push("Must be Storm Wardens");
-      return { ok: reasons.length === 0, reason: reasons.join(", ") };
+      if (char.rank < 5) reasons.push("Rank 5+");
+      if (char.renown < 40) reasons.push("Renown 40+");
+      if (getScore('WS') < 50) reasons.push("WS 50+");
+      if (['Apothecary', 'Devastator Marine', 'Techmarine'].includes(char.specialization)) reasons.push("Cannot be Apothecary/Devastator/Techmarine");
+      return { ok: reasons.length === 0, reason: reasons.join(", ") + " (Must be nominated)" };
     }
   }
 ];
 
 export const TRAIT_DESCRIPTIONS: { [key: string]: string } = {
   "Auto-stabilised": "The creature is always considered braced when firing Heavy weapons and may fire them on semi-auto or full auto as a Half Action.",
+  "Brutal Charge": "A creature with this trait deals an extra 3 points of damage when it charges in the same round. A horde with this trait does an additional 1d10 damage when it charges in the same round.",
   "Engine of War": "Dreadnoughts can only take Advances from the Dreadnought Advances Table. Dreadnoughts are not affected by Blood Loss or Fatigue. Dreadnoughts have no fine manipulators and cannot complete tasks that require fine manual dexterity. Dreadnoughts can only be healed (repaired) using the Tech-use Skill. Dreadnoughts suffer a –30 penalty on all tests when attempting Shadowing or Silent Move.",
   "Size (Enormous)": "Enormous creatures are massive, gaining +10 to Base Movement, +10 to Intimidate, and +10 to be hit by attacks. They have a base stealth penalty of -10.",
   "Sturdy": "Sturdy creatures are hard to move and gain a +20 bonus to tests made to resist grappling and the Takedown talent.",
@@ -3875,6 +5175,7 @@ export const TALENT_DESCRIPTIONS: { [key: string]: string } = {
   "Flame Weapon Training": "The sight of flaming streams of promethium brings joy to the Explorer’s heart and dread to his foes. He has mastered the art of a wide variety of flamer weapons. The Universal Talent group encompasses all non-Exotic weapons with the Flame special quality.",
   "Flesh Render": "The Battle-Brother has a taste for the massive damage that can be inflicted with chain weapons and other melee weapons that rip apart the flesh of their enemies. When inflicting Damage with a melee weapon that has the Tearing quality, the character rolls a single additional die for Damage and picks the highest roll. For weapons that inflict several dice worth of Damage, only a single additional die is rolled.",
   "Foresight": "Logic and analysis do for the character what Tarot and the bones claim to do for the superstitious masses. By careful consideration of all the possible consequences, and examination of all evidence and information, the character can identify the best path for success. By spending 10 minutes studying or analysing a problem, the character gains a +10 bonus to his next Intelligence Test.",
+  "Forging the Bond": "The Space Marine is gifted at adapting to the fighting styles and traditions of other Chapters, and while serving in the Deathwatch has forged strong bonds of brotherhood with his Kill-team.\n• At Rank 1–3, the Space Marine may benefit from the Squad Mode abilities specific to any other Chapter. When members of the Kill-team activate a Chapter-specific Squad Mode ability, the activating Battle-Brother can choose to allow any Space Marines from a different Chapter possessing this Talent to benefit from the ability as well. If he chooses to do so, activating the Squad Mode ability costs an additional 3 Cohesion (total, not per Battle-Brother).\n• At Rank 4–5, the Talent functions as above, but the cost is reduced to 2 additional Cohesion.\n• At Rank 6–8, the Talent functions as above, but the cost is reduced to 1 additional Cohesion.",
   "Frenzy": "The character’s temper and passion boil just below the surface of his psyche, mostly held in check by his rational mind, but easily released when needed. If the character spends one full Round fuelling his anger—by flagellation, drugs, or other means—on the next Round he goes into an uncontrolled rage, gaining a +10 bonus to Weapon Skill, Strength, Toughness, and Willpower, but suffering a –20 penalty to Ballistic Skill and Intelligence. The character must attack the nearest enemy in melee combat if possible. If he is not engaged with the nearest enemy, he must move towards that enemy and engage it if possible. The character will not take obviously suicidal actions such as leaping off a building in order to engage someone on the ground, but he will take any actions that have a reasonable opportunity to engage in melee with the nearest enemy. While Frenzied, he is immune to Fear, Pinning, Stunning effects, the effects of Fatigue, and he may not Parry, retreat, or flee. He remains Frenzied for the duration of the combat. Unless the character has a Talent that allows him to do so, he may not use Psychic Powers whilst in Frenzy. Some beings are either permanently Frenzied or can Frenzy at will.",
   "Furious Assault": "The character’s speed and martial prowess allow him to land several blows where lesser combatants land one. If the character successfully hits his target using the All Out Attack Action, he may spend his Reaction to make an additional attack using the same bonuses or penalties as the original attack.",
   "Good Reputation": "The character is well respected within a social group or organisation. The character gains an additional +10 bonus to Fellowship Tests when dealing with this group. This Talent is cumulative with Peer, for a total of a +20 bonus. This bonus also applies to Influence Tests when dealing with this particular group. The GM and player may agree to award this Talent when appropriate to the adventure or campaign.",
@@ -3970,6 +5271,7 @@ export const TALENT_DESCRIPTIONS: { [key: string]: string } = {
   "Thunder Charge": "The Battle-Brother charges into combat using his armoured body as an additional weapon. Driven by his armour and the Battle-Brother’s enhanced muscle, the impact of such a charge is like being struck by a thunderbolt. When the Battle-Brother makes a Charge Action, first make an unarmed attack (see page 245 for more details) against every opponent he is charging. This represents slamming into the enemy with the character’s armoured bulk. This attack automatically also has the potential to knock the opponent down in the same way as if the Battle-Brother had used the Knock Down Action (see page 241 for more details). Once this attack has been resolved, the Battle-Brother may make his normal Charge Attack as normal. If the Battle-Brother charges a Horde, he may make d5+1 unarmed attacks against the Horde.",
   "Total Recall": "Mental conditioning or augmentation enables the character to record and recall great amounts of information, effectively granting him a perfect memory. The character can automatically remember trivial facts or pieces of information he might feasibly have picked up in the past. When dealing with more detailed, complex, or obscure facts, such as the exact layout of a defence network, the GM may require a successful Intelligence Test to recall the information.",
   "True Grit": "The character is able to shrug off wounds that would fell lesser men. Whenever the character suffers Critical Damage, halve the result (rounding up).",
+  "Two-Handed Weapon Expertise": "When wielding any two-handed melee weapon, the character ignores the Unbalanced Quality and treats weapons with the Unwieldy Quality as being Unbalanced instead. This Talent may be purchased twice; if a Character does so, then the character ignores the Unwieldy Quality and treats weapons with the Unbalanced Quality as having the Balanced Quality instead.",
   "Two-Weapon Wielder": "Years of training allow the character to use a weapon in each hand when needed. When armed with two weapons of the same type, the character may spend a Full Action to attack with both. Both tests made to attack with the weapons suffer a –20 penalty (see Chapter VIII: Combat for more details on fighting with two weapons). The character must possess Two-Weapon Wielder (Melee) and Two-Weapon Wielder (Ballistic) if he wishes to use a gun and hand weapon with this Talent.",
   "Tyrannic War Stratagem": "The Battle-Brother gains a +10 bonus on all command Tests that relate specifically to combating the Tyranids, and gains a single one of the Stratagems described below. This Talent may be purchased multiple times, each time requiring that a different Stratagem be selected. The bonus to command Tests remains at +10 no matter how many times the Talent is purchased.\n\nBulwark: When fighting against a Horde, the Battle-Brother may attempt to Parry melee attacks, but suffers a penalty equal to half the Horde’s Magnitude (rounding up) on the Test, due to the sheer number of creatures attacking.\n\nCleansing Flame: Any creature attempting an Agility Test to avoid being hit by a Flame weapon must re-roll successful Tests. Against Hordes of Tyranids, the amount of random Magnitude damage dealt by a Flame weapon may be rolled twice, selecting the highest result.\n\nGrenadier: The Battle-Brother may use a Krak Grenade as his chosen weapon for any Charge Attack, Standard Attack or All-Out Attack action, suffering a –20 penalty to hit due to the difficulty of the attack. However, if the attack roll succeeds, the Battle-Brother deals the normal damage of an Astartes Krak Grenade (with its associated Pen value), adding +1 to the Pen for every Degree of Success on the attack roll (to represent the grenade being thrust into vulnerable points in the creature’s carapace).\n\nMaster of Venoms: For the duration of the mission, a single non-powered weapon (i.e., not a chainsword, power sword, force weapon, etc) may be given the Toxic quality, and he may requisition special poison-delivery bolter shells for 5 requisition per clip, which deal –2 damage but gain the Toxic quality. All weapons the Battle-Brother wields with the Toxic quality may affect Tyranids in spite of their normal immunity to poisons.\n\nSlaughter the Swarm: When calculating the number of hits inflicted against a Horde, the Battle-Brother scores a number of bonus hits (after all other modifiers) equal to either his Intelligence Bonus or his Perception Bonus (whichever is higher).\n\nWithdraw: The Battle-Brother, if engaged in melee, may attempt to disengage from combat when Dodging by taking a –20 penalty on the Dodge Test. If the Test is successful, the Battle-Brother moves his Agility Bonus in metres and is prone, but no longer in melee.",
   "Tyrannic War Stratagem (Bulwark)": "The Battle-Brother gains a +10 bonus on all command Tests that relate specifically to combating the Tyranids.\n\nBulwark: When fighting against a Horde, the Battle-Brother may attempt to Parry melee attacks, but suffers a penalty equal to half the Horde’s Magnitude (rounding up) on the Test, due to the sheer number of creatures attacking.",
@@ -4181,6 +5483,13 @@ export const ULTRAMARINES_HONOUR_GUARD_ABILITIES = [
   }
 ];
 
+export const TEMPEST_BLADE_ABILITIES = [
+  {
+    name: "The Highlander's Wrath",
+    description: "When Heavily Damaged or Critically Damaged, the Tempest Blade ignores the effects of Fatigue, gains a +10 bonus to all Weapon Skill Tests and a +2 bonus to all melee Damage rolls, and any Heroic Sacrifice he declares lasts for a number of Rounds equal to his Toughness Bonus +2. Additionally, a Tempest Blade may always choose to take the Deathwatch Dreadnought Advanced Speciality even though characters are not normally allowed to take two Advanced Specialities; to a Tempest Blade, internment within a Dreadnought is the greatest expression of their beliefs."
+  }
+];
+
 export const SWORD_BROTHER_ABILITIES = [
   {
     name: "Righteous Rage",
@@ -4199,3 +5508,164 @@ export const SWORD_BROTHER_ABILITIES = [
     description: "The Templar’s wrath knows no limitations, and his fury is as easily expressed with a storm of fire as with the clash of blades. The character gains the benefits of the Hatred Talent with ranged attacks as well as with melee attacks."
   }
 ];
+
+export const MISSION_OATHS = [
+  {
+    name: "Oath of the Astartes",
+    info: "A Battle-Brother’s loyalty to his Chapter and Primarch is second only to his loyalty to the Emperor. Those who serve in the Deathwatch are no different. These Space Marines learn to share this loyalty with their newfound brothers in arms. Taking the Oath of the Astartes means studying the Codex Astartes and drilling with squad tactics until the Battle-Brother’s skills are honed to a fine edge.",
+    prerequisite: "Tactical Marine, Assault Marine or Devastator Marine",
+    effect: "Those who take this oath have added faith in their Battle-Brothers and a keener understanding of the strength of their squad. A Kill-team which takes this oath before a Mission may add +2 to their Cohesion for the duration of that Mission.",
+    squadModeAbilities: "Squad Advance, Bolter Assault and Tactical Spacing."
+  },
+  {
+    name: "Oath of the Emperor",
+    info: "A Battle-Brother’s loyalty to the Emperor is a vital part of his existence, a value instilled in him since his induction and a shield he carries with him wherever he goes. Often before battle, Space Marines gather in the Watch Fortress’ grand shrine to the Emperor and reaffirm these oaths of loyalty, giving themselves a greater sense of purpose and renewing their fervour for defending the Imperium.",
+    prerequisite: "Tactical Marine, Librarian or Apothecary",
+    effect: "Those who take the Oath to the Emperor before battle have spent long hours praying to the Emperor and are filled with his righteous zeal. All members of the Kill-team may add +10 to Willpower Tests for the duration of the Mission.",
+    squadModeAbilities: "Fire for Effect, Regroup and Strongpoint."
+  },
+  {
+    name: "Oath of Glory",
+    info: "The Adeptus Astartes relentlessly seek glory in the Emperor’s name, often pushing themselves to feats of greatness (even by the high standards of the superhuman Space Marines) against the Imperium’s foes. Such feats become the tales of glory told within a Chapter and can earn those responsible great respect and standing amongst their peers.",
+    prerequisite: "Tactical Marine or Assault Marine",
+    effect: "Those that take the Oath of Glory pledge to the Emperor, their Chapter, their Primarch, and their Battle-Brothers to prove themselves in battle above and beyond their duty. All members of a Kill-team which take this oath will gain an additional point of Renown for each Primary and Secondary Objective that the Kill-team completes, as long as they are personally involved.",
+    squadModeAbilities: "Squad Advance, Bolter Assault and Furious Charge."
+  },
+  {
+    name: "Oath of Knowledge",
+    info: "Knowledge is power, and on the battlefield it can mean the difference between anticipating a foe’s attacks and being caught off guard. Many Battle-Brothers study the Imperium’s foes to learn their strengths and weaknesses so they may better kill them in combat. However, the Imperium’s foes are near infinite and a Battle-Brother’s time is not.",
+    prerequisite: "Librarian or Apothecary",
+    effect: "Those who take the Oath of Knowledge endeavour to learn all they can of their foes. A Kill-team which takes this oath may choose a single kind of foe (i.e. Ork, Tau, Tyranid), and for the duration of the Mission all members of the team will gain a +10 to Weapon Skill and Ballistic Skill Tests against this chosen enemy with ranged or melee weapons. Alternatively a Librarian who takes the Oath of Knowledge (or is part of a Kill-team which selects it) may instead choose to study their powers more exhaustively and steel himself against the perils of the warp. This grants the Librarian the ability to re-roll the results of any rolls on Table 6–1: Psychic Phenomena for the duration of the Mission.",
+    squadModeAbilities: "Go to Ground, Dig In and Strongpoint."
+  },
+  {
+    name: "Oath of Loyalty",
+    info: "As important as loyalty to the Chapter is loyalty to one’s comrades. Knowing they can be relied upon in combat to watch a Battle-Brother’s back and support his attacks is key to the squad’s strength and effectiveness. An Oath of Loyalty is a way of strengthening that faith within the squad and boosting a Battle-Brother’s own connection with his Kill-team.",
+    prerequisite: "Tactical Marine or Apothecary",
+    effect: "Those who take the Oath of Loyalty spend time with their Battle-Brothers to strengthen their camaraderie. A Kill-team which takes this oath gains a +1 bonus on Cohesion Challenge rolls and their leader may add +10 to all tests to resist Cohesion damage.",
+    squadModeAbilities: "Tactical Spacing, Regroup and Soak Fire."
+  },
+  {
+    name: "Oath of the Weapon",
+    info: "Space Marines drill constantly, and when they are not fighting. they are training for combat. Some Battle-Brothers take this a step further and take oaths to ensure their weapons do not fail them in combat, blessing bolters and chainswords so that the Emperor might ensure their effectiveness against His enemies.",
+    prerequisite: "Techmarine or Devastator Marine",
+    effect: "Those taking the Oath of the Weapon pray over their weapons before battle and strive to extinguish even the smallest element of chance in their function. A Kill-team which takes this oath may ignore the effects of Jams (see page 249) with their personal weaponry and re-roll Weapon Skill Tests to confirm Righteous Fury (see page 245) with melee weapons for the duration of the Mission.",
+    squadModeAbilities: "Fire Support, Fire for Effect and Tank Buster."
+  },
+  {
+    name: "Liturgies of Battle",
+    info: "Chaplains are the very embodiment of Honour, and when war calls, his righteous wrath at the foes of the Imperium inspires his Battle-Brothers.",
+    prerequisite: "Deathwatch Chaplain",
+    effect: "All Battle-Brothers in Support Range of the Chaplain gain the Fearless Talent. In addition, the effects of the Chaplain’s Litany of Hate Talent extend to all Battle-Brothers in support range, and the effects of that Talent are Doubled (from +10 to +20) when performing a charge.",
+    squadModeAbilities: "—"
+  },
+  {
+    name: "Oath of Hope",
+    info: "The Blood Angels, like their Primarch, believe absolutely in the promise of a better future for Mankind, citing their transformation from wretched wasteland dwellers to beings of angelic mien as an example of this. Blood Angels Space Marines strive to protect that hope, even if it takes the final breath of the very last Son of Sanguinius to bring about that future.",
+    prerequisite: "Blood Angels",
+    effect: "Those that take the Oath of Hope stand as paragons of humanity and avatars of the Emperor’s grace, and few true servants of the Imperium can help but feel inspired by so powerful a presence. A Kill-Team which takes this oath gains a +20 bonus to all Tests to resist Fear and Pinning, as do any other servants of the Imperium within 100m of the Kill-Team.",
+    squadModeAbilities: "Bolter Assault, Furious Charge, Squad Advance"
+  },
+  {
+    name: "Oath of Vengeance",
+    info: "The Dark Angels do not suffer those who stand against Mankind, or those who rebel or betray. Many are the litanies of retribution and declarations of hatred intoned upon the eve of battle by the Dark Angels, but all have a singular purpose—to incite the servants of the Emperor to wrath and retribution. A Dark Angel enacts vengeance not only for the acts already committed against Mankind, but is also vigilant for all those misdeeds yet to come, and by swearing this oath, exhorts his allies to do likewise.",
+    prerequisite: "Dark Angels",
+    effect: "Those that take the Oath of Vengeance contemplate the wrongs done to them and the masses of Humanity by heretics, aliens and daemons, hardening themselves for the battles to come. A Kill-Team which takes this Oath gains +1 Cohesion when any member of the Kill-Team takes any Test to resist Cohesion Damage and passes by 2 or more Degrees of Success, as their determination is strengthened by the attacks of their foes.",
+    squadModeAbilities: "Fire Support, Dig In, Strongpoint"
+  },
+  {
+    name: "Masters of the Craft",
+    info: "In addition to having overcome the challenges of siege warfare, many Imperial Fists veterans are masters of its technical aspects. These masters of the art of siegecraft seek to pass on their expertise to those around them.",
+    prerequisite: "Imperial Fists",
+    effect: "By the application of insight, experience and logic, the Imperial Fist team leader instils his Battle-Brothers with an understanding of siegecraft. A Kill-team which takes this oath before a Mission may add +20 to all Command Skill tests.",
+    squadModeAbilities: "Furious Charge, Squad Advance, Dig In, Strongpoint."
+  },
+  {
+    name: "Oath of War",
+    info: "Wolf Priests embody the cycle of life and death, and for the Wolves of Fenris, the purest expression of this cycle is warfare. War is the formalised act of survival, the moment where the survival of one being or species is anathema to the survival of another, and few understand the harsh necessities of survival better than those who have endured the brutality of Fenris.",
+    prerequisite: "Wolf Priest",
+    effect: "Those who take this Oath feast and drink in the days before battle is joined, celebrating the lives they have led and the victories they have won, for soon they may die—to sleep upon the red snow, as the Fenrisians say—and it is better that one has no regrets when one’s thread is cut. All Battle-Brothers within Support Range of the Wolf Priest gain the Fearless Talent, and the Kill-Team may nominate a single type of enemy (such as Tyranid Genestealers, Tau Fire Warriors, etc); against this enemy, all members of the Kill-Team gain +10 to hit and +2 to damage with all weapons and attacks.",
+    squadModeAbilities: "Furious Charge, Squad Advance, Tactical Spacing"
+  },
+  {
+    name: "Oath of the Wolf-King",
+    info: "The Space Wolves look to the example of their father and master, Leman Russ, the Wolf-King of Fenris, in all aspects of battle. The Wolf-King’s cunning and ruthlessness are as legendary as his might and valour, and the Space Wolves seek to emulate this. Once committed to battle, the Wolves know only to see it through, and are unceasing in their pursuit of victory, heedless of peril and inured to doubt.",
+    prerequisite: "Space Wolves",
+    effect: "Those who take this Oath do not meditate upon the philosophies of war, but rather steel themselves for the brutality of conflict and the necessary atrocities that accompany it. Any Squad Attack Pattern used by a member of this Kill-Team has its cost reduced by 1, to a minimum of 1.",
+    squadModeAbilities: "Bolter Assault, Fire for Effect, Furious Charge"
+  },
+  {
+    name: "Oath of Duty",
+    info: "Taken upon a volume of the Codex Astartes, the Oath of Duty is an avowal of one’s duty, stated for all to hear and its fulfilment is promised upon a sacred tome. The Ultramarines hold that an oath sworn upon something sacred is unbreakable, for to break such a vow would not only be disgraceful, but blasphemous, and few can refute such reasoning.",
+    prerequisite: "Ultramarines",
+    effect: "Those that take the Oath of Duty meditate upon the task at hand, focussing utterly on the completion of their immediate task, with no consideration of anything irrelevant to their mission. Such focus grants the members of the Kill-Team the freedom to approach the mission’s objectives in any way they choose, unfettered by any other considerations. This Oath grants no special ability, but rather grants access to four Squad Mode abilities instead of three.",
+    squadModeAbilities: "Fire for Effect, Squad Advance, Regroup, Tactical Spacing"
+  },
+  {
+    name: "Oath of the Endless Crusade",
+    info: "The Black Templars are a Chapter whose every deed is surrounded by righteous zeal and the oaths, vows, promises and declarations of warriors and commanders. It should come as no surprise, then, to imagine that the rituals of oath-taking are of particular significance to the Black Templars, for the selection and swearing of an oath represents the culmination of a time of fasting and prayer for every Battle-Brother, and signifies the final moments of calm before battle is joined. The Oath of the Endless Crusade is one of the most commonly taken of the Black Templars’ oaths, drawing upon ten millennia of perpetual crusading, and is believed to have been originally composed by Sigismund himself, upon becoming the Chapter’s first High Marshal. Taking the Oath of the Endless Crusade means committing utterly to the indiscriminate destruction of all creatures who would oppose mankind’s dominion of the galaxy.",
+    prerequisite: "Black Templars",
+    effect: "Those that take the Oath of the Endless Crusade are inspired to greater feats of wrath and valour and strive to push ever onwards to victory and the annihilation of their foes. All members of a Kill-team that take this Oath gain the Brutal Charge Trait and gain an additional point of Renown for each Primary and Secondary Objective that the Killteam completes, as long as they were personally involved and the objective required that the enemy be assaulted and exterminated—the Black Templars do not see the valour in defence while there are yet foes to slay.",
+    squadModeAbilities: "Bolter Assault, Furious Charge, Regroup."
+  },
+  {
+    name: "Oath of the Final Duel",
+    info: "Sworn upon a rough-hewn altar of vitrified sand taken from the shores of one of Sacris’ storm-wracked seas, the Storm Wardens regard this oath as an acceptance of the end that they may face in honourable combat, and with that acceptance, free themselves of the burdens of doubt or self-preservation.",
+    prerequisite: "Any Battle-Brother of the Storm Wardens Chapter",
+    effect: "Those that take the Oath of the Final Duel do so silently, each confronting the notion of their own fate and their own demise. Their silent vow sworn, the Killteam face battle prepared to die, with every moment of continued existence a blessing from the Emperor. Any member of a Kill-team which takes this Oath gains a +10 bonus to Weapon Skill when engaged in single combat with an enemy.",
+    squadModeAbilities: "Furious Charge, Soak Fire, Tank Hunter"
+  }
+];
+
+export const GENE_SEED_PURITIES: Record<string, { description: string }> = {
+  "Pure": {
+    description: "The new Chapter is a direct descendent of its Progenitor. It is likely to maintain close contact with its Progenitor and many brother Successors, and follows the traditions of its peers closely. Characters drawn from such Chapters follow all of the rules for those of their Progenitor."
+  },
+  "A New Generation": {
+    description: "Attempts have been made to “breed out” real or perceived flaws in the Progenitor’s gene-stock, introducing some divergence. Such Chapters often go on to define their own traditions and write their own histories, looking forward to the future more than back to the past. Some links may be maintained with the Progenitor Chapter, but it is just as likely that the new Chapter strikes out entirely on its own. Characters drawn from this Chapter follow all of the rules for those drawn from its Progenitor, but are not tied to the Progenitor’s Chapter Demeanour. Instead of using the Progenitor’s Chapter Demeanour, choose or roll on Table 1–5: Codex Demeanours to randomly select one of the new Codex Demeanours."
+  },
+  "Altered Stock": {
+    description: "For whatever reason, the Chapter’s gene-seed has subtly altered, causing some zygotes to become deficient. While some links are maintained with the Progenitor, the Battle-Brothers of the Chapter may be shunned, for they appear subtly different to their brethren. Characters drawn from this Chapter follow the normal rules for the Progenitor, but must roll on Table 1–7: Gene-Seed Deficiencies."
+  },
+  "Flawed": {
+    description: "A major flaw has been introduced, marking the Chapter apart from its brother Successors. Chapters suffering some kind of flaw are often forced to forge their own destiny, either embracing their fate or raging against it. Some go on to earn glory despite their flaw, while others are consumed by it, burning brightly, if all too briefly. Characters drawn from this Chapter follow the usual rules for the Progenitor, but have a 50/50 chance of either using the Chapter Demeanour or rolling on Table 1–5: Codex Demeanours. In addition, they must roll on Table 1–8: Chapter Flaws."
+  }
+};
+
+export const GENE_SEED_DEFICIENCIES: Record<string, { description: string }> = {
+  "Hyper-stimulated Omophagea": {
+    description: "Having tasted the flesh of the foe once, the Chapter’s Battle-Brothers develop an addiction to the processes allowed by the Omophagea. A player character confronted with the opportunity to partake of the flesh of a fallen enemy must pass a Challenging (+0) Willpower Test or do so immediately, whether he wants to or not."
+  },
+  "Oversensitive Occulobe": {
+    description: "The organ that allows the Space Marines to see in low light conditions has become overly sensitised, working exceptionally well in the dark but suffering in full light conditions. The character can see in total dark as if it were merely low light, and low light as if it were full light. However, should he remove his helmet in full light conditions he will suffer –10 to all Awareness Tests."
+  },
+  "Mutated Catalepsean Node": {
+    description: "The implant that allows the Battle-Brother to enter a half-sleep in which he can remain alert for danger has become dangerously mutated. The Space Marine is unable to sleep normally, and stays awake for days, even weeks on end without effect. However, when sleep does come, sometimes with little or no warning, it is wont to last for many days on end."
+  },
+  "Oolitic Secretions": {
+    description: "The Chapter’s oolitic kidney function is unbalanced in such a way that the Battle-Brother’s skin is turned an unusual colour due to its secretions. The Space Sharks (for example) have grey skin, while the Salamanders’ is the colour of volcanic rock. A whole range of other colours is possible, and the more extreme might be viewed by some as a seriously disturbing mutation."
+  },
+  "Disturbing Voice": {
+    description: "Due to a malfunction in or related to the function of the Betcher’s gland, the Chapter’s brethren exhibit unusual vocal characteristics. Some cannot speak above a sibilant whisper for example, while others have deep, booming voices or speak with an otherworldly cant. Allies might find it truly terrifying. All Space Marines with this deficiency have the Disturbing Voice Talent."
+  },
+  "Lost Zygote": {
+    description: "One of the Chapter’s zygotes has entirely ceased to function. Choose one of the Implants described on page 36 of the DEATHWATCH Rulebook. The in game benefits of this Implant no longer apply. In some cases the player should agree with the GM exactly what effect this has on the character, as the effects of some implants are wrapped up in other character abilities, Skills and Talents."
+  },
+  "Doomed": {
+    description: "A Chapter that loses the ability to replicate either the Black Carapace or Progenoid zygotes is ultimately doomed. Without the former the future generations of Space Marines will not be able to interface with their power armour, and without the latter there will be no future generations at all. Battle-Brothers with this mutation are unaffected themselves, but know that unless their Chapter’s Apothecaries can affect a cure, they are the very last of their line."
+  },
+  "Multiple Instabilities": {
+    description: "Roll d3 more times on this table, re-rolling multiples of the same result (including this one)."
+  }
+};
+
+export const CATEGORY_DESCRIPTIONS: Record<string, string> = {
+  "Common Lore": "The Common Lore skill allows the character to recall general information, procedures, divisions, traditions, famed individuals, and superstitions of a particular world, group, organisation, or race. This skill differs from Scholastic Lore, which represents scholarly learning, and Forbidden Lore, which involves hidden or proscribed knowledge, in that it deals with basic information learned from prolonged exposure to a culture or area.\nSuccess in a Common Lore Test indicates the character recalls general information about the subject. The GM determines what extra information to provide for additional Degrees of Success.",
+  "Forbidden Lore": "Forbidden Lore skills represent knowledge usually hidden, veiled, or proscribed by an organisation or society. Mere possession of this knowledge may cause difficulties for those not associated with the group in question. Excessive knowledge of the hidden truths of the Traitor Legions, for example, can be decidedly bad for one’s health for those outside (or even inside) the Adeptus Astartes. A successful Forbidden Lore Test indicates the character recalls basic information about the subject. The GM reveals additional information as appropriate to the Degree of Success on the roll.",
+  "Scholastic Lore": "Scholastic Lore grants the character knowledge of a particularly complex or esoteric subject. A successful Skill Test allows the character to recall necessary information or research a particular subject if appropriate reference material is readily available. Scholastic Lore grants a depth of knowledge far beyond that of Common Lore, requiring both experience and study to obtain. Scholastic Lore Tests can identify things that fall within the character’s area of expertise, such as a person, book, starship, or machine spirit. Scholastic Lore can overlap with Common Lore and Forbidden Lore in some areas, but it represents more indepth—and academic—information. A character with Common Lore (Imperial Creed) might know conventional information about the Cult of the Emperor and its various organisations and their practices within the Imperium, but one with Scholastic Lore (Imperial Creed) would be able to name the various cults within a subsector and their varying levels of divergence from the Ministorum. Scholastic Lore Tests require no time, as the character either knows the fact or not. Researching, however, requires an Extended Test of a duration and difficulty appropriate to the task at hand.",
+  "Navigation": "The character uses the Navigation Skill to plot a course between two points. The course might be across a continent or across a star system. A successful Navigation Test also provides an estimated travel time based on geography, cosmography, prevailing conditions, weather, and solar winds. Surface navigation is used to navigate across a planet’s surface, using logi-compasses, map readouts, and geographical knowledge. Stellar navigation is used to navigate in space between planets, using star-charts, and carto-mantic rituals. A Navigation Test represents several hours of charting courses, consulting maps, and making necessary trajectory corrections. However, 1 minute is adequate for the purpose of finding the character’s current location.\nSkill Use: 1 minute for simple location; 1d5 hours for plotting courses or routes",
+  "Pilot": "Characters utilise the Pilot Skill to fly anything from personal jump packs, to small atmospheric craft such as landers or guncutters, to void-capable fighters, bombers, and capital vessels. Under normal conditions, piloting does not require a test, but unusual or difficult conditions such as storms, obstacles or dangerous manoeuvres do require a Skill Test. When chasing another vehicle or ship or contesting for position, the character makes an opposed Pilot Test against his opponent. The skill also allows the character to control land-based, hover, or skimmer-type vehicles. Vehicles include Cargo-8s, Rhinos, Land Speeders, Sentinels, and other ground-based transports. Normal driving does not require a test, but a test is required for hazardous conditions, excessive speed, or dangerous manoeuvres.\nSkill Use: Half Action",
+  "Speak Language": "The Speak Language Skill is used to communicate with others using the same language. The Imperium has nearly as many languages as it has star systems, but for all this variety, most can speak or understand a variation of Low Gothic. In most situations, Skill Tests are unnecessary so long as those involved all speak a common tongue. However, communication with those using obscure dialects or cryptic, complex concepts requires a test at an appropriate difficulty.",
+  "Trade": "Trade Skills allow the character to create things, from guns to starships. Characters with this Skill can earn money or reputation plying a trade. They can identify the works of particularly famous or infamous craftsmen, or recall information concerning items of their trade. Trade Tests can represent the work of an hour, week, or month depending on the complexity of the task at hand. However, tests that involve the examination of an item to recall information require a Full Action."
+};
+export const ALL_SPECIAL_ABILITIES = [...TACTICAL_MARINE_ABILITIES, ...APOTHECARY_ABILITIES, ...ASSAULT_MARINE_ABILITIES, ...DEVASTATOR_MARINE_ABILITIES, ...TECHMARINE_ABILITIES, ...DEATHWATCH_CHAMPION_ABILITIES, ...DEATHWATCH_CHAPLAIN_ABILITIES, ...DEATHWATCH_EPISTOLARY_ABILITIES, ...DEATHWATCH_FORGE_MASTER_ABILITIES, ...DEATHWATCH_KEEPER_ABILITIES, ...DEATHWATCH_KILL_MARINE_ABILITIES, ...DEATHWATCH_CAPTAIN_ABILITIES, ...FIRST_COMPANY_VETERAN_ABILITIES, ...SANGUINARY_PRIEST_ABILITIES, ...RAVENWING_VETERAN_ABILITIES, ...DEATHWING_TERMINATOR_ABILITIES, ...WOLF_SCOUT_ABILITIES, ...WOLF_PRIEST_ABILITIES, ...TYRANNIC_WAR_VETERAN_ABILITIES, ...ULTRAMARINES_HONOUR_GUARD_ABILITIES, ...SWORD_BROTHER_ABILITIES, ...WOLF_GUARD_ABILITIES, ...TEMPEST_BLADE_ABILITIES, ...EMPERORS_CHAMPION_ABILITIES];

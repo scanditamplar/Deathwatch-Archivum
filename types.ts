@@ -67,6 +67,8 @@ export interface RangedWeapon extends BaseWeapon {
   ammoClass?: string; // e.g., 'Bolt', 'Plasma', 'Melta', 'Shotgun'
   ammoCategory?: AmmoCategory; // New field for ammo compatibility
   attachments?: string[]; // List of attachment names
+  isCombiWeapon?: boolean;
+  combiProfile?: Omit<RangedWeapon, 'id' | 'isCombiWeapon' | 'combiProfile'>;
 }
 
 export interface Ammo {
@@ -89,8 +91,8 @@ export const AMMO_DATABASE: Ammo[] = [
   { name: "Witch Bolts", category: "Special Issue Ammo", compatibleClass: "Bolt", ammoCategory: "Bolt shells", description: "Disrupts psychic connection.", modifiers: "Psy Rating -1 (1d10 rnds), No Push. Warp Instability Test." },
   { name: "Implosion Shells", category: "Special Issue Ammo", compatibleClass: "Bolt", ammoCategory: "Bolt shells", description: "Target suffers 1d5 Agility Damage if they take damage.", modifiers: "1d5 Ag Dmg on hit" },
   { name: "Standard Bullets", category: "Ammo", compatibleClass: "Solid Projectile", ammoCategory: "Bullets", description: "Standard solid projectile rounds.", modifiers: "-" },
-  { name: "Ignis Rounds (Bullets)", category: "Special Issue Ammo", compatibleClass: "Solid Projectile", ammoCategory: "Bullets", description: "Changes damage to Energy (E). Target Ag Test or set ablaze.", modifiers: "Dmg Type E, Ag Test vs Fire" },
-  { name: "Penetrator Rounds (Bullets)", category: "Special Issue Ammo", compatibleClass: "Solid Projectile", ammoCategory: "Bullets", description: "Increases Pen by +5.", modifiers: "Pen +5" },
+  { name: "Ignis Rounds (Solid)", category: "Special Issue Ammo", compatibleClass: "Solid Projectile", ammoCategory: "Bullets", description: "Changes damage to Energy (E). Target Ag Test or set ablaze.", modifiers: "Dmg Type E, Ag Test vs Fire" },
+  { name: "Penetrator Rounds (Solid)", category: "Special Issue Ammo", compatibleClass: "Solid Projectile", ammoCategory: "Bullets", description: "Increases Pen by +5.", modifiers: "Pen +5" },
   { name: "Charge Pack", category: "Ammo", compatibleClass: "Las", ammoCategory: "Charge pack", description: "Standard energy cell.", modifiers: "-" },
   { name: "Exotic Rounds", category: "Ammo", compatibleClass: "Exotic", ammoCategory: "Exotic", description: "Specialized ammunition for exotic weapons.", modifiers: "Varies" },
   { name: "Razor-Web", category: "Special Issue Ammo", compatibleClass: "Exotic", ammoCategory: "Exotic", description: "-20 to escape. Escape attempts deal 2d10 R damage, Pen 8.", modifiers: "-20 Escape, 2d10 R Pen 8 on escape attempt" },
@@ -99,13 +101,94 @@ export const AMMO_DATABASE: Ammo[] = [
   { name: "Plasma Flask", category: "Ammo", compatibleClass: "Plasma", ammoCategory: "Plasma flask", description: "Hydrogen fuel flask.", modifiers: "-" },
   { name: "Standard Shells", category: "Ammo", compatibleClass: "Shotgun", ammoCategory: "Shells", description: "Standard shotgun shells.", modifiers: "-" },
   { name: "Breaching Rounds", category: "Special Issue Ammo", compatibleClass: "Shotgun", ammoCategory: "Shells", description: "Changes damage to Explosive (X), Range reduced by half.", modifiers: "Dmg Type X, Range x0.5" },
-  { name: "Ignis Rounds (Shells)", category: "Special Issue Ammo", compatibleClass: "Shotgun", ammoCategory: "Shells", description: "Changes damage to Energy (E). Target Ag Test or set ablaze.", modifiers: "Dmg Type E, Ag Test vs Fire" },
-  { name: "Penetrator Rounds (Shells)", category: "Special Issue Ammo", compatibleClass: "Shotgun", ammoCategory: "Shells", description: "Increases Pen by +5. Loses Scatter.", modifiers: "Pen +5, No Scatter" },
+  { name: "Ignis Rounds", category: "Special Issue Ammo", compatibleClass: "Shotgun", ammoCategory: "Shells", description: "Changes damage to Energy (E). Target Ag Test or set ablaze.", modifiers: "Dmg Type E, Ag Test vs Fire" },
+  { name: "Penetrator Rounds", category: "Special Issue Ammo", compatibleClass: "Shotgun", ammoCategory: "Shells", description: "Increases Pen by +5. Loses Scatter.", modifiers: "Pen +5, No Scatter" },
   { name: "Shredder Rounds", category: "Special Issue Ammo", compatibleClass: "Shotgun", ammoCategory: "Shells", description: "Increases Pen by +1, gains Tearing.", modifiers: "Pen +1, Tearing" },
+  { name: "Linebreaker Rounds", category: "Special Issue Ammo", compatibleClass: "Shotgun", ammoCategory: "Shells", description: "Unique super-dense alloy rounds. Count ranges out to 10 metres as point-blank for Scatter.", modifiers: "10m point-blank for Scatter" },
   { name: "Slug Rounds", category: "Special Issue Ammo", compatibleClass: "Shotgun", ammoCategory: "Shells", description: "Loses Scatter. Gains Tearing and Felling (1).", modifiers: "No Scatter, Tearing, Felling (1)" },
 ];
 
 export const WEAPON_ATTACHMENTS: { [key: string]: WeaponAttachment } = {
+  "Combat Sight: Laser & Imaging": {
+    name: "Combat Sight: Laser & Imaging",
+    description: "Laser Tracer (+10 hit single shots) & Long Range Imaging (+10m pistol/+20m basic range).",
+    rule: "Provides a +10 bonus to hit against targets when taking single shots. Increases range.",
+    compatibleClasses: ['Pistol', 'Basic'],
+    compatibleAmmoTypes: [],
+    slot: 'Sight'
+  },
+  "Combat Sight: Laser & Targeter": {
+    name: "Combat Sight: Laser & Targeter",
+    description: "Laser Tracer (+10 hit single shots) & Focal Targeter (Pen + Per Bonus).",
+    rule: "Provides a +10 bonus to hit against targets when taking single shots. Increases Penetration.",
+    compatibleClasses: ['Pistol', 'Basic'],
+    compatibleAmmoTypes: [],
+    slot: 'Sight'
+  },
+  "Combat Sight: Laser & Shadow": {
+    name: "Combat Sight: Laser & Shadow",
+    description: "Laser Tracer (+10 hit single shots) & Shadow Light (Ignores lighting/cloak penalties).",
+    rule: "Provides a +10 bonus to hit against targets when taking single shots. Ignores concealment lighting.",
+    compatibleClasses: ['Pistol', 'Basic'],
+    compatibleAmmoTypes: [],
+    slot: 'Sight'
+  },
+  "Combat Sight: Laser & Audible": {
+    name: "Combat Sight: Laser & Audible",
+    description: "Laser Tracer (+10 hit single shots) & Audible Trigger (Fire at full concealment at -10).",
+    rule: "Provides a +10 bonus to hit against targets when taking single shots. Can hit through walls more easily.",
+    compatibleClasses: ['Pistol', 'Basic'],
+    compatibleAmmoTypes: [],
+    slot: 'Sight'
+  },
+  "Combat Sight: Imaging & Targeter": {
+    name: "Combat Sight: Imaging & Targeter",
+    description: "Long Range Imaging (+10m pistol/+20m basic range) & Focal Targeter (Pen + Per Bonus).",
+    rule: "Increases range and Penetration.",
+    compatibleClasses: ['Pistol', 'Basic'],
+    compatibleAmmoTypes: [],
+    slot: 'Sight'
+  },
+  "Combat Sight: Imaging & Shadow": {
+    name: "Combat Sight: Imaging & Shadow",
+    description: "Long Range Imaging (+10m pistol/+20m basic range) & Shadow Light (Ignores lighting/cloak penalties).",
+    rule: "Increases range. Ignores concealment lighting.",
+    compatibleClasses: ['Pistol', 'Basic'],
+    compatibleAmmoTypes: [],
+    slot: 'Sight'
+  },
+  "Combat Sight: Imaging & Audible": {
+    name: "Combat Sight: Imaging & Audible",
+    description: "Long Range Imaging (+10m pistol/+20m basic range) & Audible Trigger (Fire at full concealment at -10).",
+    rule: "Increases range. Can hit through walls more easily.",
+    compatibleClasses: ['Pistol', 'Basic'],
+    compatibleAmmoTypes: [],
+    slot: 'Sight'
+  },
+  "Combat Sight: Targeter & Shadow": {
+    name: "Combat Sight: Targeter & Shadow",
+    description: "Focal Targeter (Pen + Per Bonus) & Shadow Light (Ignores lighting/cloak penalties).",
+    rule: "Increases Penetration. Ignores concealment lighting.",
+    compatibleClasses: ['Pistol', 'Basic'],
+    compatibleAmmoTypes: [],
+    slot: 'Sight'
+  },
+  "Combat Sight: Targeter & Audible": {
+    name: "Combat Sight: Targeter & Audible",
+    description: "Focal Targeter (Pen + Per Bonus) & Audible Trigger (Fire at full concealment at -10).",
+    rule: "Increases Penetration. Can hit through walls more easily.",
+    compatibleClasses: ['Pistol', 'Basic'],
+    compatibleAmmoTypes: [],
+    slot: 'Sight'
+  },
+  "Combat Sight: Shadow & Audible": {
+    name: "Combat Sight: Shadow & Audible",
+    description: "Shadow Light (Ignores lighting/cloak penalties) & Audible Trigger (Fire at full concealment at -10).",
+    rule: "Ignores most visual concealment and lets you fire through walls more easily.",
+    compatibleClasses: ['Pistol', 'Basic'],
+    compatibleAmmoTypes: [],
+    slot: 'Sight'
+  },
   "Arm Weapon Mounting": {
     name: "Arm Weapon Mounting",
     description: "This heavy bracing allows a single ranged weapon to be mounted along the arm, with specific hand movements or MIU input triggering the weapon. This allows the user to keep both hands free, and can have a strong visual impression as the Battle-Brother brings forth a storm of destruction with the sweep of his hand.",
@@ -288,6 +371,26 @@ export interface CharacterData {
   chapter: string;
   specialization: string;
   advancedSpeciality: string;
+  customChapterDemeanor?: string;
+  geneSeedPurity?: string;
+  geneSeedDeficiency?: string;
+  additionalGeneSeedDeficiencies?: string[];
+  customLostZygotes?: string[];
+  customChapterPrimogenitor?: string;
+  usePrimogenitorRules?: boolean;
+  customChapterModifierName?: string;
+  customChapterModifierChoices?: string[];
+  customSoloModeName?: string;
+  customSoloModeSkillChoices?: string[];
+  customSoloModeCharacteristicChoice?: string;
+  customSoloModeChosenAbility?: string;
+  customSquadModeAttackPattern?: string;
+  customSquadModeChosenAttackPattern?: string;
+  customSquadModeDefensiveStance?: string;
+  customSquadModeChosenDefensiveStance?: string;
+  customChapterPsychicPowers?: string;
+  customChapterRestrictedSpecializations?: string[];
+  customChapterCustomRestrictions?: string;
   blackShieldChoices?: {
     attackPattern: string;
     attackPatternName: string;
@@ -295,6 +398,19 @@ export interface CharacterData {
     defensiveStanceName: string;
     soloModeAbility: string;
     soloModeAbilityName: string;
+  };
+  bloodRavensChoices?: {
+    scholasticLore: string;
+    forbiddenLore: string;
+    librariumTextsFocus?: string;
+  };
+  novamarinesChoices?: {
+    stat1: string;
+    stat2: string;
+  };
+  dreadnoughtWeapons?: {
+    rightArm: string;
+    leftArm: string;
   };
   hasCruxTerminatus: boolean;
   hasIronHalo: boolean;
@@ -306,13 +422,17 @@ export interface CharacterData {
   renown: number; 
   xpTotal: number;
   xpSpent: number;
-  wounds: { current: number; max: number };
+  wounds: { current: number; max: number; temporary?: number };
+  marineWounds?: number;
+  structuralIntegrity?: { current: number; max: number };
   cohesion: { current: number; max: number };
   criticalWounds: number;
+  portrait?: string;
   fatigue: number;
   fate: { current: number; max: number };
   insanity: number;
   corruption: number;
+  currentOath?: string;
   battleTraumas: string[]; // List of names
   cybernetics: Cybernetic[]; // New field
   ammunition: AmmunitionInventory[]; // List of owned ammo types
@@ -333,6 +453,9 @@ export interface CharacterData {
   chapterDemeanor: string;
   soloModeAbility: string;
   activeSaga?: string;
+  tempestBladeDreadnought?: boolean;
+  isEmperorsChampion?: boolean;
+  emperorsChampionVow?: string;
   squadModeAbilities: {
     defensive: string[];
     attack: string[];
@@ -406,6 +529,13 @@ export const SPECIALIZATION_GEAR: { [key: string]: { weapons?: { melee?: MeleeWe
     additionalWargear: [
       { id: 'de_psychic_hood', name: "Psychic Hood", description: "Provides a +5 bonus to Focus Power Tests and allows the user to nullify psychic powers." }
     ]
+  },
+  "Tempest Blade": {
+    weapons: {
+      melee: [
+        { id: 'tb_claymore', name: "Master-Crafted Sacris Claymore", damage: "2d10+2 R", pen: 2, special: "Master-Crafted, Unbalanced" }
+      ]
+    }
   },
   "Deathwatch Champion": {
     weapons: {
@@ -576,6 +706,7 @@ export const ALL_TALENTS: Talent[] = [
   { name: "Flame Weapon Training", requirements: "—", benefit: "Gain proficiency with a group of flame weapons." },
   { name: "Flesh Render", requirements: "Adeptus Astartes", benefit: "Cause additional damage with chain weapons." },
   { name: "Foresight", requirements: "Int 30", benefit: "Contemplate to gain +10 bonus on next Test." },
+  { name: "Forging the Bond", requirements: "Adeptus Astartes, Deathwatch", benefit: "Share Chapter-specific Squad Mode abilities with trained Battle-Brothers." },
   { name: "Frenzy", requirements: "—", benefit: "Enter psychotic rage to gain combat bonuses." },
   { name: "Furious Assault", requirements: "WS 35", benefit: "On a successful WS Test, gain a free second attack." },
   { name: "Good Reputation", requirements: "Fel 50, Peer", benefit: "The character has a good reputation amongst a certain group." },
@@ -639,6 +770,7 @@ export const ALL_TALENTS: Talent[] = [
   { name: "Rapid Reaction", requirements: "Ag 40", benefit: "Test Ag to negate surprise." },
   { name: "Rapid Reload", requirements: "—", benefit: "Reduce reload time." },
   { name: "Resistance", requirements: "—", benefit: "Gain +10 bonus to Resistance Tests." },
+  { name: "Resistance (Mutation)", requirements: "—", benefit: "Gain +10 bonus to tests made to resist mutation effects." },
   { name: "Rite of Awe", requirements: "Techmarine or Mechanicus Implants", benefit: "50m radius, –10 to all Tests due to Fear." },
   { name: "Rite of Fear", requirements: "Techmarine or Mechanicus Implants", benefit: "Fear Rating 1 for two minutes in a 50m radius." },
   { name: "Rite of Pure Thought", requirements: "Techmarine or Mechanicus Implants", benefit: "The character is immune to emotion." },
@@ -673,6 +805,7 @@ export const ALL_TALENTS: Talent[] = [
   { name: "Thunder Charge", requirements: "Adeptus Astartes", benefit: "Break enemies with the momentum of an armoured charge." },
   { name: "Total Recall", requirements: "Int 30", benefit: "The character can remember trivial facts and minor details." },
   { name: "True Grit", requirements: "T 40", benefit: "Reduce Critical Damage the character takes." },
+  { name: "Two-Handed Weapon Expertise", requirements: "-", benefit: "Ignores the Unbalanced Quality on two-handed weapons and treats Unwieldy as Unbalanced. Can be purchased twice to treat Unbalanced as Balanced." },
   { name: "Two-Weapon Wielder", requirements: "WS 35 or BS 35, Ag 35", benefit: "Attack twice when wielding two weapons." },
   { name: "Tyrannic War Stratagem", requirements: "Tyrannic War Veteran", benefit: "Gain a +10 bonus on all command Tests that relate specifically to combating the Tyranids, and gains a single Stratagem." },
   { name: "Unarmed Master", requirements: "WS 45, Ag 40, Unarmed Warrior", benefit: "Attacks do 1d10+SB Damage and lack the Primitive trait." },
@@ -704,9 +837,9 @@ export const ALL_SKILLS = [
   { name: "Common Lore (Deathwatch)", characteristic: "Int" },
   { name: "Common Lore (Ecclesiarchy)", characteristic: "Int" },
   { name: "Common Lore (Imperial Creed)", characteristic: "Int" },
-  { name: "Common Lore (Imperial Guard)", characteristic: "Int" },
-  { name: "Common Lore (Imperial Navy)", characteristic: "Int" },
-  { name: "Common Lore (Imperium)", characteristic: "Int" },
+  { name: "Common Lore (Imperial Guard)", characteristic: "Int", mastery: 0, description: "Basic information about the ranking system, logistics, structure, and basic tactical and strategic practices of the Imperial Guard, as well as particularly famed regiments." },
+  { name: "Common Lore (Imperial Navy)", characteristic: "Int", mastery: 0, description: "Basic information about the ranks, customs, uniforms, and particular traditions of the Imperial Navy, as well as famous admirals and ships." },
+  { name: "Common Lore (Imperium)", characteristic: "Int", mastery: 1, description: "Knowledge of the segmentums, sectors, and most well-known worlds of the Imperium." },
   { name: "Common Lore (Jericho Reach)", characteristic: "Int" },
   { name: "Common Lore (Tech)", characteristic: "Int" },
   { name: "Common Lore (War)", characteristic: "Int" },
@@ -759,6 +892,7 @@ export const ALL_SKILLS = [
   { name: "Scholastic Lore (Tactica Imperialis)", characteristic: "Int" },
   { name: "Scrutiny", characteristic: "Per" },
   { name: "Shadowing", characteristic: "Ag" },
+  { name: "Silent Move", characteristic: "Ag" },
   { name: "Speak Language (Eldar)", characteristic: "Int" },
   { name: "Speak Language (High Gothic)", characteristic: "Int" },
   { name: "Speak Language (Kroot)", characteristic: "Int" },
@@ -798,6 +932,15 @@ export const INITIAL_CHARACTER: CharacterData = {
     defensiveStanceName: "",
     soloModeAbility: "",
     soloModeAbilityName: ""
+  },
+  bloodRavensChoices: {
+    scholasticLore: "",
+    forbiddenLore: "",
+    librariumTextsFocus: ""
+  },
+  novamarinesChoices: {
+    stat1: "",
+    stat2: ""
   },
   hasCruxTerminatus: false,
   hasIronHalo: false,
@@ -1026,9 +1169,7 @@ Skill Use: Free Action made as part of Movement` },
       "Regroup",
       "Soak Fire",
       "Strongpoint",
-      "Tactical Spacing",
-      "Overwatch",
-      "Stealth Advance"
+      "Tactical Spacing"
     ],
     attack: [
       "Bolter Assault",

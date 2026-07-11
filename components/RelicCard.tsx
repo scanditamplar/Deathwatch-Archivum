@@ -81,7 +81,7 @@ const RelicCard: React.FC<RelicCardProps> = ({ relic, character, onRequisition, 
       <div className="relative z-10 border-t border-[#333] pt-2 mt-2">
         <p className="text-[11px] text-gray-300 leading-relaxed font-bold">
           <span className="text-[#8b0000] uppercase text-[9px] tracking-wider mr-1">Rules:</span>
-          {relic.summary || "No summary available."}
+          {relic.summary || (relic as any).rules || "No summary available."}
         </p>
         {!isExpanded && (
           <div className="text-[9px] text-[#ffd700] mt-2 uppercase font-bold tracking-wider text-center border-t border-[#222] pt-1 opacity-70">

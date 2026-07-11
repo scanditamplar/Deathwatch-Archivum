@@ -1,0 +1,18 @@
+{
+  "collections": [
+    {
+      "name": "sessions",
+      "rules": [
+        "allow read, write: if true;"
+      ],
+      "subcollections": [
+        {
+          "name": "characters",
+          "rules": [
+            "allow read, write: if true;"
+          ]
+        }
+      ]
+    }
+  ]
+}

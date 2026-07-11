@@ -1,0 +1,40 @@
+const fs = require('fs');
+let code = fs.readFileSync('constants.tsx', 'utf8');
+
+const newDem = `
+export const CUSTOM_CHAPTER_DEMEANORS: Record<string, { demeanorDescription: string }> = {
+  "Brothers in Battle": {
+    demeanorDescription: "All Space Marines within a given Chapter are bonded to one another by a common genetic inheritance and years of combat at each others’ side. While some Battle-Brothers serving in the Deathwatch have difficulty widening their sense of comradeship to include those outside of their Chapter, others have none at all, regarding all Space Marines, regardless of Chapter or Progenitor, as their Brothers. As such, there is nothing that the Battle-Brother would not do for a fellow Space Marine, up to and including dying so that his Brothers may live. The only downside of such a trait is that the Battle-Brother may come to look down upon those outside of the Adeptus Astartes, believing (often quite rightly) that none can match their own standards."
+  },
+  "Cleanse and Purify": {
+    demeanorDescription: "Those Chapters who display this trait believe that no trace of an enemy should be left behind to stain the ground on which he was slain. Simply slaying the foe is rarely sufficient—the Battle-Brothers are driven to burn his corpse, destroy his works, burn down his cities and scour his worlds of life so that no trace of his existence remains. While some servants of the Ordo Xenos believe it wise to recover and study the weapons of their foes, these Battle-Brothers believe such a notion is foolhardy at best, and heretical at worse. They often favour weapons that immolate, incinerate, atomise or blast apart their foe, being particularly fond of flamers, meltaguns and plasma guns, all of which are ideal for eradicating the stain of the alien, the fiend and the heretic."
+  },
+  "No Mercy, No Respite": {
+    demeanorDescription: "While all Space Marines are relentless in their prosecution of their objectives, some are wont to become so embroiled in their mission that all other concerns are secondary. These Battle-Brothers have no concept of the notion of defeat and would rather die than accept that once a battle is joined it will not be won. They are stubborn in the face of adversity and capable of the most awe-inspiring feats of courage. Yet on occasion such Battle-Brothers have been known to ignore what they regard as secondary concerns, sometimes to the detriment of the larger strategic situation. Some have even been known to ignore orders from higher up the chain of command when serving as part of composite force made of squads of several Chapters, or when serving individually as members of the Deathwatch."
+  },
+  "Purity Above All": {
+    demeanorDescription: "The Battle-Brothers of this Chapter have no patience whatsoever for any hint of genetic deviation, in humanity at large or in other Space Marine Chapters. While all Space Marines abhor the mutant, these Battle-Brothers see corruption wherever they look, and are ever on the guard against genetic instability in their own gene-stock and in those of other Chapters. They regard even allied Abhumans as monsters and refuse to serve alongside them, and sometimes even extend this notion to those brother Chapters with unusual genetic traits, in particular the Space Wolves and Salamanders. When fighting against those they perceive as impure, these Battle-Brothers are utterly unstoppable, but it is often difficult to integrate them into Deathwatch Kill-teams that include brethren they regard as impure in some way."
+  },
+  "Scions of Mars": {
+    demeanorDescription: "While all Space Marines utilise wargear that the vast bulk of Humanity regard as a work of technological marvel, some have access to the most arcane and revered of weapons, armour and other devices. Such Chapters invariably maintain close links with the Adeptus Mechanicus, perhaps having served side by side with the servants of the Omnissiah in a past campaign, establishing common connections that both groups value. Through their training and their access to such marvels, the Battle-Brothers have developed a certain expertise in the use of advanced wargear and know how to get the best from such items. These brethren eschew simple weapons in favour of more complex ones, and when serving in the Deathwatch are ideal when the Kill-team is issued with specialised equipment or unusual items, especially those rendered up from the mysterious depths of the Omega Vault at the heart of Watch Station Erioch."
+  },
+  "See, But Don’t Be Seen": {
+    demeanorDescription: "The Battle-Brother understands well the value of maintaining a silent, unseen vigil on the foe, striking only when his target is at its weakest and most vulnerable. The Chapter stalks the night and the shadows, approaching the foe from unanticipated quarters before disappearing once more. Such Chapters foster patience and wily cunning in their Battle-Brothers, and regard as rash and unsubtle those who charge headlong into combat."
+  },
+  "Swift As The Wind": {
+    demeanorDescription: "The Battle-Brothers of the Chapter may excel at rapid strikes and lightning raids, but the trait extends to every facet of their character. They are as quick to anger as they are to jest. They can be impatient, yet display great personal initiative. While not rash or foolhardy, such a Battle-Brother believes in the value of immediate action over protracted planning, and chafes at the bit to engage the foe."
+  },
+  "Suffer Not The Alien To Live": {
+    demeanorDescription: "The Chapter has participated in countless xenos-wars, purging species after species that the enemies of the Emperor may be cast from the galaxy once and for all. Some such Chapters may have suffered at the hands (or claws or tentacles) of ravening alien beings, and harbour a special hatred for a particular xenos strain, or indeed all aliens. They often believe in the sanctity of the human form, regarding it as being cast in the image of the Emperor himself, and may therefore eschew the use of augmetics unless absolutely needed. While some Space Marine Chapters may tolerate the existence of species such as the Eldar and the Tau, these do not. They would sooner put a bolter round through the head of an alien emissary than trust a single word its speaks, even if doing so would bring about total war."
+  },
+  "Suffer Not The Works of Heretics": {
+    demeanorDescription: "The teachings of the Chapter’s cult focus on the many crimes that have been committed against humanity by heretics and schismatics. This is probably because the Chapter fought a crusade against such an enemy, and developed a special hatred for those amongst humanity who would turn from the light of the Emperor and embrace other, less worthy gods. Battle-Brothers of this mindset are often intolerant of the more unusual expressions of the Imperial Cult, sometimes even going so far as to denounce such expressions as heretical. They may even see the subtle taint of heresy in the traditions of other Chapters, a trait that has brought them into conflict with their brother Adeptus Astartes more than once."
+  },
+  "Uphold The Honour of The Emperor": {
+    demeanorDescription: "Nearly all Chapters revere the Emperor not as a god, as preached by the Ecclesiarchy, but as the honoured ancestor and father figure, the individual in whose image the Primarchs were made and whose blood therefore flows in their own veins. They trust above all things that the Emperor will guide their hands and protect them, and his praises are ever on their lips. Battle-Brothers drawn from such Chapters ever seek to prove themselves worthy in the eyes of the Emperor, performing great deeds to bring about his glory. Furthermore, these Battle-Brothers may prove bombastic and prideful, preferring to make bold, frontal assaults over stealthy approaches, so that the enemy may know that their doom is come, and tremble before the might of the favoured sons of the Emperor of Mankind."
+  }
+};
+`;
+
+code = code.replace('export const CHAPTERS = [', newDem + '\nexport const CHAPTERS = [');
+fs.writeFileSync('constants.tsx', code);

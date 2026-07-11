@@ -1,0 +1,57 @@
+814-  const [isWeaponCloseHovered, setIsWeaponCloseHovered] = useState(false);
+815-  const [isWeaponSubmitting, setIsWeaponSubmitting] = useState(false);
+816-  const [customChapterName, setCustomChapterName] = useState("");
+817-  const [customChapterDemeanorSelection, setCustomChapterDemeanorSelection] = useState("");
+818-  const [customChapterPuritySelection, setCustomChapterPuritySelection] = useState("Pure");
+819:  const [customChapterDeficiencySelection, setCustomChapterDeficiencySelection] = useState("");
+820-  const [customChapterAdditionalDeficiencies, setCustomChapterAdditionalDeficiencies] = useState<string[]>([]);
+821-  const [isCreatingCustomChapter, setIsCreatingCustomChapter] = useState(false);
+822-  const [isWargearAccessGranted, setIsWargearAccessGranted] = useState(false);
+823-  const [isReclusiamAccessGranted, setIsReclusiamAccessGranted] = useState(false);
+824-  const [isRequisitioningDreadWargear, setIsRequisitioningDreadWargear] = useState(false);
+--
+6302-                    </div>
+6303-                    {customChapterPuritySelection !== "Pure" && (
+6304-                      <div>
+6305-                        <label className="block text-gray-400 text-sm uppercase tracking-wider mb-2 font-bold text-center">Gene-Seed Deficiency</label>
+6306-                        <select 
+6307:                          value={customChapterDeficiencySelection}
+6308-                          onChange={(e) => setCustomChapterDeficiencySelection(e.target.value)}
+6309-                          className="w-full bg-[#1a1a1a] border border-[#333] p-3 rounded text-white focus:border-[#8b0000] outline-none"
+6310-                        >
+6311-                          <option value="" disabled>Select a Deficiency...</option>
+6312-                          {Object.keys(GENE_SEED_DEFICIENCIES).map(def => (
+6313-                            <option key={def} value={def}>{def}</option>
+6314-                          ))}
+6315-                        </select>
+6316:                        {customChapterDeficiencySelection && (
+6317-                          <div className="mt-4 p-4 bg-[#111] border border-[#333] rounded text-sm text-gray-300 italic h-24 overflow-y-auto custom-scrollbar">
+6318:                            {GENE_SEED_DEFICIENCIES[customChapterDeficiencySelection].description}
+6319-                          </div>
+6320-                        )}
+6321-                      </div>
+6322-                    )}
+6323-                  </div>
+--
+6333-                    >
+6334-                      Cancel
+6335-                    </button>
+6336-                    <button
+6337-                      onClick={() => {
+6338:                        if (customChapterName.trim() && customChapterDemeanorSelection && (customChapterPuritySelection === "Pure" || customChapterDeficiencySelection)) {
+6339:                          handleChapterChange(customChapterName.trim(), customChapterDemeanorSelection, customChapterPuritySelection, customChapterDeficiencySelection);
+6340-                          setIsCreatingCustomChapter(false);
+6341-                          setShowChapterModal(false);
+6342-                          setCustomChapterName("");
+6343-                          setCustomChapterDemeanorSelection("");
+6344-                          setCustomChapterPuritySelection("Pure");
+6345-                          setCustomChapterDeficiencySelection("");
+6346-                        }
+6347-                      }}
+6348-                      className="bg-[#8b0000] text-white px-6 py-2 rounded uppercase font-bold shadow-[0_0_10px_rgba(139,0,0,0.5)] hover:bg-[#a00000] disabled:opacity-50 disabled:cursor-not-allowed"
+6349:                      disabled={!customChapterName.trim() || !customChapterDemeanorSelection || (customChapterPuritySelection !== "Pure" && !customChapterDeficiencySelection)}
+6350-                    >
+6351-                      Create Chapter
+6352-                    </button>
+6353-                  </div>
+6354-                </div>
